@@ -1,10 +1,6 @@
 #pragma once
 #include "Card.hpp"
 
-// Placeholder (wait for others to implement)
-class Player;
-class GameManager;
-
 class ActionCard : public Card {
     public:
         // ctor

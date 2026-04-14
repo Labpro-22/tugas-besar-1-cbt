@@ -1,6 +1,10 @@
 #pragma once
 #include <string>
 
+// Placeholder (wait for others to implement)
+class Player;
+class GameManager;
+
 class Card {
     private:
         static int nextCardId;
@@ -22,6 +26,3 @@ class Card {
         virtual std::string getDescription() const = 0;
         virtual std::string getType() const = 0;
 };
-
-// static var
-int Card::nextCardId = 1;
