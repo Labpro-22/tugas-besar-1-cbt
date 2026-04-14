@@ -1,5 +1,8 @@
 #include "Card.hpp"
 
+// static var
+int Card::nextCardId = 1;
+
 // ctor
 Card::Card() : cardId(nextCardId++) {}
 
