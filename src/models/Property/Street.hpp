@@ -21,7 +21,7 @@ class Street : public Property {
         Street(int buyPrice, ColorGroup color, std::vector<int> rentLevels, int houseCost, int hotelCost, BuildingLevel level, int festivalMultiplier);
 
         // dtor
-        virtual ~Street();
+        ~Street();
 
         // Get the purchase price
         int getBuyPrice() const override;
@@ -44,7 +44,7 @@ class Street : public Property {
         // Demolish buildings from this street
         void demolish() override;
 
-        // Getter methods for private attributes
+        // Getter methods for buyPrice
         int getPriceValue() const { 
             return buyPrice; 
         }

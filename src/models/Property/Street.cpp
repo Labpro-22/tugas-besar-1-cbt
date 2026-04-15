@@ -45,7 +45,7 @@ int Street::getPropertyDetail() const {
 
 /// Print the title information of this street
 void Street::printTitle() const {
-    std::cout << "=== Street Deed ===" << std::endl;
+    std::cout << "=== Street Title ===" << std::endl;
     std::cout << "Code: " << getCode() << std::endl;
     std::cout << "Name: " << getName() << std::endl;
     std::cout << "Buy Price: " << buyPrice << std::endl;
