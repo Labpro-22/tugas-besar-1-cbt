@@ -1,6 +1,10 @@
 #pragma once
 #include <iostream>
 #include "Player.hpp"
+#include "Dice.hpp"
+#include "JailManager.hpp"
+#include "TransactionLogger.hpp"
+#include "FestivalEffect.hpp"
 #include <vector>
 using namespace std;
 

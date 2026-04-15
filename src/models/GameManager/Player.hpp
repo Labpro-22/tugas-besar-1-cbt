@@ -23,7 +23,6 @@ class Player{
         int cash;
         int position;
         PlayerStatus status;
-        int jailTurns;
         vector<Card> hand;
         vector<Property> properties;
         bool usedAbilityThisTurn;
@@ -36,6 +35,7 @@ class Player{
         int getCash() const;
         int getPosition() const;
         PlayerStatus getStatus() const;
+        void setStatus(int State);
         void addCash(int amount);
         void reduceCash(int amount);
         int getTotalWealth() const;
