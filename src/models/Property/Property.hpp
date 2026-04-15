@@ -48,14 +48,14 @@ class Property {
         // ---- Must implement functions ----
 
         // Get the purchase price of the property
-        virtual int getBuyPrice() = 0;
+        virtual int getBuyPrice() const = 0;
 
-        /// Get detailed property information
-        virtual int getPropertyDetail(int detail) = 0;
+        // Get detailed property information
+        virtual int getPropertyDetail() const = 0;
 
-        /// Print the title information of the property to output
-        virtual void printTitle() = 0;
+        // Print the title information of the property
+        virtual void printTitle() const = 0;
 
-        /// Demolish the property
+        // Demolish the property
         virtual void demolish() = 0;
 };
