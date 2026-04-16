@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <map>
+
 #include "TransactionLogger.hpp"
 #include "Player.hpp"
 using namespace std;
@@ -20,6 +21,15 @@ private:
     vector<LogEntry> log;
 
 public:
+    GameState(int currentTurn = 0,
+    int maxTurn = 0,
+    int activePlayerIndex = 0,
+    vector<Player> players,
+    vector<int> turnOrder,
+    vector<Property> properties,
+    vector<SkillCard*> skillDeckCard,
+    vector<LogEntry> log);
+
     string serialize() const;
     void deserialize(const string& data);
 };

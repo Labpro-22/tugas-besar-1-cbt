@@ -4,17 +4,18 @@
 #include <vector>
 #include <map>
 #include "Player.hpp"
+#include "LiquidationPanel.hpp"
 using namespace std;
 
 
-class BankruptcyHandler {
-private:
-    Player& debtor;
-    Player* creditor;
-    int debtAmount;
-
-public:
-    BankruptcyHandler(Player& debtor, Player* creditor, int debt);
+    class BankruptcyHandler {
+    private:
+        Player& debtor;
+        Player* creditor;
+        int debtAmount;
+        LiquidationPanel panel;
+    public:
+        BankruptcyHandler(Player& debtor, Player* creditor, int debt);
 
     int calculateMaxLiquidation();
     bool canCoverDebt();
