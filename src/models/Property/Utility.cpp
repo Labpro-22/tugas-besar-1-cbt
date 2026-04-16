@@ -2,7 +2,7 @@
 #include <iostream>
 
 // ctor
-Utility::Utility() : Property(), buyPrice(0) {
+Utility::Utility() : Property(), buyPrice(0), ownedUtilityCount(1), lastDiceTotal(0) {
     // Default multiplier table: key = owned utility count, value = rent multiplier
     multiplierTable[1] = 4;
     multiplierTable[2] = 10;
@@ -12,7 +12,7 @@ Utility::Utility() : Property(), buyPrice(0) {
 /// @param buyPrice The purchase price of the street
 /// @param multiplierTable The multiplier of rent price
 Utility::Utility(int buyPrice, const std::map<int, int>& multiplierTable)
-    : Property(), buyPrice(buyPrice), multiplierTable(multiplierTable) {}
+    : Property(), buyPrice(buyPrice), multiplierTable(multiplierTable), ownedUtilityCount(1), lastDiceTotal(0) {}
 
 // dtor
 Utility::~Utility() {}
@@ -47,13 +47,28 @@ int Utility::getPropertyDetail() const {
         return 0;
     }
 
-    // later
-    int ownedUtilityCount = 1;
     int multiplier = resolveMultiplier(ownedUtilityCount);
+    return lastDiceTotal * multiplier;
+}
 
-    // later
-    int diceTotal = 0;
-    return diceTotal * multiplier;
+// Set runtime-owned utility count for rent calculation context.
+void Utility::setOwnedUtilityCount(int count) {
+    if (count < 1) {
+        ownedUtilityCount = 1;
+        return;
+    }
+
+    ownedUtilityCount = count;
+}
+
+// Set runtime dice total for rent calculation context.
+void Utility::setLastDiceTotal(int diceTotal) {
+    if (diceTotal < 0) {
+        lastDiceTotal = 0;
+        return;
+    }
+
+    lastDiceTotal = diceTotal;
 }
 
 // Print utility title information
@@ -80,5 +95,10 @@ void Utility::printTitle() const {
 
 // Utility cannot be demolished 
 void Utility::demolish() {
-    // nothing
+    // no-op
+}
+
+// return utility
+std::string Utility::getType() const {
+    return "Utility";
 }

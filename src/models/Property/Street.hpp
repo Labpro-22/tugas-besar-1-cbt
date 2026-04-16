@@ -44,6 +44,9 @@ class Street : public Property {
         // Demolish buildings from this street
         void demolish() override;
 
+        // return street
+        std::string getType() const override;
+
         // Getter methods for buyPrice
         int getPriceValue() const { 
             return buyPrice; 

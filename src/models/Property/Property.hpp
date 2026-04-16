@@ -58,4 +58,7 @@ class Property {
 
         // Demolish the property
         virtual void demolish() = 0;
+
+        // return type of property
+        virtual std::string getType() const = 0;
 };

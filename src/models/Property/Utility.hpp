@@ -6,6 +6,8 @@ class Utility : public Property {
     private:
         int buyPrice;
         std::map<int, int> multiplierTable;
+        int ownedUtilityCount;
+        int lastDiceTotal;
 
         // Resolve multiplier by owned utility count with safe fallback.
         int resolveMultiplier(int ownedUtilityCount) const;
@@ -26,11 +28,20 @@ class Utility : public Property {
         // Get the property detail information, returns multiplier * dice
         int getPropertyDetail() const override;
 
+        // Set runtime-owned utility count for rent calculation context.
+        void setOwnedUtilityCount(int count);
+
+        // Set runtime dice total for rent calculation context.
+        void setLastDiceTotal(int diceTotal);
+
         // Print utility title information
         void printTitle() const override;
 
         // Utility cannot be demolished
         void demolish() override;
+
+        // return utility
+        std::string getType() const override;
 
         // Getter methods for buyPrice
         int getPriceValue() const {
@@ -38,7 +49,7 @@ class Utility : public Property {
         }
 
         // Getter methods for multiplierTable
-        std::map<int, int> getMultiplierTable() const {
+        const std::map<int, int>& getMultiplierTable() const {
             return multiplierTable;
         }
 };

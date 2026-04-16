@@ -59,7 +59,7 @@ void Street::printTitle() const {
     std::cout << std::endl;
 
     if (getOwner() != nullptr) {
-        std::cout << "Owner: Player (ID: " << getOwner() << ")" << std::endl;
+        std::cout << "Owner: Player (ptr: " << getOwner() << ")" << std::endl;
     } else {
         std::cout << "Owner: Bank (unowned)" << std::endl;
     }
@@ -94,4 +94,9 @@ void Street::activateEffect(int multiplier) {
 void Street::demolish() {
     level = BuildingLevel::EMPTY;
     festivalMultiplier = 1; // reset any active effects
+}
+
+// return street
+std::string Street::getType() const {
+    return "Street";
 }
