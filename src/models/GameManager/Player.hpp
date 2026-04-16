@@ -1,8 +1,13 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <string>
+#include <algorithm>
 #include "../Card/Card.hpp"
 #include "../Card/SkillCard.hpp"
+#include "JailManager.hpp"
+#include "../Property/Property.hpp"
+#include "BankruptcyHandler.hpp"
 using namespace std;
 
 // struct PlayerStatus {
@@ -23,15 +28,16 @@ class Player{
         int cash;
         int position;
         PlayerStatus status;
-        vector<Card> hand;
-        vector<Property> properties;
+        vector<Card*> hand;
+        vector<Property*> properties;
         bool usedAbilityThisTurn;
         bool hasShield;
         int discountPercentage;
         int discountRemainingTurns;
+        BankruptcyHandler BH;
     public :
-        Player(std::string username, int startingCash);
-        string getUsername() const;
+        Player(string username, int startingCash, int startPosition = 0, PlayerStatus state, vector<Card*> startHand, vector<Property*> startProperty, int usedAbility = 0, bool shield = false, int discPercent = 0, int discRemain = 0);
+        string getUsername();
         int getCash() const;
         int getPosition() const;
         PlayerStatus getStatus() const;
@@ -45,12 +51,12 @@ class Player{
         int getPropertyCount() const;
         void addCard(SkillCard* card);
         void removeCard(SkillCard* card);
-        vector<SkillCard*>& getHand(); 
+        vector<Card*>& getHand(); 
         int getCardCount() const;
         bool canUseAbility() const;
         void setUsedAbility();
         void resetTurn();
-        void payJailFine();
+        void payJailFine(JailManager& jm);
         bool isJailed() const;
         bool canGetCard() const;
         void setBankrupt();
