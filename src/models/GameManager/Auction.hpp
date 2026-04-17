@@ -9,9 +9,9 @@ using namespace std;
 
 class Auction{
     private :
-        Property property;
-        vector<Player> participants;
-        map bids;
+        Property* property;
+        vector<Player*> participants;
+        map<string, int> bids;
         int currentBid;
         int minimumBid;
         int winnerIndex;
@@ -21,10 +21,10 @@ class Auction{
         void determineWinner();
         void nextParticipant();
     public :
-        Auction(Property& prop, vector<Player> participants);
+        Auction(Property* prop, vector<Player*> participants);
         void start();
-        bool submitBid(Player& player, int amount);
-        void pass(Player& player);
-        Player getWinner();
+        bool submitBid(Player* player, int amount);
+        void pass(Player* player);
+        Player* getWinner();
         int getWinningBid(); //Perlukah?
 };
