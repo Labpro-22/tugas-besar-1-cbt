@@ -24,6 +24,14 @@ class PropertyConfig {
         int getPurchasePrice() const;
         const int* getRent() const;
         const int getID() const;
+        const int getCode() const;
+        int getName() const;
+        int getType() const;
+        int getColor() const;
+        int getLandPrice() const;
+        int getMortgageValue() const;
+        int getHouseCost() const;
+        int getHotelCost() const;
         void setPropertyAmount(int purchasePrice, int rent);
 
         friend std::istream& operator>>(std::istream& is, PropertyConfig& config);

@@ -40,3 +40,35 @@ std::istream& operator>>(std::istream& is, PropertyConfig& config) {
 const int PropertyConfig::getID() const {
     return id;
 }
+
+const int PropertyConfig::getCode() const {
+    return code;
+}
+
+int PropertyConfig::getName() const {
+    return name;
+}
+
+int PropertyConfig::getType() const {
+    return type;
+}
+
+int PropertyConfig::getColor() const {
+    return color;
+}
+
+int PropertyConfig::getLandPrice() const {
+    return landPrice;
+}
+
+int PropertyConfig::getMortgageValue() const {
+    return mortgageValue;
+}
+
+int PropertyConfig::getHouseCost() const {
+    return houseCost;
+}
+
+int PropertyConfig::getHotelCost() const {
+    return hotelCost;
+}
