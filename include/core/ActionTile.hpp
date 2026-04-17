@@ -10,8 +10,7 @@ protected:
 
 public:
   // Konstruktor dan destruktor
-  ActionTile(const std::string &code, const std::string &name, int pos,
-             const std::string &actionType);
+  ActionTile(const std::string &code, const std::string &name, int pos, const std::string &actionType);
   ~ActionTile() = default;
 
   // Getter

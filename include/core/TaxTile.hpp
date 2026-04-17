@@ -11,9 +11,8 @@ protected:
 
 public:
   // Konstruktor dan destruktor
-  TaxTile(const std::string &code, const std::string &name, int pos,
-          const std::string &taxType);
-  ~TaxTile() override = default;
+  TaxTile(const std::string &code, const std::string &name, int pos, const std::string &taxType);
+  ~TaxTile() = default;
 
   // Method petak bertipe pajak
   virtual int calculateTax(Player &player, int tax);

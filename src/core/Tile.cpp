@@ -1,7 +1,7 @@
 #include "core/Tile.hpp"
 
-Tile::Tile(const std::string &code, const std::string &name, int pos)
-    : id(code), name(name), position(pos), landed(false), tile_type("base") {}
+Tile::Tile(const std::string &code, const std::string &name, int pos, const std::string &type)
+  : id(code), name(name), position(pos), tile_type(type) {}
 
 std::string Tile::getCode() const { return id; }
 
