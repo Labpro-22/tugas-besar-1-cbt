@@ -4,6 +4,7 @@
 #include <string>
 
 #include "loader-config.hpp"
+#include "saver-config.hpp"
 
 // Stub to avoid error
 // #define PropertyConfig int
@@ -18,6 +19,7 @@ using namespace std;
 
 // Configuration class, holds all the configuration data for the game.
 // NOTE: config loader in ConfigurationLoader class.
+// NOTE: config saver in ConfigurationSaver class.
 class Configuration {
     private:
         /* ----------------------------- Plural configs ----------------------------- */
