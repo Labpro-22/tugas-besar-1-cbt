@@ -42,6 +42,12 @@ int Property::getMortgageValue() const {
     return mortgageValue;
 }
 
+// Set status of this property
+/// @param status pointer to the new status
+void Property::setStatus(PropertyStatus s){
+    status = s;
+}
+
 // Set the owner of this property
 /// @param p Pointer to the player who is taking ownership
 void Property::setOwner(Player* p) {

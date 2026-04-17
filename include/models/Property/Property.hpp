@@ -11,9 +11,6 @@ class Property {
         PropertyStatus status;
         int mortgageValue;
         Player* owner;
-    protected:
-        // Set the owner of this property
-        void setOwner(Player* p);
     public:
         // default ctor (status = "BANK")
         Property();
@@ -38,6 +35,12 @@ class Property {
 
         // Get the mortgage value of the property
         int getMortgageValue() const;
+
+        // Set the owner of this property
+        void setOwner(Player* p);
+
+        // Set status of this property
+        void setStatus(PropertyStatus s);
 
         // Mortgage the property, returns the mortgage amount given to the player
         virtual int mortgage();
