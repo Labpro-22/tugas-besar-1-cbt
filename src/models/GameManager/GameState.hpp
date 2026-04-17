@@ -6,6 +6,7 @@
 
 #include "TransactionLogger.hpp"
 #include "Player.hpp"
+#include "../Property/Property.hpp"
 using namespace std;
 
 

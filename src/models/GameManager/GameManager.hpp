@@ -5,6 +5,8 @@
 #include "JailManager.hpp"
 #include "TransactionLogger.hpp"
 #include "FestivalEffect.hpp"
+#include "../Card/CardDeck.hpp"
+#include ""
 #include <vector>
 using namespace std;
 
@@ -16,6 +18,7 @@ class GameManager {
         vector<Player> players;
         vector<int> turnOrder;
         Board board;
+        Dice dice;
         CardDeck<ChanceCard> chanceDeck;
         CardDeck<CommunityChestCard> chestDeck;
         CardDeck skillDeck;

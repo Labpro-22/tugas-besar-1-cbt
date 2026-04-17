@@ -16,14 +16,13 @@ using namespace std;
         LiquidationPanel panel;
     public:
         BankruptcyHandler(Player& debtor, Player* creditor, int debt);
-
-    int calculateMaxLiquidation();
-    bool canCoverDebt();
-    bool initiateLiquidation();
-    void sellPropertyToBank(Property& prop);
-    void mortgageProperty(Property& prop);
-    void declareBankrupt();
-    void transferAssets();
-    void repossessProperties();
-    void auctionRepossessedProperties();
+        int calculateMaxLiquidation();
+        bool canCoverDebt();
+        bool initiateLiquidation();
+        void sellPropertyToBank(Property& prop);
+        void mortgageProperty(Property& prop);
+        void declareBankrupt();
+        void transferAssets();
+        void repossessProperties();
+        void auctionRepossessedProperties();
 };

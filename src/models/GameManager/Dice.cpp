@@ -2,7 +2,7 @@
 
 
 Dice::Dice() : dice1(0), dice2(0), consecutiveDouble(0){}
-void Dice::roll(){
+int Dice::roll(){
     random_device rd;
     mt19937 gen(rd());
     int min = 1;
@@ -12,6 +12,7 @@ void Dice::roll(){
 
     dice1 = dist(gen);
     dice2 = dist(gen);
+    return dice1 + dice2;
 }
 int Dice::getTotal(){
     return dice1+dice2;

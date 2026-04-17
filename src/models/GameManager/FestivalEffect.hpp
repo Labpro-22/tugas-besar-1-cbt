@@ -8,7 +8,7 @@ using namespace std;
 
 class FestivalEffect {
     private:
-        map<Property, int> effects;
+        map<string, pair<int, int>> effects;
     public:
         int activateEffect(string propertyCode, int currentFMULT);
         void tickDuration(string propertyCode);
