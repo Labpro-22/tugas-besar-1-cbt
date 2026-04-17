@@ -52,13 +52,13 @@ class Configuration {
         void setUtilityRent(int key, int value);
 
         TaxConfig getTax() const;
-        void setTax(int value);
+        void setTax(int pph_flat, int pph_percent, int pbm_flat);
 
         SpecialConfig getSpecial() const;
-        void setSpecial(int value);
+        void setSpecial(int goSalary, int jailFine);
 
         MiscConfig getMisc() const;
-        void setMisc(int value);
+        void setMisc(int maxTurn, int initialBalance);
 
         void loadConfig(const string& filename);
         void saveConfig(const string& filename) const;
