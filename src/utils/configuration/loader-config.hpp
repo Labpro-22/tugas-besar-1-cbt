@@ -11,6 +11,8 @@
 
 using namespace std;
 
+// LoaderConfig class, responsible for loading configuration data from files,
+// each file to each data class.
 class LoaderConfig{
     public:
         static void loadPropertyConfig(const string& filename, unordered_map<int, PropertyConfig>& propertyConfigs);
@@ -19,7 +21,6 @@ class LoaderConfig{
         static void loadTaxConfig(const string& filename, TaxConfig& taxConfig);
         static void loadSpecialConfig(const string& filename, SpecialConfig& specialConfig);
         static void loadMiscConfig(const string& filename, MiscConfig& miscConfig);
-
     };
 
 

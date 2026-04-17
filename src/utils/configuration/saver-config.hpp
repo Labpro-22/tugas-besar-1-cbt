@@ -4,11 +4,11 @@
 #include <fstream>
 #include <string>
 #include <unordered_map>
-
 #include "configuration.hpp"
-
 using namespace std;
 
+// SaverConfig class, responsible for saving configuration data to files,
+// each data class to each file.
 class SaverConfig {
     public:
         static void savePropertyConfig(const string& filename, const unordered_map<int, PropertyConfig>& propertyConfigs);
