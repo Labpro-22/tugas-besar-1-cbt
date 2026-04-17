@@ -1,3 +1,4 @@
+#include "../GameManager/Player.hpp"
 #include "MoveCard.hpp"
 
 // ctor
@@ -24,8 +25,17 @@ std::string MoveCard::getType() const {
 }
 
 void MoveCard::use(Player* p, GameManager* gm){
-    (void)p;
     (void)gm;
+    if (p == nullptr) {
+        return;
+    }
+
+    constexpr int boardSize = 40;
+    int newPosition = (p->getPosition() + steps) % boardSize;
+    if (newPosition < 0) {
+        newPosition += boardSize;
+    }
+    p->setPosition(newPosition);
+
     markAsUsed();
-    // implement effect through GameManager (later)
 }

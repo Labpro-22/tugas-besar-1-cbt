@@ -95,7 +95,7 @@ void Utility::printTitle() const {
 
 // Utility cannot be demolished 
 void Utility::demolish() {
-    // no-op
+    // nothing
 }
 
 // return utility

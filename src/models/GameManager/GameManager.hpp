@@ -42,4 +42,6 @@ class GameManager {
         void executeFestival(Player& player, string propCode);
         void executeTaxPayment(Player& player, int amount, bool toBank);
         void addLogEntry(string action);
+        vector<Player>& getPlayers() { return players; }
+        const vector<Player>& getPlayers() const { return players; }
 };

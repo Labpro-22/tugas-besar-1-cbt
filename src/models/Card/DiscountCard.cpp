@@ -1,3 +1,4 @@
+#include "../GameManager/Player.hpp"
 #include "DiscountCard.hpp"
 #include <algorithm>
 
@@ -30,7 +31,6 @@ std::string DiscountCard::getType() const {
     return "DiscountCard";
 }
 
-
 // apply discount
 int DiscountCard::applyDiscount(int amount) {
     if (amount <= 0) {
@@ -42,13 +42,15 @@ int DiscountCard::applyDiscount(int amount) {
 }
 
 void DiscountCard::use(Player* p, GameManager* gm) {
-    (void)p;
     (void)gm;
+    if (p == nullptr) {
+        return;
+    }
 
+    // apply discount
     if (remainingDuration > 0) {
-        --remainingDuration;
+        p->applyDiscount(discountPercent, remainingDuration);
     }
 
     markAsUsed();
-    // implement effect through GameManager (later)
 }

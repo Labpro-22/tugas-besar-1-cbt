@@ -126,10 +126,9 @@ bool Player::hasShieldActive() const {
     return hasShield; 
 }
 
-// Belum selesai
-void Player::applyDiscount(int pct) {
+void Player::applyDiscount(int pct, int duration) {
     discountPercentage = pct;
-    discountRemainingTurns = 1;
+    discountRemainingTurns = (duration > 0) ? duration : 1;
 }
 
 void Player::tickDiscount() {
@@ -147,23 +146,23 @@ int Player::getDiscountPercentage() const {
 bool Player::hasDiscount() const { 
     return discountPercentage > 0; 
 }
-// Later
-// int Player::getRailroadCount() const {
-//     int count = 0;
-//     for (Property* prop : properties) {
-//         if (prop->getCategory() == "Railroad") {
-//             count++;
-//         }
-//     }
-//     return count;
-// }
 
-// int Player::getUtilityCount() const {
-//     int count = 0;
-//     for (Property* prop : properties) {
-//         if (prop->getCategory() == "Utility") {
-//             count++;
-//         }
-//     }
-//     return count;
-// }
+int Player::getRailroadCount() const {
+    int count = 0;
+    for (Property* prop : properties) {
+        if (prop != nullptr && prop->getType() == "Railroad") {
+            ++count;
+        }
+    }
+    return count;
+}
+
+int Player::getUtilityCount() const {
+    int count = 0;
+    for (Property* prop : properties) {
+        if (prop != nullptr && prop->getType() == "Utility") {
+            ++count;
+        }
+    }
+    return count;
+}

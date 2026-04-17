@@ -1,4 +1,6 @@
+#include "../GameManager/Player.hpp"
 #include "DemolitionCard.hpp"
+#include "../Property/Street.hpp"
 
 // ctor
 DemolitionCard::DemolitionCard() : SkillCard() {}
@@ -19,8 +21,19 @@ std::string DemolitionCard::getType() const {
 }
 
 void DemolitionCard::use(Player* p, GameManager* gm) {
-    (void)p;
     (void)gm;
+    if (p == nullptr) {
+        return;
+    }
+
+    // Menghancurkan 1 properti lawan
+    for (Property* property : p->getProperties()) {
+        Street* street = dynamic_cast<Street*>(property);
+        if (street != nullptr && street->getBuildingLevel() != BuildingLevel::EMPTY) {
+            street->demolish();
+            break;
+        }
+    }
+
     markAsUsed();
-    // implement effect through GameManager (later)
 }

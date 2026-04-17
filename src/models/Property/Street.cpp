@@ -1,3 +1,4 @@
+#include "../GameManager/Player.hpp"
 #include "Street.hpp"
 #include <iostream>
 #include <algorithm>
@@ -14,7 +15,7 @@ Street::Street()
 /// @param rentLevels Vector of rent prices for each building level
 /// @param houseCost The cost to build a house on this street
 /// @param hotelCost The cost to upgrade to a hotel on this street
-/// @param level The current building level.
+/// @param level The current building level
 /// @param festivalMultiplier The event multiplier for special effects
 Street::Street(int buyPrice, ColorGroup color, std::vector<int> rentLevels, int houseCost, int hotelCost, BuildingLevel level, int festivalMultiplier)
     : Property(), buyPrice(buyPrice), color(color), rentLevels(rentLevels), houseCost(houseCost), hotelCost(hotelCost), level(level), festivalMultiplier(festivalMultiplier) {}
@@ -68,7 +69,7 @@ void Street::printTitle() const {
     std::cout << "===================" << std::endl;
 }
 
-// Upgrade this street to hotel level if not already.
+// Upgrade this street to hotel level if not already
 void Street::upgradeHotel() {
     if (level < BuildingLevel::HOTEL) {
         level = BuildingLevel::HOTEL;
@@ -78,8 +79,41 @@ void Street::upgradeHotel() {
 // Check if all streets of the same color are owned by the same player (monopoly).
 /// @return true if this street's color group is monopolized, false otherwise.
 bool Street::isMonopolized() const {
-    // later
-    return (getOwner() != nullptr); // Placeholder 
+    Player* owner = getOwner();
+    if (owner == nullptr) {
+        return false;
+    }
+
+    // var untuk tampung jumlah yang dibutuhkan
+    int requiredCount = 0;
+    switch (color) {
+        // coklat & biru tua hanya 2 lahan
+        case ColorGroup::COKLAT:
+        case ColorGroup::BIRU_TUA:
+            requiredCount = 2;
+            break;
+        case ColorGroup::BIRU_MUDA:
+        case ColorGroup::MERAH_MUDA:
+        case ColorGroup::ORANGE:
+        case ColorGroup::MERAH:
+        case ColorGroup::KUNING:
+        case ColorGroup::HIJAU:
+            requiredCount = 3;
+            break;
+        default:
+            return false;
+    }
+
+    // jika lebih dari required, monopolized
+    int ownedColorCount = 0;
+    for (Property* property : owner->getProperties()) {
+        Street* street = dynamic_cast<Street*>(property);
+        if (street != nullptr && street->getColorGroup() == color) {
+            ++ownedColorCount;
+        }
+    }
+
+    return ownedColorCount >= requiredCount;
 }
 
 // Activate special event effects on this street

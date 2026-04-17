@@ -1,3 +1,4 @@
+#include "../GameManager/Player.hpp"
 #include "ShieldCard.hpp"
 
 // ctor
@@ -19,8 +20,11 @@ std::string ShieldCard::getType() const {
 }
 
 void ShieldCard::use(Player* p, GameManager* gm) {
-    (void)p;
     (void)gm;
+    if (p == nullptr) {
+        return;
+    }
+
+    p->activateShield();
     markAsUsed();
-    // implement effect through GameManager (later)
 }

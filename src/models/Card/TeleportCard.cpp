@@ -1,3 +1,4 @@
+#include "../GameManager/Player.hpp"
 #include "TeleportCard.hpp"
 
 // ctor
@@ -19,8 +20,12 @@ std::string TeleportCard::getType() const {
 }
 
 void TeleportCard::use(Player* p, GameManager* gm) {
-    (void)p;
     (void)gm;
+    if (p == nullptr) {
+        return;
+    }
+
+    // default
+    p->setPosition(0);
     markAsUsed();
-    // implement effect through GameManager (later)
 }
