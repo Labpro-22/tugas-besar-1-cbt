@@ -14,6 +14,7 @@ class Property {
     public:
         // Set the owner of this property
         void setOwner(Player* p);
+
         // default ctor (status = "BANK")
         Property();
 
@@ -51,6 +52,7 @@ class Property {
         
         void setCode(std::string newCode);
         void setStatusStr(std::string statusStr);
+        void setStatus(PropertyStatus s);
         virtual void setFestival(int fmult, int fdur) {} 
         virtual void setBuildingCount(int count) {}
 
