@@ -10,7 +10,7 @@ class Dice {
         int consecutiveDouble;
     public :
         Dice();
-        void roll();
+        int roll();
         void setValues(int d1, int d2);
         int getTotal();
         int getDie1() const;
