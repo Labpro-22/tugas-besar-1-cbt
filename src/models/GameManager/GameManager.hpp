@@ -19,39 +19,44 @@ class Board;
 
 class GameManager {
 private:
-    int currentTurn;
-    int maxTurn;
-    int activePlayerIndex;
-    vector<Player> players;
-    vector<int> turnOrder;
-    Board *board;
-    Dice dice;
-    CardDeck<ChanceCard> chanceDeck;
-    CardDeck<CommunityCard> chestDeck;
-    CardDeck<SkillCard> skillDeck;
-    DiscardPile discardPile;
-    Configuration config;
-    TransactionLogger logger;
-    FestivalEffect festivalEffect;
+  int currentTurn;
+  int maxTurn;
+  int activePlayerIndex;
+  vector<Player> players;
+  vector<int> turnOrder;
+  Board *board;
+  Dice dice;
+  CardDeck<ChanceCard> chanceDeck;
+  CardDeck<CommunityCard> chestDeck;
+  CardDeck<SkillCard> skillDeck;
+  DiscardPile discardPile;
+  Configuration config;
+  TransactionLogger logger;
+  FestivalEffect festivalEffect;
 
 public:
-    GameManager();
-    void startNewGame();
-    void processTurn();
-    void processCommand(string cmd);
-    bool checkWinCondition();
-    Player &getCurrentPlayer();
-    void advanceToNextPlayer();
-    bool isGameOver();
-    Player &getWinner();
-    vector<Player> &getPlayers();
-    void moveCurrentPlayer(int steps);
-    void executePurchase(Player &player, Property &prop);
-    void executeRentPayer(Player &, Player &owner, Property &prop, int amount);
-    void executeAuction(Property &prop);
-    void executeBankruptcy(Player &debtor, Player *creditor, int amount);
-    void executeFestival(Player &player, string propCode);
-    void executeTaxPayment(Player &player, int amount, bool toBank);
-    void addLogEntry(string action);
-    Board &getBoard();
+  GameManager();
+  void startNewGame();
+  void processTurn();
+  void processCommand(string cmd);
+  bool checkWinCondition();
+  Player &getCurrentPlayer();
+  void advanceToNextPlayer();
+  bool isGameOver();
+  Player &getWinner();
+  vector<Player> &getPlayers();
+  void moveCurrentPlayer(int steps);
+  void executePurchase(Player &player, Property &prop);
+  void executeRentPayer(Player &, Player &owner, Property &prop, int amount);
+  void executeAuction(Property &prop);
+  void executeBankruptcy(Player &debtor, Player *creditor, int amount);
+  void executeFestival(Player &player, string propCode);
+  void executeTaxPayment(Player &player, int amount, bool toBank);
+  void addLogEntry(string action);
+  Board &getBoard();
+
+  // Dynamic board accessors for card/tile logic
+  int getGoSalary() const;
+  int getJailPosition() const;
+  int getBoardSize() const;
 };

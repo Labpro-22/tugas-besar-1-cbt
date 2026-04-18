@@ -10,48 +10,47 @@ MoveCard::MoveCard(int cardId, int steps) : SkillCard(cardId), steps(steps) {}
 MoveCard::~MoveCard() {}
 
 // Getter steps
-int MoveCard::getSteps() const {
-    return steps;
-}
+int MoveCard::getSteps() const { return steps; }
 
 // Must implement functions
 std::string MoveCard::getDescription() const {
-    return "Move by " + std::to_string(steps) + " steps.";
+  return "Move by " + std::to_string(steps) + " steps.";
 }
 
-std::string MoveCard::getType() const {
-    return "MoveCard";
-}
+std::string MoveCard::getType() const { return "MoveCard"; }
 
-int MoveCard::getValue() const {
-    return steps;
-}
+int MoveCard::getValue() const { return steps; }
 
-void MoveCard::use(Player* p, GameManager* gm){
-    if (p == nullptr || gm == nullptr) {
-        return;
+void MoveCard::use(Player *p, GameManager *gm) {
+  if (p == nullptr || gm == nullptr) {
+    return;
+  }
+
+  if (!p->canUseAbility()) {
+    gm->addLogEntry(p->getUsername() +
+                    " gagal menggunakan MoveCard (ability sudah dipakai)");
+    return;
+  }
+
+  int boardSize = gm->getBoardSize();
+
+  if (p == &gm->getCurrentPlayer()) {
+    gm->moveCurrentPlayer(steps);
+  } else {
+    int oldPos = p->getPosition();
+    int newPos = (oldPos + steps) % boardSize;
+    if (newPos < 0)
+      newPos += boardSize;
+    p->setPosition(newPos);
+    if (newPos < oldPos) {
+      p->addCash(gm->getGoSalary());
     }
+  }
 
-    if (!p->canUseAbility()) {
-        gm->addLogEntry(p->getUsername() + " gagal menggunakan MoveCard (ability sudah dipakai)");
-        return;
-    }
+  markAsUsed();
+  p->setUsedAbility();
+  p->removeCard(this);
 
-    if (p == &gm->getCurrentPlayer()) {
-        gm->moveCurrentPlayer(steps);
-    } else {
-        int oldPos = p->getPosition();
-        int newPos = (oldPos + steps) % 40;
-        if (newPos < 0) newPos += 40;
-        p->setPosition(newPos);
-        if (newPos < oldPos) {
-            p->addCash(200);
-        }
-    }
-
-    markAsUsed();
-    p->setUsedAbility();
-    p->removeCard(this);
-
-    gm->addLogEntry("MoveCard digunakan sebanyak " + std::to_string(steps) + " langkah");
+  gm->addLogEntry("MoveCard digunakan sebanyak " + std::to_string(steps) +
+                  " langkah");
 }

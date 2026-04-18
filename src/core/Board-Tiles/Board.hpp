@@ -10,22 +10,26 @@ class Configuration;
 
 class Board {
 private:
-    // Atribut kelas
-    std::vector<Tile *> tiles;
-    int tileCount;
+  // Atribut kelas
+  std::vector<Tile *> tiles;
+  int tileCount;
 
 public:
-    // Konstruktor dan destruktor
-    Board();
-    ~Board();
+  // Konstruktor dan destruktor
+  Board();
+  ~Board();
 
-    // Method inisiasi data board
-    void initialize(Configuration &config);
+  // Method inisiasi data board
+  void initialize(Configuration &config);
 
-    // Getter tile
-    Tile &getTile(int pos);
-    Tile *getTilebyCode(const std::string &code);
-    int getTileCount() const;
+  // Getter tile
+  Tile &getTile(int pos);
+  Tile *getTilebyCode(const std::string &code);
+  int getTileCount() const;
+
+  // Dynamic board query helpers
+  int findNearestStation(int currentPos) const;
+  int findJailPosition() const;
 };
 
 #endif
