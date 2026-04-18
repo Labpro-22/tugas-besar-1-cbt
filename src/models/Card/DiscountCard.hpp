@@ -22,6 +22,7 @@ class DiscountCard : public SkillCard {
         // Must implement functions
         std::string getDescription() const override;
         std::string getType() const override;
+        int getValue() const override;
 
         // apply discount
         int applyDiscount(int amount);

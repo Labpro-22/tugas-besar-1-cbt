@@ -1,4 +1,4 @@
-#pragma once
+    #pragma once
 #include <string>
 #include <vector>
 #include <iostream>
@@ -17,7 +17,7 @@ private:
     int activePlayerIndex;
     vector<Player> players;
     vector<int> turnOrder;
-    vector<Property> properties;
+    vector<Property*> properties;
     vector<SkillCard*> skillDeckCards;
     vector<LogEntry> log;
 
@@ -27,7 +27,7 @@ public:
     int activePlayerIndex = 0,
     vector<Player> players,
     vector<int> turnOrder,
-    vector<Property> properties,
+    vector<Property*> properties,
     vector<SkillCard*> skillDeckCard,
     vector<LogEntry> log);
 

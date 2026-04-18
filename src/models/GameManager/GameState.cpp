@@ -1,4 +1,5 @@
 #include "GameState.hpp"
+#include "../Card/DiscountCard.hpp"
 #include <sstream> 
 #include <iostream>
 
@@ -6,7 +7,7 @@ using namespace std;
 
 GameState::GameState(int currentTurn, int maxTurn, int activePlayerIndex,
                      vector<Player> players, vector<int> turnOrder,
-                     vector<Property> properties, vector<SkillCard*> skillDeckCard,
+                     vector<Property*> properties, vector<SkillCard*> skillDeckCard,
                      vector<LogEntry> log)
     : currentTurn(currentTurn), maxTurn(maxTurn), activePlayerIndex(activePlayerIndex),
       players(players), turnOrder(turnOrder), properties(properties),
@@ -46,7 +47,9 @@ string GameState::serialize() const {
                     ss << " " << card->getValue(); 
                 } 
                 else if (jenis == "DiscountCard") {
-                    ss << " " << card->getValue() << " " << card->getDuration();
+                    if (DiscountCard* dc = dynamic_cast<DiscountCard*>(card)) {
+                        ss << " " << dc->getValue() << " " << dc->getRemainingDuration();
+                    }
                 }
                 
                 ss << " ";
@@ -62,14 +65,14 @@ string GameState::serialize() const {
     }
 
     ss << properties.size() << "\n";
-    for (Property prop : properties) {
-        ss << prop.getCode() << " "        
-           << prop.getType() << " "       
-           << prop.getName() << " " 
-           << prop.getStatus() << " "   
-           << prop.getFMult() << " "       
-           << prop.getFDur() << " "        
-           << prop.getBuildingCount() << "\n"; 
+    for (Property* prop : properties) {
+        ss << prop->getCode() << " "        
+            << prop->getType() << " "       
+            << prop->getName() << " " 
+            << prop->getStatusString() << " " 
+            << prop->getFMult() << " "       
+            << prop->getFDur() << " "        
+            << prop->getBuildingCount() << "\n";
     }
 
 
@@ -153,22 +156,31 @@ void GameState::deserialize(const string& data) {
             
             ss >> kode >> jenis >> pemilik >> status >> fmult >> fdur >> bangunan;
             
-            Property prop; 
-            
+            Property* prop = nullptr; 
 
-            prop.setCode(kode);
-            prop.setType(jenis);
-        
-            if (pemilik != "BANK") {
-                // prop.setOwnerName(pemilik); 
+            // ALOKASI BERDASARKAN TIPE
+            if (jenis == "Street") {
+                prop = new Street();
+            } else if (jenis == "Railroad") {
+                prop = new Railroad();
+            } else if (jenis == "Utility") {
+                prop = new Utility();
             }
+
+            // JIKA VALID, SET VALUENYA
+            if (prop != nullptr) {
+                prop->setCode(kode);
+                
+                if (pemilik != "BANK") {
+                    // prop->setOwner(player_pointer_dari_list); 
+                }
+                
+                prop->setStatusStr(status); // Set via string
+                prop->setFestival(fmult, fdur);
+                prop->setBuildingCount(bangunan);
             
-            prop.setStatus(status);
-            prop.setFestival(fmult, fdur);
-            prop.setBuildingCount(bangunan);
-        
-            
-            properties.push_back(prop);
+                properties.push_back(prop);
+            }
         }
     }
 

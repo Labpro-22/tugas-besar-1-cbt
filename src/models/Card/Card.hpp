@@ -25,4 +25,5 @@ class Card {
         // Getter Functions (Pure Virtual)
         virtual std::string getDescription() const = 0;
         virtual std::string getType() const = 0;
+        virtual int getValue() const = 0;
 };

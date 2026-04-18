@@ -32,7 +32,9 @@ class Railroad : public Property {
         int getPriceValue() const { 
             return buyPrice; 
         }
-
+        std::string getType() const override {
+            return "Railroad";
+        }
         // Getter methods for rentTable
         std::map<int, int> getRentTable() const {
             return rentTable;

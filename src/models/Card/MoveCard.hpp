@@ -20,6 +20,7 @@ class MoveCard : public SkillCard {
         // Must implement functions
         std::string getDescription() const override;
         std::string getType() const override;
+        int getValue() const override;
 
         // Use functions
         void use(Player* p, GameManager* gm) override;

@@ -16,4 +16,7 @@ class CommunityCard : public ActionCard {
         std::string getDescription() const override;
         std::string getType() const override;
         void execute(Player* p, GameManager* gm) override;
+        int getValue() const override {
+            return 0;
+        }
 };

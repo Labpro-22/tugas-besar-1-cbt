@@ -68,3 +68,20 @@ void Property::redeem() {
 
     // later
 }
+
+void Property::setCode(std::string newCode) {
+    code = newCode;
+}
+
+std::string Property::getStatusString() const {
+    if (status == PropertyStatus::BANK) return "BANK";
+    if (status == PropertyStatus::OWNED) return "OWNED";
+    if (status == PropertyStatus::MORTGAGED) return "MORTGAGED";
+    return "BANK"; // Default
+}
+
+void Property::setStatusStr(std::string statusStr) {
+    if (statusStr == "BANK") status = PropertyStatus::BANK;
+    else if (statusStr == "OWNED") status = PropertyStatus::OWNED;
+    else if (statusStr == "MORTGAGED") status = PropertyStatus::MORTGAGED;
+}

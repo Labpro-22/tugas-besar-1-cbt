@@ -22,4 +22,7 @@ class SkillCard : public Card {
 
         // Use function (pure virtual)
         virtual void use(Player* p, GameManager* gm) = 0;
+        virtual int getValue() const override {
+            return 0;
+        }
 };

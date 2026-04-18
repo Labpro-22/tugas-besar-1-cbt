@@ -23,6 +23,10 @@ std::string MoveCard::getType() const {
     return "MoveCard";
 }
 
+int MoveCard::getValue() const {
+    return steps;
+}
+
 void MoveCard::use(Player* p, GameManager* gm){
     (void)p;
     (void)gm;

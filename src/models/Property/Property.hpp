@@ -39,6 +39,24 @@ class Property {
         // Get the mortgage value of the property
         int getMortgageValue() const;
 
+
+        virtual std::string getType() const = 0;
+        std::string getStatusString() const;
+        virtual int getFMult() const {
+            return 1; 
+        }
+        virtual int getFDur() const { 
+            return 0;
+        }
+        virtual int getBuildingCount() const {
+            return 0;
+        } 
+        
+        void setCode(std::string newCode);
+        void setStatusStr(std::string statusStr);
+        virtual void setFestival(int fmult, int fdur) {} 
+        virtual void setBuildingCount(int count) {}
+
         // Mortgage the property, returns the mortgage amount given to the player
         virtual int mortgage();
 

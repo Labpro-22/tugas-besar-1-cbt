@@ -30,6 +30,9 @@ std::string DiscountCard::getType() const {
     return "DiscountCard";
 }
 
+int DiscountCard::getValue() const {
+    return discountPercent; 
+}
 
 // apply discount
 int DiscountCard::applyDiscount(int amount) {

@@ -71,3 +71,7 @@ void Railroad::printTitle() const {
 void Railroad::demolish() {
     // nothing
 }
+
+std::string Railroad::getType() const {
+    return "Railroad";
+}

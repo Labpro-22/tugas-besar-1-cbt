@@ -41,4 +41,7 @@ class Utility : public Property {
         std::map<int, int> getMultiplierTable() const {
             return multiplierTable;
         }
+        std::string getType() const override {
+            return "Utility";
+        }
 };
