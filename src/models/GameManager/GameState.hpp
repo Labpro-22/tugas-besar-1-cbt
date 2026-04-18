@@ -1,4 +1,4 @@
-    #pragma once
+#pragma once
 #include <string>
 #include <vector>
 #include <iostream>
@@ -25,11 +25,11 @@ public:
     GameState(int currentTurn = 0,
     int maxTurn = 0,
     int activePlayerIndex = 0,
-    vector<Player> players,
-    vector<int> turnOrder,
-    vector<Property*> properties,
-    vector<SkillCard*> skillDeckCard,
-    vector<LogEntry> log);
+    vector<Player> players = {},
+    vector<int> turnOrder = {},
+    vector<Property*> properties = {},
+    vector<SkillCard*> skillDeckCard = {},
+    vector<LogEntry> log = {});
 
     string serialize() const;
     void deserialize(const string& data);

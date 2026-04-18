@@ -1,5 +1,13 @@
 #include "GameState.hpp"
 #include "../Card/DiscountCard.hpp"
+#include "../Card/MoveCard.hpp"
+#include "../Card/ShieldCard.hpp"
+#include "../Card/TeleportCard.hpp"
+#include "../Card/LassoCard.hpp"
+#include "../Card/DemolitionCard.hpp"
+#include "../Property/Street.hpp"
+#include "../Property/Railroad.hpp"
+#include "../Property/Utility.hpp"
 #include <sstream> 
 #include <iostream>
 
@@ -121,15 +129,27 @@ void GameState::deserialize(const string& data) {
                 if (jenisKartu == "MoveCard") {
                     int nilaiKartu;
                     ss >> nilaiKartu;
-                    hand.push_back(new MoveCard(nilaiKartu));
+                    hand.push_back(new MoveCard(0, nilaiKartu));
                 } 
                 else if (jenisKartu == "DiscountCard") {
                     int nilaiKartu, durasiKartu;
                     ss >> nilaiKartu >> durasiKartu;
-                    hand.push_back(new DiscountCard(nilaiKartu, durasiKartu));
+                    hand.push_back(new DiscountCard(0, nilaiKartu, durasiKartu));
+                }
+                else if (jenisKartu == "ShieldCard") {
+                    hand.push_back(new ShieldCard());
+                }
+                else if (jenisKartu == "TeleportCard") {
+                    hand.push_back(new TeleportCard());
+                }
+                else if (jenisKartu == "LassoCard") {
+                    hand.push_back(new LassoCard());
+                }
+                else if (jenisKartu == "DemolitionCard") {
+                    hand.push_back(new DemolitionCard());
                 } 
                 else {
-                    hand.push_back(new SkillCard(jenisKartu)); 
+                    hand.push_back(new ShieldCard());
                 }
             }
             vector<Property*> emptyProperties;
@@ -151,10 +171,10 @@ void GameState::deserialize(const string& data) {
     int propertiesSize;
     if (ss >> propertiesSize) {
         for (int i = 0; i < propertiesSize; i++) {
-            string kode, jenis, pemilik, status;
+            string kode, jenis, nama, status;
             int fmult, fdur, bangunan;
             
-            ss >> kode >> jenis >> pemilik >> status >> fmult >> fdur >> bangunan;
+            ss >> kode >> jenis >> nama >> status >> fmult >> fdur >> bangunan;
             
             Property* prop = nullptr; 
 
@@ -170,11 +190,6 @@ void GameState::deserialize(const string& data) {
             // JIKA VALID, SET VALUENYA
             if (prop != nullptr) {
                 prop->setCode(kode);
-                
-                if (pemilik != "BANK") {
-                    // prop->setOwner(player_pointer_dari_list); 
-                }
-                
                 prop->setStatusStr(status); // Set via string
                 prop->setFestival(fmult, fdur);
                 prop->setBuildingCount(bangunan);
@@ -189,8 +204,27 @@ void GameState::deserialize(const string& data) {
         for (int i = 0; i < deckSize; i++) {
             string jenisKartu;
             ss >> jenisKartu;
-
-            skillDeckCards.push_back(new SkillCard(jenisKartu)); 
+            if (jenisKartu == "MoveCard") {
+                skillDeckCards.push_back(new MoveCard());
+            }
+            else if (jenisKartu == "DiscountCard") {
+                skillDeckCards.push_back(new DiscountCard());
+            }
+            else if (jenisKartu == "ShieldCard") {
+                skillDeckCards.push_back(new ShieldCard());
+            }
+            else if (jenisKartu == "TeleportCard") {
+                skillDeckCards.push_back(new TeleportCard());
+            }
+            else if (jenisKartu == "LassoCard") {
+                skillDeckCards.push_back(new LassoCard());
+            }
+            else if (jenisKartu == "DemolitionCard") {
+                skillDeckCards.push_back(new DemolitionCard());
+            }
+            else {
+                skillDeckCards.push_back(new ShieldCard());
+            }
         }
     }
     int logSize;

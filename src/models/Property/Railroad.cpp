@@ -2,7 +2,7 @@
 #include <iostream>
 
 // ctor
-Railroad::Railroad() : Property(), buyPrice(0) {
+Railroad::Railroad() : Property(), buyPrice(0), ownedRailroadCount(1) {
     // Default rent table: key = number of railroad owned, value = rent.
     rentTable[1] = 25;
     rentTable[2] = 50;
@@ -13,8 +13,8 @@ Railroad::Railroad() : Property(), buyPrice(0) {
 // custom ctor
 /// @param buyPrice The purchase price of the railroad
 /// @param rentTable The rule of rent for railroad
-Railroad::Railroad(int buyPrice, std::map<int, int> rentTable)
-    : Property(), buyPrice(buyPrice), rentTable(rentTable) {}
+Railroad::Railroad(int buyPrice, const std::map<int, int>& rentTable)
+    : Property(), buyPrice(buyPrice), rentTable(rentTable), ownedRailroadCount(1) {}
 
 // dtor
 Railroad::~Railroad() {}
@@ -32,17 +32,36 @@ int Railroad::getPropertyDetail() const {
         return 0; // Unowned property doesn't charge rent
     }
 
+    return resolveRent(ownedRailroadCount);
+}
+
+// Resolve rent by owned railroad count with safe fallback.
+int Railroad::resolveRent(int ownedCount) const {
     if (rentTable.empty()) {
         return 0;
     }
 
-    // placeholder
+    auto exact = rentTable.find(ownedCount);
+    if (exact != rentTable.end()) {
+        return exact->second;
+    }
+
     auto singleRailroadRent = rentTable.find(1);
     if (singleRailroadRent != rentTable.end()) {
         return singleRailroadRent->second;
     }
 
     return rentTable.begin()->second;
+}
+
+// Set runtime-owned railroad count for rent calculation context.
+void Railroad::setOwnedRailroadCount(int count) {
+    if (count < 1) {
+        ownedRailroadCount = 1;
+        return;
+    }
+
+    ownedRailroadCount = count;
 }
 
 // Print the title information of this Railroad
@@ -70,8 +89,4 @@ void Railroad::printTitle() const {
 // Railroad cannot be demolished
 void Railroad::demolish() {
     // nothing
-}
-
-std::string Railroad::getType() const {
-    return "Railroad";
 }

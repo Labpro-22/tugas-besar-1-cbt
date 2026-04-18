@@ -1,4 +1,8 @@
 #include "LassoCard.hpp"
+#include "../GameManager/Player.hpp"
+#include "../GameManager/GameManager.hpp"
+#include <iostream>
+#include <vector>
 
 // ctor
 LassoCard::LassoCard() : SkillCard() {}
@@ -19,8 +23,48 @@ std::string LassoCard::getType() const {
 }
 
 void LassoCard::use(Player* p, GameManager* gm) {
-    (void)p;
-    (void)gm;
+    if (p == nullptr || gm == nullptr) {
+        return;
+    }
+
+    if (!p->canUseAbility()) {
+        gm->addLogEntry(p->getUsername() + " gagal menggunakan LassoCard (ability sudah dipakai)");
+        return;
+    }
+
+    std::vector<Player*> candidates;
+    for (Player& player : gm->getPlayers()) {
+        if (&player == p) {
+            continue;
+        }
+        if (player.getStatus() != ACTIVE) {
+            continue;
+        }
+        candidates.push_back(&player);
+    }
+
+    if (candidates.empty()) {
+        std::cout << "Tidak ada target valid untuk LassoCard.\n";
+        return;
+    }
+
+    std::cout << "Pilih target LassoCard:\n";
+    for (size_t i = 0; i < candidates.size(); ++i) {
+        std::cout << i << ". " << candidates[i]->getUsername()
+                  << " (tile " << candidates[i]->getPosition() << ")\n";
+    }
+
+    int choice = -1;
+    std::cin >> choice;
+    if (choice < 0 || choice >= static_cast<int>(candidates.size())) {
+        std::cout << "Pilihan target tidak valid.\n";
+        return;
+    }
+
+    Player* target = candidates[choice];
+    gm->movePlayerTo(*target, p->getPosition());
+    gm->addLogEntry(p->getUsername() + " menarik " + target->getUsername() + " dengan LassoCard");
     markAsUsed();
-    // implement effect through GameManager (later)
+    p->setUsedAbility();
+    p->removeCard(this);
 }

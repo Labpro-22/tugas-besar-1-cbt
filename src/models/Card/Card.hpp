@@ -1,10 +1,6 @@
 #pragma once
 #include <string>
 
-// Placeholder (wait for others to implement)
-class Player;
-class GameManager;
-
 class Card {
     private:
         static int nextCardId;

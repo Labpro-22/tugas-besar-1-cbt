@@ -1,4 +1,6 @@
 #include "ChanceCard.hpp"
+#include "../GameManager/Player.hpp"
+#include "../GameManager/GameManager.hpp"
 
 // ctor
 ChanceCard::ChanceCard(int cardId, ChanceCardType type) : ActionCard(cardId), chanceType(type) {}
@@ -25,7 +27,25 @@ std::string ChanceCard::getType() const {
 }
 
 void ChanceCard::execute(Player* p, GameManager* gm) {
-    (void)p;
-    (void)gm;
-    // implement effect through GameManager (later)
+    if (p == nullptr || gm == nullptr) {
+        return;
+    }
+
+    switch (chanceType) {
+        case ChanceCardType::GO_TO_NEAREST_STATION: {
+            const int destination = gm->getNearestStationPosition(p->getPosition());
+            gm->movePlayerTo(*p, destination);
+            gm->addLogEntry(p->getUsername() + " menuju stasiun terdekat");
+            break;
+        }
+        case ChanceCardType::MOVE_BACK_3: {
+            gm->movePlayerTo(*p, p->getPosition() - 3);
+            gm->addLogEntry(p->getUsername() + " mundur 3 petak");
+            break;
+        }
+        case ChanceCardType::GO_TO_JAIL: {
+            gm->sendPlayerToJail(*p);
+            break;
+        }
+    }
 }

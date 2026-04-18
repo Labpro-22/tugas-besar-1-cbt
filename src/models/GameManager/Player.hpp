@@ -4,11 +4,10 @@
 #include <string>
 #include <algorithm>
 #include "../Card/Card.hpp"
-#include "../Card/SkillCard.hpp"
-#include "JailManager.hpp"
 #include "../Property/Property.hpp"
-#include "BankruptcyHandler.hpp"
 using namespace std;
+
+class JailManager;
 
 // struct PlayerStatus {
 //     enum Kategori {
@@ -34,9 +33,8 @@ class Player{
         bool hasShield;
         int discountPercentage;
         int discountRemainingTurns;
-        BankruptcyHandler BH;
     public :
-        Player(string username, int startingCash, int startPosition = 0, PlayerStatus state, vector<Card*> startHand, vector<Property*> startProperty, int usedAbility = 0, bool shield = false, int discPercent = 0, int discRemain = 0);
+        Player(string username, int startingCash, int startPosition = 0, PlayerStatus state = ACTIVE, vector<Card*> startHand = {}, vector<Property*> startProperty = {}, int usedAbility = 0, bool shield = false, int discPercent = 0, int discRemain = 0);
         string getUsername();
         int getCash() const;
         int getPosition() const;
@@ -49,8 +47,8 @@ class Player{
         void removeProperty(Property* prop);
         vector<Property*>& getProperties();
         int getPropertyCount() const;
-        void addCard(SkillCard* card);
-        void removeCard(SkillCard* card);
+        void addCard(Card* card);
+        void removeCard(Card* card);
         vector<Card*>& getHand(); 
         int getCardCount() const;
         bool canUseAbility() const;
@@ -64,7 +62,7 @@ class Player{
         void activateShield();
         void deactivateShield();
         bool hasShieldActive() const;
-        void applyDiscount(int pct);
+        void applyDiscount(int pct, int duration = 1);
         void tickDiscount();
         int getDiscountPercentage() const;
         bool hasDiscount() const;

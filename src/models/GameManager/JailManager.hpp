@@ -8,7 +8,7 @@ using namespace std;
 
 class JailManager{
     private :
-        map<Player, int> jailTurns;
+        map<string, int> jailTurns;
         int maxJailTurns;
         int jailFine;
         vector<Player> prisoners;

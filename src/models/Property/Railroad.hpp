@@ -6,12 +6,16 @@ class Railroad : public Property {
     private:
         int buyPrice;
         std::map<int, int> rentTable;
+        int ownedRailroadCount;
+
+        // Resolve rent by owned railroad count with safe fallback.
+        int resolveRent(int ownedCount) const;
     public:
         // ctor 
         Railroad();
 
         // custom ctor
-        Railroad(int buyPrice, std::map<int, int> rentTable);
+        Railroad(int buyPrice, const std::map<int, int>& rentTable);
 
         // dtor
         ~Railroad();
@@ -21,6 +25,9 @@ class Railroad : public Property {
 
         // Get the property detail information, returns rent based on rentTable
         int getPropertyDetail() const override;
+
+        // Set runtime-owned railroad count for rent calculation context.
+        void setOwnedRailroadCount(int count);
 
         // Print the title information of this railroad
         void printTitle() const override;
@@ -36,7 +43,7 @@ class Railroad : public Property {
             return "Railroad";
         }
         // Getter methods for rentTable
-        std::map<int, int> getRentTable() const {
+        const std::map<int, int>& getRentTable() const {
             return rentTable;
         }
 };

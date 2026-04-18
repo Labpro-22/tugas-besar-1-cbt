@@ -1,4 +1,6 @@
 #include "MoveCard.hpp"
+#include "../GameManager/Player.hpp"
+#include "../GameManager/GameManager.hpp"
 
 // ctor
 MoveCard::MoveCard() : SkillCard(), steps(0) {}
@@ -28,8 +30,24 @@ int MoveCard::getValue() const {
 }
 
 void MoveCard::use(Player* p, GameManager* gm){
-    (void)p;
-    (void)gm;
+    if (p == nullptr || gm == nullptr) {
+        return;
+    }
+
+    if (!p->canUseAbility()) {
+        gm->addLogEntry(p->getUsername() + " gagal menggunakan MoveCard (ability sudah dipakai)");
+        return;
+    }
+
+    if (p == &gm->getCurrentPlayer()) {
+        gm->moveCurrentPlayer(steps);
+    } else {
+        gm->movePlayerTo(*p, p->getPosition() + steps);
+    }
+
     markAsUsed();
-    // implement effect through GameManager (later)
+    p->setUsedAbility();
+    p->removeCard(this);
+
+    gm->addLogEntry("MoveCard digunakan sebanyak " + std::to_string(steps) + " langkah");
 }

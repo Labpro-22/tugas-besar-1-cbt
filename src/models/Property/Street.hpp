@@ -79,10 +79,22 @@ class Street : public Property {
         const std::vector<int>& getRentLevels() const { 
             return rentLevels; 
         }
-        std::string getType() const override { return "Street"; }
-        int getFMult() const override { return festivalMultiplier; }
-        int getFDur() const override { return festivalDuration; }
-        int getBuildingCount() const override { return static_cast<int>(level); }
+        
+        std::string getType() const override { 
+            return "Street"; 
+        }
+
+        int getFMult() const override { 
+            return festivalMultiplier; 
+        }
+
+        int getFDur() const override { 
+            return festivalDuration; 
+        }
+
+        int getBuildingCount() const override { 
+            return static_cast<int>(level); 
+        }
 
         void setFestival(int fmult, int fdur) override {
             festivalMultiplier = fmult;

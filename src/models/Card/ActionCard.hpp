@@ -1,5 +1,7 @@
 #pragma once
 #include "Card.hpp"
+#include "../GameManager/Player.hpp"
+#include "../GameManager/GameManager.hpp"
 
 class ActionCard : public Card {
     public:

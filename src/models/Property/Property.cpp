@@ -1,5 +1,4 @@
 #include "Property.hpp"
-#include <iostream>
 
 // default ctor (status = "BANK")
 Property::Property() : code(""), name(""), status(PropertyStatus::BANK), mortgageValue(0), owner(nullptr) {}
@@ -65,8 +64,6 @@ void Property::redeem() {
     if (status == PropertyStatus::MORTGAGED) {
         status = PropertyStatus::OWNED;
     }
-
-    // later
 }
 
 void Property::setCode(std::string newCode) {

@@ -1,9 +1,10 @@
 #include "Player.hpp"
+#include "JailManager.hpp"
 
 // posisi dan properties belum sesuai dengan load
-Player::Player(string username, int startingCash, int startPosition = 0, PlayerStatus state, vector<Card*> startHand, vector<Property*> startProperty, int usedAbility = 0, bool shield = false, int discPercent = 0, int discRemain = 0) 
+Player::Player(string username, int startingCash, int startPosition, PlayerStatus state, vector<Card*> startHand, vector<Property*> startProperty, int usedAbility, bool shield, int discPercent, int discRemain) 
 : username(username), cash(startingCash), position(startPosition), 
-status(state), hand(startHand), properties(startProperty), usedAbilityThisTurn(false),
+status(state), hand(startHand), properties(startProperty), usedAbilityThisTurn(usedAbility != 0),
 hasShield(shield), discountPercentage(discPercent), discountRemainingTurns(discRemain){}
 string Player::getUsername() { 
     return username;
@@ -58,11 +59,11 @@ vector<Property*>& Player::getProperties() { return properties; }
 int Player::getPropertyCount() const { return properties.size(); }
 
 
-void Player::addCard(SkillCard* card) {
+void Player::addCard(Card* card) {
     hand.push_back(card);
 }
 
-void Player::removeCard(SkillCard* card) {
+void Player::removeCard(Card* card) {
     auto it = std::find(hand.begin(), hand.end(), card);
     if (it != hand.end()) {
         hand.erase(it);
@@ -89,13 +90,12 @@ void Player::setUsedAbility() {
     usedAbilityThisTurn = true;
 }
 
-// Not done
 void Player::resetTurn() {
     usedAbilityThisTurn = false;
+    deactivateShield();
     tickDiscount();
 }
 
-//Not done
 void Player::setBankrupt() {
     status = BANKRUPT;
 }
@@ -126,10 +126,9 @@ bool Player::hasShieldActive() const {
     return hasShield; 
 }
 
-// Belum selesai
-void Player::applyDiscount(int pct) {
+void Player::applyDiscount(int pct, int duration) {
     discountPercentage = pct;
-    discountRemainingTurns = 1;
+    discountRemainingTurns = (duration > 0) ? duration : 1;
 }
 
 void Player::tickDiscount() {
@@ -147,23 +146,23 @@ int Player::getDiscountPercentage() const {
 bool Player::hasDiscount() const { 
     return discountPercentage > 0; 
 }
-// Later
-// int Player::getRailroadCount() const {
-//     int count = 0;
-//     for (Property* prop : properties) {
-//         if (prop->getCategory() == "Railroad") {
-//             count++;
-//         }
-//     }
-//     return count;
-// }
 
-// int Player::getUtilityCount() const {
-//     int count = 0;
-//     for (Property* prop : properties) {
-//         if (prop->getCategory() == "Utility") {
-//             count++;
-//         }
-//     }
-//     return count;
-// }
+int Player::getRailroadCount() const {
+    int count = 0;
+    for (Property* prop : properties) {
+        if (prop != nullptr && prop->getType() == "Railroad") {
+            ++count;
+        }
+    }
+    return count;
+}
+
+int Player::getUtilityCount() const {
+    int count = 0;
+    for (Property* prop : properties) {
+        if (prop != nullptr && prop->getType() == "Utility") {
+            ++count;
+        }
+    }
+    return count;
+}

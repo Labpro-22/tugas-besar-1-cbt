@@ -11,10 +11,9 @@ class Property {
         PropertyStatus status;
         int mortgageValue;
         Player* owner;
-    protected:
+    public:
         // Set the owner of this property
         void setOwner(Player* p);
-    public:
         // default ctor (status = "BANK")
         Property();
 
@@ -39,8 +38,6 @@ class Property {
         // Get the mortgage value of the property
         int getMortgageValue() const;
 
-
-        virtual std::string getType() const = 0;
         std::string getStatusString() const;
         virtual int getFMult() const {
             return 1; 
@@ -76,4 +73,7 @@ class Property {
 
         // Demolish the property
         virtual void demolish() = 0;
+
+        // return type of property
+        virtual std::string getType() const = 0;
 };
