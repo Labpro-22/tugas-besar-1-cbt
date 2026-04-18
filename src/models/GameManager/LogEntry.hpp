@@ -1,9 +1,8 @@
 #pragma once
-#include <string>
-#include <vector>
 #include <iostream>
 #include <map>
-#include "Player.hpp"
+#include <string>
+#include <vector>
 using namespace std;
 
 class LogEntry {

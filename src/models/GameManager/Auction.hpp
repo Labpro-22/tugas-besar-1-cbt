@@ -26,5 +26,5 @@ class Auction{
         bool submitBid(Player* player, int amount);
         void pass(Player* player);
         Player* getWinner();
-        int getWinningBid(); //Perlukah?
+        int getWinningBid();
 };

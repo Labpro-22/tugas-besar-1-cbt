@@ -14,22 +14,21 @@ std::string LassoCard::getDescription() const {
     return "Pulls a target player to your tile.";
 }
 
-std::string LassoCard::getType() const {
-    return "LassoCard";
-}
+std::string LassoCard::getType() const { return "LassoCard"; }
 
-void LassoCard::use(Player* p, GameManager* gm) {
+void LassoCard::use(Player *p, GameManager *gm) {
     if (p == nullptr || gm == nullptr) {
         return;
     }
 
     if (!p->canUseAbility()) {
-        gm->addLogEntry(p->getUsername() + " gagal menggunakan LassoCard (ability sudah dipakai)");
+        gm->addLogEntry(p->getUsername() +
+            " gagal menggunakan LassoCard (ability sudah dipakai)");
         return;
     }
 
-    std::vector<Player*> candidates;
-    for (Player& player : gm->getPlayers()) {
+    std::vector<Player *> candidates;
+    for (Player &player : gm->getPlayers()) {
         if (&player == p) {
             continue;
         }
@@ -46,8 +45,8 @@ void LassoCard::use(Player* p, GameManager* gm) {
 
     std::cout << "Pilih target LassoCard:\n";
     for (size_t i = 0; i < candidates.size(); ++i) {
-        std::cout << i << ". " << candidates[i]->getUsername()
-                  << " (tile " << candidates[i]->getPosition() << ")\n";
+        std::cout << i << ". " << candidates[i]->getUsername() << " (tile "
+            << candidates[i]->getPosition() << ")\n";
     }
 
     int choice = -1;
@@ -57,9 +56,11 @@ void LassoCard::use(Player* p, GameManager* gm) {
         return;
     }
 
-    Player* target = candidates[choice];
+    Player *target = candidates[choice];
     target->setPosition(p->getPosition());
-    gm->addLogEntry(p->getUsername() + " menarik " + target->getUsername() + " dengan LassoCard");
+    gm->addLogEntry(p->getUsername() + " menarik " + target->getUsername() +
+        " dengan LassoCard");
     markAsUsed();
     p->setUsedAbility();
     p->removeCard(this);
+}

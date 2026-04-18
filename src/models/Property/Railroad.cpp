@@ -29,7 +29,7 @@ int Railroad::getBuyPrice() const {
 /// @return The rent amount to be paid based on owned railroad count (fallback to first entry).
 int Railroad::getPropertyDetail() const {
     if (getOwner() == nullptr) {
-        return 0; // Unowned property doesn't charge rent
+        return 0;
     }
 
     if (rentTable.empty()) {

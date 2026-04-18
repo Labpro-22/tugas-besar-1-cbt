@@ -6,13 +6,15 @@
 #include <string>
 #include <vector>
 
+class Configuration;
+
 class Board {
-  private:
+private:
     // Atribut kelas
     std::vector<Tile *> tiles;
     int tileCount;
 
-  public:
+public:
     // Konstruktor dan destruktor
     Board();
     ~Board();

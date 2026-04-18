@@ -1,76 +1,67 @@
 #include "BankruptcyHandler.hpp"
+#include "../Property/Property.hpp"
+#include "LiquidationPanel.hpp"
+#include "Player.hpp"
 
+BankruptcyHandler::BankruptcyHandler(Player &debtor, Player *creditor, int debt)
+    : debtor(debtor), creditor(creditor), debtAmount(debt),
+        panel(new LiquidationPanel(&debtor, debt)) {}
 
-BankruptcyHandler::BankruptcyHandler(Player& debtor,
-                                     Player* creditor,
-                                     int debt)
-    : debtor(debtor),
-      creditor(creditor),
-      debtAmount(debt),
-      panel(&debtor, debt)
-{
-}
+BankruptcyHandler::~BankruptcyHandler() { delete panel; }
 
-int BankruptcyHandler::calculateMaxLiquidation(){
+int BankruptcyHandler::calculateMaxLiquidation() {
 
     int total = 0;
     total += debtor.getCash();
 
+    vector<Property *> sellList = panel->getSellableProperties();
 
-    vector<Property*> sellList = panel.getSellableProperties();
-
-    for (int i = 0; i < sellList.size(); i++) {
+    for (size_t i = 0; i < sellList.size(); i++) {
         total += sellList[i]->getBuyPrice();
     }
-    // vector<Property*> mortgageList = panel.getMortgageableProperties();
-
-    // for (int i = 0; i < mortgageList.size(); i++) {
-    //     total += mortgageList[i]->getMortgageValue();
-    // }
     return total;
 }
-bool BankruptcyHandler::canCoverDebt(){
+bool BankruptcyHandler::canCoverDebt() {
     return calculateMaxLiquidation() >= debtAmount;
 }
-bool BankruptcyHandler::initiateLiquidation(){
-    if(panel.isDebtSatisfied()){
+bool BankruptcyHandler::initiateLiquidation() {
+    if (panel->isDebtSatisfied()) {
         return true;
     }
 
-    vector<Property*> sellList = panel.getSellableProperties();
+    vector<Property *> sellList = panel->getSellableProperties();
 
-    for (int i = 0; i < sellList.size(); i++) {
-        if (panel.isDebtSatisfied()){
+    for (size_t i = 0; i < sellList.size(); i++) {
+        if (panel->isDebtSatisfied()) {
             break;
         }
-        panel.sellToBank(sellList[i]);
+        panel->sellToBank(sellList[i]);
     }
 
-    vector<Property*> mortgageList = panel.getMortgageableProperties();
+    vector<Property *> mortgageList = panel->getMortgageableProperties();
 
-    for (int i = 0; i < mortgageList.size(); i++) {
-        if (panel.isDebtSatisfied()){
+    for (size_t i = 0; i < mortgageList.size(); i++) {
+        if (panel->isDebtSatisfied()) {
             break;
         }
-        panel.mortgage(mortgageList[i]);
+        panel->mortgage(mortgageList[i]);
     }
 
-    if (panel.isDebtSatisfied()) {
+    if (panel->isDebtSatisfied()) {
         debtor.reduceCash(debtAmount);
         return true;
     }
     declareBankrupt();
     return false;
 }
-void BankruptcyHandler::sellPropertyToBank(Property& prop){
-    panel.sellToBank(&prop);
+void BankruptcyHandler::sellPropertyToBank(Property &prop) {
+    panel->sellToBank(&prop);
 }
-void BankruptcyHandler::mortgageProperty(Property& prop){
-    panel.mortgage(&prop);
+void BankruptcyHandler::mortgageProperty(Property &prop) {
+    panel->mortgage(&prop);
 }
 
-void BankruptcyHandler::declareBankrupt()
-{
+void BankruptcyHandler::declareBankrupt() {
     if (creditor != nullptr) {
         transferAssets();
     } else {
@@ -78,14 +69,13 @@ void BankruptcyHandler::declareBankrupt()
         auctionRepossessedProperties();
     }
 
-    debtor.setStatus(BANKRUPT);
+    debtor.setBankrupt();
 }
 
-void BankruptcyHandler::transferAssets()
-{
-    vector<Property*> props = debtor.getProperties();
+void BankruptcyHandler::transferAssets() {
+    vector<Property *> props = debtor.getProperties();
 
-    for (int i = 0; i < props.size(); i++) {
+    for (size_t i = 0; i < props.size(); i++) {
         creditor->addProperty(props[i]);
         props[i]->setOwner(creditor);
     }
@@ -93,21 +83,19 @@ void BankruptcyHandler::transferAssets()
     creditor->addCash(debtor.getCash());
     debtor.reduceCash(debtor.getCash());
 }
-void BankruptcyHandler::repossessProperties()
-{
-    vector<Property*> props = debtor.getProperties();
+void BankruptcyHandler::repossessProperties() {
+    vector<Property *> props = debtor.getProperties();
 
-    for (int i = 0; i < props.size(); i++) {
+    for (size_t i = 0; i < props.size(); i++) {
         props[i]->setOwner(nullptr);
     }
 
-    for (int i = 0; i < props.size(); i++) {
+    for (size_t i = 0; i < props.size(); i++) {
         debtor.removeProperty(props[i]);
     }
     debtor.reduceCash(debtor.getCash());
 }
 
-void BankruptcyHandler::auctionRepossessedProperties()
-{
+void BankruptcyHandler::auctionRepossessedProperties() {
     cout << "Properti sitaan masuk ke pelelangan." << endl;
 }

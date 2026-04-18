@@ -1,109 +1,91 @@
 #pragma once
-#include <vector>
-#include <iostream>
-#include <algorithm>
-#include "Property.hpp"
-#include "ColorGroup.hpp"
 #include "BuildingLevel.hpp"
-#include "../GameManager/Player.hpp"
+#include "ColorGroup.hpp"
+#include "Property.hpp"
+#include <algorithm>
+#include <iostream>
+#include <vector>
+
+class Player;
 
 class Street : public Property {
-    private:
-        int buyPrice;
-        ColorGroup color;
-        std::vector<int> rentLevels;
-        int houseCost;
-        int hotelCost;
-        BuildingLevel level;
-        int festivalMultiplier;
-        int festivalDuration;
-    public:
-        // ctor (default color COKLAT)
-        Street();
+private:
+    int buyPrice;
+    ColorGroup color;
+    std::vector<int> rentLevels;
+    int houseCost;
+    int hotelCost;
+    BuildingLevel level;
+    int festivalMultiplier;
+    int festivalDuration;
 
-        // custom ctor
-        Street(int buyPrice, ColorGroup color, std::vector<int> rentLevels, int houseCost, int hotelCost, BuildingLevel level, int festivalMultiplier);
+public:
+    // ctor (default color COKLAT)
+    Street();
 
-        // dtor
-        ~Street();
+    // custom ctor
+    Street(int buyPrice, ColorGroup color, std::vector<int> rentLevels,
+        int houseCost, int hotelCost, BuildingLevel level,
+        int festivalMultiplier);
 
-        // Get the purchase price
-        int getBuyPrice() const override;
+    // dtor
+    ~Street();
 
-        // Get the property detail information, returns rent based on building level
-        int getPropertyDetail() const override;
+    // Get the purchase price
+    int getBuyPrice() const override;
 
-        // Print the title information of this street
-        void printTitle() const override;
+    // Get the property detail information, returns rent based on building level
+    int getPropertyDetail() const override;
 
-        // Upgrade this street to hotel level
-        void upgradeHotel();
+    // Print the title information of this street
+    void printTitle() const override;
 
-        // Check if this street is monopolized (all same color owned by one player)
-        bool isMonopolized() const;
+    // Upgrade this street to hotel level
+    void upgradeHotel();
 
-        // Activate any special effect on this street
-        void activateEffect(int multiplier);
+    // Check if this street is monopolized (all same color owned by one player)
+    bool isMonopolized() const;
 
-        // Demolish buildings from this street
-        void demolish() override;
+    // Activate any special effect on this street
+    void activateEffect(int multiplier);
 
-        // Getter methods for buyPrice
-        int getPriceValue() const { 
-            return buyPrice; 
-        }
+    // Demolish buildings from this street
+    void demolish() override;
 
-        // Get the color group of this street
-        ColorGroup getColorGroup() const { 
-            return color; 
-        }
+    // Getter methods for buyPrice
+    int getPriceValue() const { return buyPrice; }
 
-        // Get the house cost 
-        int getHouseCost() const { 
-            return houseCost; 
-        }
+    // Get the color group of this street
+    ColorGroup getColorGroup() const { return color; }
 
-        // Get the hotel cost 
-        int getHotelCost() const { 
-            return hotelCost; 
-        }
+    // Get the house cost
+    int getHouseCost() const { return houseCost; }
 
-        // Get the current building level 
-        BuildingLevel getBuildingLevel() const { 
-            return level; 
-        }
+    // Get the hotel cost
+    int getHotelCost() const { return hotelCost; }
 
-        // Get the festival multiplier value
-        int getFestivalMultiplier() const { 
-            return festivalMultiplier; 
-        }
+    // Get the current building level
+    BuildingLevel getBuildingLevel() const { return level; }
 
-        // Get the rent levels vector 
-        const std::vector<int>& getRentLevels() const { 
-            return rentLevels; 
-        }
-        std::string getType() const override { 
-            return "Street"; 
-        }
+    // Get the festival multiplier value
+    int getFestivalMultiplier() const { return festivalMultiplier; }
 
-        int getFMult() const override { 
-            return festivalMultiplier; 
-        }
+    // Get the rent levels vector
+    const std::vector<int> &getRentLevels() const { return rentLevels; }
+    std::string getType() const override { return "Street"; }
 
-        int getFDur() const override { 
-            return festivalDuration; 
-        }
+    int getFMult() const override { return festivalMultiplier; }
 
-        int getBuildingCount() const override { 
-            return static_cast<int>(level); 
-        }
+    int getFDur() const override { return festivalDuration; }
 
-        void setFestival(int fmult, int fdur) override {
-            festivalMultiplier = fmult;
-            festivalDuration = fdur;
-        }
+    int getBuildingCount() const override { return static_cast<int>(level); }
 
-        void setBuildingCount(int count) override {
-            level = static_cast<BuildingLevel>(count); // Asumsi Enum BuildingLevel (0=Tanah, 1=H1, dst)
-        }
+    void setFestival(int fmult, int fdur) override {
+        festivalMultiplier = fmult;
+        festivalDuration = fdur;
+    }
+
+    void setBuildingCount(int count) override {
+        level = static_cast<BuildingLevel>(count);
+    }
 };

@@ -1,25 +1,26 @@
 #include "GameState.hpp"
-#include "../Card/MoveCard.hpp"
+#include "../Card/DemolitionCard.hpp"
 #include "../Card/DiscountCard.hpp"
+#include "../Card/LassoCard.hpp"
+#include "../Card/MoveCard.hpp"
 #include "../Card/ShieldCard.hpp"
 #include "../Card/TeleportCard.hpp"
-#include "../Card/LassoCard.hpp"
-#include "../Card/DemolitionCard.hpp"
-#include "../Property/Street.hpp"
 #include "../Property/Railroad.hpp"
+#include "../Property/Street.hpp"
 #include "../Property/Utility.hpp"
-#include <sstream> 
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
 GameState::GameState(int currentTurn, int maxTurn, int activePlayerIndex,
-                     vector<Player> players, vector<int> turnOrder,
-                     vector<Property*> properties, vector<SkillCard*> skillDeckCard,
-                     vector<LogEntry> log)
-    : currentTurn(currentTurn), maxTurn(maxTurn), activePlayerIndex(activePlayerIndex),
-      players(players), turnOrder(turnOrder), properties(properties),
-      skillDeckCards(skillDeckCard), log(log) {}
+    vector<Player> players, vector<int> turnOrder,
+    vector<Property *> properties,
+    vector<SkillCard *> skillDeckCard, vector<LogEntry> log)
+    : currentTurn(currentTurn), maxTurn(maxTurn),
+        activePlayerIndex(activePlayerIndex), players(players),
+        turnOrder(turnOrder), properties(properties),
+        skillDeckCards(skillDeckCard), log(log) {}
 
 string GameState::serialize() const {
     stringstream ss;
@@ -29,87 +30,80 @@ string GameState::serialize() const {
     ss << players.size() << "\n";
     for (Player p : players) {
         // Data dasar pemain
-        ss << p.getUsername() << " " 
-           << p.getCash() << " " 
-           << p.getPosition() << " ";
-           
-        
-        if (p.getStatus() == ACTIVE){
+        ss << p.getUsername() << " " << p.getCash() << " " << p.getPosition()
+            << " ";
+
+        if (p.getStatus() == ACTIVE) {
             ss << "ACTIVE ";
-        }
-        else if (p.getStatus() == BANKRUPT){
+        } else if (p.getStatus() == BANKRUPT) {
             ss << "BANKRUPT ";
-        }
-        else if (p.getStatus() == JAILED) {
+        } else if (p.getStatus() == JAILED) {
             ss << "JAILED ";
         }
         int cardCount = p.getCardCount();
         ss << cardCount << " ";
-        
+
         if (cardCount > 0) {
             ss << " ";
-            for (Card* card : p.getHand()) {
-                string jenis = card->getType(); 
+            for (Card *card : p.getHand()) {
+                string jenis = card->getType();
                 ss << jenis;
                 if (jenis == "MoveCard") {
-                    ss << " " << card->getValue(); 
-                } 
-                else if (jenis == "DiscountCard") {
-                    if (DiscountCard* dc = dynamic_cast<DiscountCard*>(card)) {
+                    ss << " " << card->getValue();
+                } else if (jenis == "DiscountCard") {
+                    if (DiscountCard *dc = dynamic_cast<DiscountCard *>(card)) {
                         ss << " " << dc->getValue() << " " << dc->getRemainingDuration();
                     }
                 }
-                
+
                 ss << " ";
             }
         }
         ss << "\n";
     }
 
-
     ss << turnOrder.size() << "\n";
     for (int t : turnOrder) {
-        ss << t << "\n"; 
+        ss << t << "\n";
     }
 
     ss << properties.size() << "\n";
-    for (Property* prop : properties) {
-        ss << prop->getCode() << " "        
-            << prop->getType() << " "       
-            << prop->getName() << " " 
-            << prop->getStatusString() << " " 
-            << prop->getFMult() << " "       
-            << prop->getFDur() << " "        
-            << prop->getBuildingCount() << "\n";
+    for (Property *prop : properties) {
+        ss << prop->getCode() << " " << prop->getType() << " " << prop->getName()
+            << " " << prop->getStatusString() << " " << prop->getFMult() << " "
+            << prop->getFDur() << " " << prop->getBuildingCount() << "\n";
     }
 
-
     ss << skillDeckCards.size() << "\n";
-    for (SkillCard* card : skillDeckCards) {
-        ss << card->getType() << "\n"; 
+    for (SkillCard *card : skillDeckCards) {
+        ss << card->getType() << "\n";
     }
 
     ss << log.size() << "\n";
     for (LogEntry entry : log) {
-        ss << entry.turn << " " 
-           << entry.username << " " 
-           << entry.actionType << " " 
-           << entry.detail << "\n";
+        ss << entry.turn << " " << entry.username << " " << entry.actionType << " "
+            << entry.detail << "\n";
     }
 
     return ss.str();
 }
 
-void GameState::deserialize(const string& data) {
+void GameState::deserialize(const string &data) {
     stringstream ss(data);
 
-    auto createSkillCardByType = [](const string& typeName) -> SkillCard* {
-        if (typeName == "MoveCard") return new MoveCard();
-        if (typeName == "DiscountCard") return new DiscountCard();
-        if (typeName == "ShieldCard") return new ShieldCard();
-        if (typeName == "TeleportCard") return new TeleportCard();
-        if (typeName == "LassoCard") return new LassoCard();
-        if (typeName == "DemolitionCard") return new DemolitionCard();
+    auto createSkillCardByType = [](const string &typeName) -> SkillCard * {
+        if (typeName == "MoveCard")
+            return new MoveCard();
+        if (typeName == "DiscountCard")
+            return new DiscountCard();
+        if (typeName == "ShieldCard")
+            return new ShieldCard();
+        if (typeName == "TeleportCard")
+            return new TeleportCard();
+        if (typeName == "LassoCard")
+            return new LassoCard();
+        if (typeName == "DemolitionCard")
+            return new DemolitionCard();
         return nullptr;
     };
 
@@ -126,13 +120,15 @@ void GameState::deserialize(const string& data) {
         for (int i = 0; i < playersSize; i++) {
             string username, statusStr;
             int cash, position, cardCount;
-            
+
             ss >> username >> cash >> position >> statusStr >> cardCount;
             PlayerStatus status = ACTIVE;
-            if (statusStr == "BANKRUPT") status = BANKRUPT;
-            else if (statusStr == "JAILED") status = JAILED;
-            vector<Card*> hand; 
-            
+            if (statusStr == "BANKRUPT")
+                status = BANKRUPT;
+            else if (statusStr == "JAILED")
+                status = JAILED;
+            vector<Card *> hand;
+
             for (int c = 0; c < cardCount; c++) {
                 string jenisKartu;
                 ss >> jenisKartu;
@@ -140,25 +136,23 @@ void GameState::deserialize(const string& data) {
                     int nilaiKartu;
                     ss >> nilaiKartu;
                     hand.push_back(new MoveCard(0, nilaiKartu));
-                } 
-                else if (jenisKartu == "DiscountCard") {
+                } else if (jenisKartu == "DiscountCard") {
                     int nilaiKartu, durasiKartu;
                     ss >> nilaiKartu >> durasiKartu;
                     hand.push_back(new DiscountCard(0, nilaiKartu, durasiKartu));
-                } 
-                else {
-                    SkillCard* parsed = createSkillCardByType(jenisKartu);
+                } else {
+                    SkillCard *parsed = createSkillCardByType(jenisKartu);
                     if (parsed != nullptr) {
                         hand.push_back(parsed);
                     }
                 }
             }
-            vector<Property*> emptyProperties;
-            Player p(username, cash, position, status, hand, emptyProperties, 0, false, 0, 0);
+            vector<Property *> emptyProperties;
+            Player p(username, cash, status, position, hand, emptyProperties, 0,
+                false, 0, 0);
             players.push_back(p);
         }
     }
-
 
     int turnOrderSize;
     if (ss >> turnOrderSize) {
@@ -174,10 +168,10 @@ void GameState::deserialize(const string& data) {
         for (int i = 0; i < propertiesSize; i++) {
             string kode, jenis, pemilik, status;
             int fmult, fdur, bangunan;
-            
+
             ss >> kode >> jenis >> pemilik >> status >> fmult >> fdur >> bangunan;
-            
-            Property* prop = nullptr; 
+
+            Property *prop = nullptr;
 
             // ALOKASI BERDASARKAN TIPE
             if (jenis == "Street") {
@@ -191,15 +185,15 @@ void GameState::deserialize(const string& data) {
             // JIKA VALID, SET VALUENYA
             if (prop != nullptr) {
                 prop->setCode(kode);
-                
+
                 if (pemilik != "BANK") {
-                    // prop->setOwner(player_pointer_dari_list); 
+                    // prop->setOwner(player_pointer_dari_list);
                 }
-                
-                prop->setStatusStr(status); // Set via string
+
+                prop->setStatusStr(status);
                 prop->setFestival(fmult, fdur);
                 prop->setBuildingCount(bangunan);
-            
+
                 properties.push_back(prop);
             }
         }
@@ -211,7 +205,7 @@ void GameState::deserialize(const string& data) {
             string jenisKartu;
             ss >> jenisKartu;
 
-            SkillCard* parsed = createSkillCardByType(jenisKartu);
+            SkillCard *parsed = createSkillCardByType(jenisKartu);
             if (parsed != nullptr) {
                 skillDeckCards.push_back(parsed);
             }
@@ -222,10 +216,10 @@ void GameState::deserialize(const string& data) {
         for (int i = 0; i < logSize; i++) {
             int turn;
             string uname, act, detail;
-            
+
             ss >> turn >> uname >> act;
 
-            getline(ss >> ws, detail); 
+            getline(ss >> ws, detail);
 
             log.push_back(LogEntry(turn, uname, act, detail));
         }

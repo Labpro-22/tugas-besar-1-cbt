@@ -1,20 +1,19 @@
 #pragma once
-#include <string>
-#include <vector>
 #include <iostream>
 #include <map>
-#include "Player.hpp"
+#include <string>
+#include <vector>
 using namespace std;
 
-
 class PropertyState {
-    private:
+private:
     int fmult;
     int fdur;
     int buildingLevel;
-    public:
-        PropertyState(int fmult, int fdur, int buildingLevel);
-        int getFmult() const;
-        int getFdur() const;
-        int getBuildLevel() const;
+
+public:
+    PropertyState(int fmult, int fdur, int buildingLevel);
+    int getFmult() const;
+    int getFdur() const;
+    int getBuildLevel() const;
 };

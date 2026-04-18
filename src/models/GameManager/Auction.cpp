@@ -5,7 +5,7 @@
 // Constructor
 Auction::Auction(Property* prop, vector<Player*> participants) {
     this->property = prop;
-    this->participants = participants; // Menyimpan referensi/pointer pemain asli
+    this->participants = participants;
     this->currentBid = 0;
     
     this->minimumBid = prop->getBuyPrice() / 2; 
@@ -69,7 +69,7 @@ void Auction::pass(Player* player) {
     passCount++;
     
     if (passCount >= participants.size() - 1 && winnerIndex != -1) {
-        determineWinner(); // Pemenang ditemukan
+        determineWinner();
     } 
     else if (passCount >= participants.size()) {
         determineWinner();

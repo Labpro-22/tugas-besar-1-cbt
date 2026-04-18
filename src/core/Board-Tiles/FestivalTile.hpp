@@ -4,13 +4,13 @@
 #include "core/Board-Tiles/Tile.hpp"
 
 class FestivalTile : public Tile {
-  public:
-    // Konstruktor dan destruktor
-    FestivalTile(const std::string &code, const std::string &name, int pos);
-    ~FestivalTile() = default;
+    public:
+        // Konstruktor dan destruktor
+        FestivalTile(const std::string &code, const std::string &name, int pos);
+        ~FestivalTile() = default;
 
-    // Menghandle kasus apabila ada player di petak
-    void onLanded(Player &player, GameManager &game) override;
+        // Menghandle kasus apabila ada player di petak
+        void onLanded(Player &player, GameManager &game) override;
 };
 
 #endif

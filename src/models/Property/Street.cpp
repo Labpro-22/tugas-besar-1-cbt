@@ -1,11 +1,13 @@
 #include "Street.hpp"
-#include <iostream>
+#include "../GameManager/Player.hpp"
 #include <algorithm>
+#include <iostream>
 
 // ctor
-Street::Street() 
-    : Property(), buyPrice(0), color(ColorGroup::COKLAT), houseCost(0), hotelCost(0), level(BuildingLevel::EMPTY), festivalMultiplier(1) {
-    rentLevels.resize(6, 0); // Init rent levels: vacant, 1h, 2h, 3h, 4h, hotel
+Street::Street()
+    : Property(), buyPrice(0), color(ColorGroup::COKLAT), houseCost(0),
+        hotelCost(0), level(BuildingLevel::EMPTY), festivalMultiplier(1) {
+    rentLevels.resize(6, 0);
 }
 
 // custom ctor
@@ -16,27 +18,29 @@ Street::Street()
 /// @param hotelCost The cost to upgrade to a hotel on this street
 /// @param level The current building level.
 /// @param festivalMultiplier The event multiplier for special effects
-Street::Street(int buyPrice, ColorGroup color, std::vector<int> rentLevels, int houseCost, int hotelCost, BuildingLevel level, int festivalMultiplier)
-    : Property(), buyPrice(buyPrice), color(color), rentLevels(rentLevels), houseCost(houseCost), hotelCost(hotelCost), level(level), festivalMultiplier(festivalMultiplier) {}
+Street::Street(int buyPrice, ColorGroup color, std::vector<int> rentLevels,
+    int houseCost, int hotelCost, BuildingLevel level,
+    int festivalMultiplier)
+    : Property(), buyPrice(buyPrice), color(color), rentLevels(rentLevels),
+        houseCost(houseCost), hotelCost(hotelCost), level(level),
+        festivalMultiplier(festivalMultiplier) {}
 
 // dtor
 Street::~Street() {}
 
-// Get the purchase price 
+// Get the purchase price
 /// @return The buy price.
-int Street::getBuyPrice() const {
-    return buyPrice;
-}
+int Street::getBuyPrice() const { return buyPrice; }
 
-// Get property detail 
+// Get property detail
 /// @return The rent amount to be paid based on current building level
 int Street::getPropertyDetail() const {
     if (getOwner() == nullptr) {
-        return 0; // Unowned property doesn't charge rent
+        return 0;
     }
 
-    // Return rent based on current building level
-    if (!rentLevels.empty() && static_cast<int>(level) < static_cast<int>(rentLevels.size())) {
+    if (!rentLevels.empty() &&
+        static_cast<int>(level) < static_cast<int>(rentLevels.size())) {
         return rentLevels[static_cast<int>(level)];
     }
 
@@ -51,7 +55,7 @@ void Street::printTitle() const {
     std::cout << "Buy Price: " << buyPrice << std::endl;
     std::cout << "House Cost: " << houseCost << std::endl;
     std::cout << "Hotel Cost: " << hotelCost << std::endl;
-    
+
     std::cout << "Rent Levels: ";
     for (int rent : rentLevels) {
         std::cout << rent << " ";
@@ -75,17 +79,18 @@ void Street::upgradeHotel() {
     }
 }
 
-// Check if all streets of the same color are owned by the same player (monopoly).
+// Check if all streets of the same color are owned by the same player
+// (monopoly).
 /// @return true if this street's color group is monopolized, false otherwise.
 bool Street::isMonopolized() const {
-    Player* owner = getOwner();
+    Player *owner = getOwner();
     if (owner == nullptr) {
         return false;
     }
 
     int sameColorOwned = 0;
-    for (Property* prop : owner->getProperties()) {
-        Street* street = dynamic_cast<Street*>(prop);
+    for (Property *prop : owner->getProperties()) {
+        Street *street = dynamic_cast<Street *>(prop);
         if (street != nullptr && street->getColorGroup() == color) {
             ++sameColorOwned;
         }
@@ -109,5 +114,5 @@ void Street::activateEffect(int multiplier) {
 // Demolish all buildings on this street
 void Street::demolish() {
     level = BuildingLevel::EMPTY;
-    festivalMultiplier = 1; // reset any active effects
+    festivalMultiplier = 1;
 }

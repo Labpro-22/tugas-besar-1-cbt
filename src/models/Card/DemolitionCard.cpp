@@ -49,7 +49,7 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
     std::cout << "Pilih properti untuk DemolitionCard:\n";
     for (size_t i = 0; i < targets.size(); ++i) {
         std::cout << i << ". " << targets[i]->getCode()
-                  << " (bangunan: " << targets[i]->getBuildingCount() << ")\n";
+            << " (bangunan: " << targets[i]->getBuildingCount() << ")\n";
     }
 
     int choice = -1;

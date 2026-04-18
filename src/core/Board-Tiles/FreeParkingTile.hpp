@@ -4,11 +4,11 @@
 #include "core/Board-Tiles/ActionTile.hpp"
 
 class FreeParkingTile : public ActionTile {
-  public:
-    FreeParkingTile(const std::string &code, const std::string &name, int pos);
-    ~FreeParkingTile() = default;
+    public:
+        FreeParkingTile(const std::string &code, const std::string &name, int pos);
+        ~FreeParkingTile() = default;
 
-    void onLanded(Player &player, GameManager &game) override;
+        void onLanded(Player &player, GameManager &game) override;
 };
 
 #endif

@@ -1,64 +1,67 @@
 #include "core/Board-Tiles/PropertyTile.hpp"
-#include "core/GameManager/GameManager.hpp"
+#include "models/GameManager/GameManager.hpp"
 #include "models/GameManager/Player.hpp"
 #include "models/Property/Property.hpp"
 
-PropertyTile::PropertyTile(const std::string &code, const std::string &name, int pos, Property *prop) 
-  : Tile(code, name, pos, "property"), property(prop), festivalMultiplier(1), festivalDuration(0) {}
+PropertyTile::PropertyTile(const std::string &code, const std::string &name,
+                                                                                                            int pos, Property *prop)
+                : Tile(code, name, pos, "property"), property(prop), festivalMultiplier(1),
+                        festivalDuration(0) {}
 
 PropertyTile::~PropertyTile() {
-  delete property;
-  property = nullptr;
+        delete property;
+        property = nullptr;
 }
 
 void PropertyTile::applyFestivalEffect(int mult, int dur) {
-  festivalMultiplier = mult;
-  festivalDuration = dur;
+        festivalMultiplier = mult;
+        festivalDuration = dur;
 }
 
 void PropertyTile::checkFestivalEffect() {
-  if (festivalDuration > 0) {
-    festivalDuration--;
-    if (festivalDuration == 0) {
-      festivalMultiplier = 1;
-    }
-  }
+        if (festivalDuration > 0) {
+                festivalDuration--;
+                if (festivalDuration == 0) {
+                        festivalMultiplier = 1;
+                }
+        }
 }
 
 Property &PropertyTile::getProperty() { return *property; }
 
 void PropertyTile::onLanded(Player &player, GameManager &game) {
-  if (property == nullptr) {
-    return;
-  }
+        if (property == nullptr) {
+                return;
+        }
 
-  checkFestivalEffect();
+        checkFestivalEffect();
 
-  Property &prop = getProperty();
-  Player *owner = prop.getOwner();
+        Property &prop = getProperty();
+        Player *owner = prop.getOwner();
 
-  if (owner == nullptr) {
-    const bool purchased = game.executePurchase(player, prop);
-    if (!purchased) {
-      game.executeAuction(prop);
-    }
-    return;
-  }
+        if (owner == nullptr) {
+                game.executePurchase(player, prop);
+                return;
+        }
 
-  if (owner == &player) {
-    return;
-  }
+        if (owner == &player) {
+                return;
+        }
 
-  int rentDue = prop.getRent(0);
-  if (festivalMultiplier > 1) {
-    rentDue *= festivalMultiplier;
-  }
+        if (prop.getStatus() == PropertyStatus::MORTGAGED) {
+                return;
+        }
 
-  if (!player.canPay(rentDue)) {
-    Player *creditor = owner;
-    game.executeBankruptcy(player, creditor, rentDue);
-    return;
-  }
+        int rentDue = prop.getPropertyDetail();
+        if (festivalMultiplier > 1) {
+                rentDue *= festivalMultiplier;
+        }
 
-  game.executeRentPayer(player, *owner, prop, rentDue);
+        if (!player.canPay(rentDue)) {
+                Player *creditor = owner;
+                game.executeBankruptcy(player, creditor, rentDue);
+                return;
+        }
+
+        game.executeRentPayer(player, *owner, prop, rentDue);
 }
