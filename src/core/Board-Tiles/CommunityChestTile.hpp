@@ -1,7 +1,7 @@
 #ifndef COMMUNITY_CHEST_TILE_HPP
 #define COMMUNITY_CHEST_TILE_HPP
 
-#include "core/CardTile.hpp"
+#include "core/Board-Tiles/CardTile.hpp"
 
 class CommunityChestTile : public CardTile {
   public:

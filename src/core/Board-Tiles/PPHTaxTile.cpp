@@ -1,4 +1,6 @@
-#include "core/PPHTaxTile.hpp"
+#include "core/Board-Tiles/PPHTaxTile.hpp"
+#include "core/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
 #include <iostream>
 
 PPHTaxTile::PPHTaxTile(const std::string &code, const std::string &name, int pos, int flat, int percentage)
@@ -23,30 +25,25 @@ void PPHTaxTile::onLanded(Player &player, GameManager &game) {
   const int flatTax = getFlatTax();
   const int perTax = calculateTax(player, getPercentage());
 
-  int choice;
+  int choice = 0;
   std::cin >> choice;
-
-  switch (choice) {
-    case 0:
-      if (!player.canPay(flatTax)) {
-        if (!player.canPay(perTax)) {
-          Player *creditor = nullptr;
-          game.executeBankruptcy(player, creditor, flatTax);
-          return;
-        }
-        game.executeTaxPayment(player, perTax, true);
-      }
-      game.executeTaxPayment(player, flatTax, true);
-
-    case 1:
-      if (!player.canPay(perTax)) {
-        if (!player.canPay(flatTax)) {
-          Player *creditor = nullptr;
-          game.executeBankruptcy(player, creditor, perTax);
-          return;
-        }
-        game.executeTaxPayment(player, flatTax, true);
-      }
-      game.executeTaxPayment(player, perTax, true);
+  if (choice != 0 && choice != 1) {
+    choice = 0;
   }
+
+  const int selectedTax = (choice == 0) ? flatTax : perTax;
+  const int fallbackTax = (choice == 0) ? perTax : flatTax;
+
+  if (player.canPay(selectedTax)) {
+    game.executeTaxPayment(player, selectedTax, true);
+    return;
+  }
+
+  if (player.canPay(fallbackTax)) {
+    game.executeTaxPayment(player, fallbackTax, true);
+    return;
+  }
+
+  Player *creditor = nullptr;
+  game.executeBankruptcy(player, creditor, selectedTax);
 }

@@ -1,7 +1,7 @@
 #ifndef CARD_TILE_HPP
 #define CARD_TILE_HPP
 
-#include "core/Tile.hpp"
+#include "core/Board-Tiles/Tile.hpp"
 #include <string>
 
 // Deklarasi di awal
@@ -25,4 +25,4 @@ class CardTile : public Tile {
     virtual void drawCardandExecute(Player &player, GameManager &game);
 };
 
-#endif 
+#endif

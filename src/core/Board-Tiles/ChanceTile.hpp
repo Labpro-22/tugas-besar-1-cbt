@@ -1,7 +1,7 @@
 #ifndef CHANCE_TILE_HPP
 #define CHANCE_TILE_HPP
 
-#include "core/CardTile.hpp"
+#include "core/Board-Tiles/CardTile.hpp"
 
 class ChanceTile : public CardTile {
   public:

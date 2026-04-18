@@ -1,4 +1,6 @@
-#include "core/JailTile.hpp"
+#include "core/Board-Tiles/JailTile.hpp"
+#include "core/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
 
 #include <type_traits>
 #include <utility>

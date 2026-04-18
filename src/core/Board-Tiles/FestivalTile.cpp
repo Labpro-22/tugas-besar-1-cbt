@@ -1,7 +1,10 @@
-#include "core/FestivalTile.hpp"
+#include "core/Board-Tiles/FestivalTile.hpp"
 
-#include "core/Board.hpp"
-#include "core/PropertyTile.hpp"
+#include "core/Board-Tiles/Board.hpp"
+#include "core/Board-Tiles/PropertyTile.hpp"
+#include "core/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
+#include "models/Property/Property.hpp"
 
 #include <iostream>
 #include <unordered_map>

@@ -1,7 +1,7 @@
 #ifndef PPH_TAX_TILE_HPP
 #define PPH_TAX_TILE_HPP
 
-#include "core/TaxTile.hpp"
+#include "core/Board-Tiles/TaxTile.hpp"
 
 class PPHTaxTile : public TaxTile {
   private:

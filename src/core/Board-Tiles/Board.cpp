@@ -1,19 +1,19 @@
-#include "core/Board.hpp"
-#include "core/ChanceTile.hpp"
-#include "core/CommunityChestTile.hpp"
-#include "core/FestivalTile.hpp"
-#include "core/FreeParkingTile.hpp"
-#include "core/GoTile.hpp"
-#include "core/GoToJailTile.hpp"
-#include "core/JailTile.hpp"
-#include "core/PBMTaxTile.hpp"
-#include "core/PPHTaxTile.hpp"
-#include "core/PropertyTile.hpp"
-#include "core/Tile.hpp"
-#include "models/Card.hpp"
-#include "models/CardDeck.hpp"
+#include "core/Board-Tiles/Board.hpp"
+#include "core/Board-Tiles/ChanceTile.hpp"
+#include "core/Board-Tiles/CommunityChestTile.hpp"
+#include "core/Board-Tiles/FestivalTile.hpp"
+#include "core/Board-Tiles/FreeParkingTile.hpp"
+#include "core/Board-Tiles/GoTile.hpp"
+#include "core/Board-Tiles/GoToJailTile.hpp"
+#include "core/Board-Tiles/JailTile.hpp"
+#include "core/Board-Tiles/PBMTaxTile.hpp"
+#include "core/Board-Tiles/PPHTaxTile.hpp"
+#include "core/Board-Tiles/PropertyTile.hpp"
+#include "core/Board-Tiles/Tile.hpp"
+#include "models/Card/Card.hpp"
+#include "models/Card/CardDeck.hpp"
 #include "models/Configuration.hpp"
-#include "models/Property.hpp"
+#include "models/Property/Property.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -244,6 +244,10 @@ namespace {
         target = &festivalCount;
       }
 
+      if (target == nullptr) {
+        throw std::runtime_error("Unknown tile category for id generation.");
+      }
+
       (*target)++;
       std::ostringstream oss;
       oss << category << std::setw(2) << std::setfill('0') << *target;
@@ -274,18 +278,6 @@ void Board::initialize(Configuration &config) {
   tiles.clear();
 
   const std::vector<BoardTileConfig> &layout = config.getBoardLayout();
-
-  int goCount = 0;
-  int jailCount = 0;
-  for (const BoardTileConfig &entry : layout) {
-    const std::string type = toLower(entry.type);
-    if (type == "go") goCount++;
-    if (type == "jail") jailCount++;
-
-    if (type == "property") {
-      const std::string refCode = entry.propertyCode.empty() ? entry.code : entry.propertyCode;
-    }
-  }
 
   initializeCardDecks(config);
 
@@ -363,11 +355,18 @@ void Board::initialize(Configuration &config) {
       tiles.push_back(new PropertyTile(TileInitTracker::nextId('P'), tileName, pos, property));
       continue;
     }
+
+    throw std::runtime_error("Unknown board tile type: " + entry.type);
   }
   tileCount = static_cast<int>(tiles.size());
 }
 
-Tile &Board::getTile(int pos) { return *tiles[pos]; }
+Tile &Board::getTile(int pos) {
+  if (pos < 0 || pos >= static_cast<int>(tiles.size())) {
+    throw std::out_of_range("Board::getTile position out of range");
+  }
+  return *tiles[static_cast<std::size_t>(pos)];
+}
 
 Tile *Board::getTilebyCode(const std::string &code) {
   for (Tile *tile : tiles) {

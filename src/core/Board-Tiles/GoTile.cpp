@@ -1,4 +1,6 @@
-#include "core/GoTile.hpp"
+#include "core/Board-Tiles/GoTile.hpp"
+#include "core/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
 
 #include <type_traits>
 #include <utility>

@@ -1,12 +1,10 @@
 #ifndef BOARD_HPP
 #define BOARD_HPP
 
+#include "core/Board-Tiles/Tile.hpp"
+
 #include <string>
 #include <vector>
-
-// Deklarasi terlebih dahulu
-class Tile;
-class Configuration;
 
 class Board {
   private:

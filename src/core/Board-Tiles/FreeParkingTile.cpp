@@ -1,4 +1,6 @@
-#include "core/FreeParkingTile.hpp"
+#include "core/Board-Tiles/FreeParkingTile.hpp"
+#include "core/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
 
 #include <type_traits>
 #include <utility>

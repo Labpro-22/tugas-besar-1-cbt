@@ -1,7 +1,15 @@
-#include "core/PropertyTile.hpp"
+#include "core/Board-Tiles/PropertyTile.hpp"
+#include "core/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
+#include "models/Property/Property.hpp"
 
 PropertyTile::PropertyTile(const std::string &code, const std::string &name, int pos, Property *prop) 
   : Tile(code, name, pos, "property"), property(prop), festivalMultiplier(1), festivalDuration(0) {}
+
+PropertyTile::~PropertyTile() {
+  delete property;
+  property = nullptr;
+}
 
 void PropertyTile::applyFestivalEffect(int mult, int dur) {
   festivalMultiplier = mult;

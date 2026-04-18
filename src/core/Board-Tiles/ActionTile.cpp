@@ -1,4 +1,4 @@
-#include "core/ActionTile.hpp"
+#include "core/Board-Tiles/ActionTile.hpp"
 
 ActionTile::ActionTile(const std::string &code, const std::string &name, int pos, const std::string &actionType) 
   : Tile(code, name, pos, "action"), action_type(actionType) {}

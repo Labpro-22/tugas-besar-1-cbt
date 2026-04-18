@@ -1,7 +1,7 @@
 #ifndef TAX_TILE_HPP
 #define TAX_TILE_HPP
 
-#include "core/Tile.hpp"
+#include "core/Board-Tiles/Tile.hpp"
 #include <string>
 
 class TaxTile : public Tile {

@@ -1,4 +1,6 @@
-#include "core/ChanceTile.hpp"
+#include "core/Board-Tiles/ChanceTile.hpp"
+#include "core/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
 
 #include <type_traits>
 #include <utility>
@@ -100,6 +102,15 @@ namespace {
     }
   }
 
+  template <typename CardHandle>
+  auto *toCardPtr(CardHandle &card) {
+    if constexpr (std::is_pointer_v<std::decay_t<CardHandle>>) {
+      return card;
+    } else {
+      return &card;
+    }
+  }
+
   template <typename DeckType>
   bool drawFromDeckAndExecute(Player &player, GameManager &game, DeckType &deck) {
     if constexpr (!HasDeckDraw<DeckType>::value) {
@@ -113,9 +124,14 @@ namespace {
       }
 
       auto card = deck.draw();
-      executeChanceCardEffect(player, game, card);
-      discardChanceCardToDeck(deck, card);
-      discardChanceCardToGame(game, card);
+      auto *cardPtr = toCardPtr(card);
+      if (cardPtr == nullptr) {
+        return false;
+      }
+
+      executeChanceCardEffect(player, game, *cardPtr);
+      discardChanceCardToDeck(deck, *cardPtr);
+      discardChanceCardToGame(game, *cardPtr);
       return true;
     }
   }
@@ -136,8 +152,13 @@ namespace {
   bool drawFromGameManagerChance(Player &player, GameManager &game) {
     if constexpr (HasDrawChanceCard<GameManager>::value) {
       auto card = game.drawChanceCard();
-      executeChanceCardEffect(player, game, card);
-      discardChanceCardToGame(game, card);
+      auto *cardPtr = toCardPtr(card);
+      if (cardPtr == nullptr) {
+        return false;
+      }
+
+      executeChanceCardEffect(player, game, *cardPtr);
+      discardChanceCardToGame(game, *cardPtr);
       return true;
     }
 

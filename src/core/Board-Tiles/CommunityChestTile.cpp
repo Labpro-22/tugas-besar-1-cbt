@@ -1,4 +1,6 @@
-#include "core/CommunityChestTile.hpp"
+#include "core/Board-Tiles/CommunityChestTile.hpp"
+#include "core/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
 
 #include <type_traits>
 #include <utility>
@@ -100,6 +102,15 @@ namespace {
     }
   }
 
+  template <typename CardHandle>
+  auto *toCardPtr(CardHandle &card) {
+    if constexpr (std::is_pointer_v<std::decay_t<CardHandle>>) {
+      return card;
+    } else {
+      return &card;
+    }
+  }
+
   template <typename DeckType>
   bool drawFromDeckAndExecute(Player &player, GameManager &game, DeckType &deck) {
     if constexpr (!HasDeckDraw<DeckType>::value) {
@@ -113,9 +124,14 @@ namespace {
       }
 
       auto card = deck.draw();
-      executeCommunityChestCardEffect(player, game, card);
-      discardCommunityChestCardToDeck(deck, card);
-      discardCommunityChestCardToGame(game, card);
+      auto *cardPtr = toCardPtr(card);
+      if (cardPtr == nullptr) {
+        return false;
+      }
+
+      executeCommunityChestCardEffect(player, game, *cardPtr);
+      discardCommunityChestCardToDeck(deck, *cardPtr);
+      discardCommunityChestCardToGame(game, *cardPtr);
       return true;
     }
   }
@@ -136,8 +152,13 @@ namespace {
   bool drawFromGameManagerCommunityChest(Player &player, GameManager &game) {
     if constexpr (HasDrawCommunityChestCard<GameManager>::value) {
       auto card = game.drawCommunityChestCard();
-      executeCommunityChestCardEffect(player, game, card);
-      discardCommunityChestCardToGame(game, card);
+      auto *cardPtr = toCardPtr(card);
+      if (cardPtr == nullptr) {
+        return false;
+      }
+
+      executeCommunityChestCardEffect(player, game, *cardPtr);
+      discardCommunityChestCardToGame(game, *cardPtr);
       return true;
     }
 
