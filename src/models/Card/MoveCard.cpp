@@ -28,8 +28,30 @@ int MoveCard::getValue() const {
 }
 
 void MoveCard::use(Player* p, GameManager* gm){
-    (void)p;
-    (void)gm;
+    if (p == nullptr || gm == nullptr) {
+        return;
+    }
+
+    if (!p->canUseAbility()) {
+        gm->addLogEntry(p->getUsername() + " gagal menggunakan MoveCard (ability sudah dipakai)");
+        return;
+    }
+
+    if (p == &gm->getCurrentPlayer()) {
+        gm->moveCurrentPlayer(steps);
+    } else {
+        int oldPos = p->getPosition();
+        int newPos = (oldPos + steps) % 40;
+        if (newPos < 0) newPos += 40;
+        p->setPosition(newPos);
+        if (newPos < oldPos) {
+            p->addCash(200);
+        }
+    }
+
     markAsUsed();
-    // implement effect through GameManager (later)
+    p->setUsedAbility();
+    p->removeCard(this);
+
+    gm->addLogEntry("MoveCard digunakan sebanyak " + std::to_string(steps) + " langkah");
 }

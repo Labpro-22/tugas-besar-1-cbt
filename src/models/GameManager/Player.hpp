@@ -64,7 +64,7 @@ class Player{
         void activateShield();
         void deactivateShield();
         bool hasShieldActive() const;
-        void applyDiscount(int pct);
+        void applyDiscount(int pct, int duration = 1);
         void tickDiscount();
         int getDiscountPercentage() const;
         bool hasDiscount() const;

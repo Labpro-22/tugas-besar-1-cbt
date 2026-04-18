@@ -82,7 +82,3 @@ void Utility::printTitle() const {
 void Utility::demolish() {
     // nothing
 }
-
-std::string Utility::getType() const {
-    return "Utility";
-}

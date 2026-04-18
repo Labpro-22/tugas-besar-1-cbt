@@ -78,8 +78,24 @@ void Street::upgradeHotel() {
 // Check if all streets of the same color are owned by the same player (monopoly).
 /// @return true if this street's color group is monopolized, false otherwise.
 bool Street::isMonopolized() const {
-    // later
-    return (getOwner() != nullptr); // Placeholder 
+    Player* owner = getOwner();
+    if (owner == nullptr) {
+        return false;
+    }
+
+    int sameColorOwned = 0;
+    for (Property* prop : owner->getProperties()) {
+        Street* street = dynamic_cast<Street*>(prop);
+        if (street != nullptr && street->getColorGroup() == color) {
+            ++sameColorOwned;
+        }
+    }
+
+    if (color == ColorGroup::COKLAT || color == ColorGroup::BIRU_TUA) {
+        return sameColorOwned >= 2;
+    }
+
+    return sameColorOwned >= 3;
 }
 
 // Activate special event effects on this street
@@ -94,30 +110,4 @@ void Street::activateEffect(int multiplier) {
 void Street::demolish() {
     level = BuildingLevel::EMPTY;
     festivalMultiplier = 1; // reset any active effects
-}
-
-
-std::string Street::getType() const {
-    return "Street";
-}
-
-int Street::getFMult() const {
-    return festivalMultiplier;
-}
-
-int Street::getFDur() const {
-    return festivalDuration; // (Pastikan variabel ini sudah ditambah di Street.hpp)
-}
-
-int Street::getBuildingCount() const {
-    return static_cast<int>(level);
-}
-
-void Street::setFestival(int fmult, int fdur) {
-    festivalMultiplier = fmult;
-    festivalDuration = fdur;
-}
-
-void Street::setBuildingCount(int count) {
-    level = static_cast<BuildingLevel>(count); 
 }

@@ -70,6 +70,10 @@ Player& GameManager::getWinner() {
     return players[winnerIndex];
 }
 
+vector<Player>& GameManager::getPlayers() {
+    return players;
+}
+
 void GameManager::moveCurrentPlayer(int steps) {
     Player& player = getCurrentPlayer();
     int oldPos = player.getPosition();

@@ -25,7 +25,45 @@ std::string ChanceCard::getType() const {
 }
 
 void ChanceCard::execute(Player* p, GameManager* gm) {
-    (void)p;
-    (void)gm;
-    // implement effect through GameManager (later)
+    if (p == nullptr || gm == nullptr) {
+        return;
+    }
+
+    switch (chanceType) {
+        case ChanceCardType::GO_TO_NEAREST_STATION: {
+            // hard coded
+            const int stations[4] = {5, 15, 25, 35};
+            const int currentPos = p->getPosition();
+            int destination = stations[0];
+            for (int i = 0; i < 4; ++i) {
+                if (stations[i] > currentPos) {
+                    destination = stations[i];
+                    break;
+                }
+            }
+
+            int oldPos = p->getPosition();
+            int newPos = destination % 40;
+            if (newPos < 0) newPos += 40;
+            p->setPosition(newPos);
+            if (newPos < oldPos) {
+                p->addCash(200);
+            }
+            gm->addLogEntry(p->getUsername() + " menuju stasiun terdekat");
+            break;
+        }
+        case ChanceCardType::MOVE_BACK_3: {
+            int newPos = (p->getPosition() - 3) % 40;
+            if (newPos < 0) newPos += 40;
+            p->setPosition(newPos);
+            gm->addLogEntry(p->getUsername() + " mundur 3 petak");
+            break;
+        }
+        case ChanceCardType::GO_TO_JAIL: {
+            p->setPosition(10);
+            p->setStatus(JAILED);
+            gm->addLogEntry(p->getUsername() + " dikirim ke penjara");
+            break;
+        }
+    }
 }

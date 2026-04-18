@@ -45,13 +45,19 @@ int DiscountCard::applyDiscount(int amount) {
 }
 
 void DiscountCard::use(Player* p, GameManager* gm) {
-    (void)p;
-    (void)gm;
-
-    if (remainingDuration > 0) {
-        --remainingDuration;
+    if (p == nullptr || gm == nullptr) {
+        return;
     }
 
+    if (!p->canUseAbility()) {
+        gm->addLogEntry(p->getUsername() + " gagal menggunakan DiscountCard (ability sudah dipakai)");
+        return;
+    }
+
+    p->applyDiscount(discountPercent, remainingDuration);
+
     markAsUsed();
-    // implement effect through GameManager (later)
+    p->setUsedAbility();
+    p->removeCard(this);
+    gm->addLogEntry("Diskon " + std::to_string(discountPercent) + "% aktif");
 }

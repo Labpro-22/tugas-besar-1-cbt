@@ -1,5 +1,13 @@
 #include "GameState.hpp"
+#include "../Card/MoveCard.hpp"
 #include "../Card/DiscountCard.hpp"
+#include "../Card/ShieldCard.hpp"
+#include "../Card/TeleportCard.hpp"
+#include "../Card/LassoCard.hpp"
+#include "../Card/DemolitionCard.hpp"
+#include "../Property/Street.hpp"
+#include "../Property/Railroad.hpp"
+#include "../Property/Utility.hpp"
 #include <sstream> 
 #include <iostream>
 
@@ -95,6 +103,16 @@ string GameState::serialize() const {
 void GameState::deserialize(const string& data) {
     stringstream ss(data);
 
+    auto createSkillCardByType = [](const string& typeName) -> SkillCard* {
+        if (typeName == "MoveCard") return new MoveCard();
+        if (typeName == "DiscountCard") return new DiscountCard();
+        if (typeName == "ShieldCard") return new ShieldCard();
+        if (typeName == "TeleportCard") return new TeleportCard();
+        if (typeName == "LassoCard") return new LassoCard();
+        if (typeName == "DemolitionCard") return new DemolitionCard();
+        return nullptr;
+    };
+
     players.clear();
     turnOrder.clear();
     properties.clear();
@@ -121,15 +139,18 @@ void GameState::deserialize(const string& data) {
                 if (jenisKartu == "MoveCard") {
                     int nilaiKartu;
                     ss >> nilaiKartu;
-                    hand.push_back(new MoveCard(nilaiKartu));
+                    hand.push_back(new MoveCard(0, nilaiKartu));
                 } 
                 else if (jenisKartu == "DiscountCard") {
                     int nilaiKartu, durasiKartu;
                     ss >> nilaiKartu >> durasiKartu;
-                    hand.push_back(new DiscountCard(nilaiKartu, durasiKartu));
+                    hand.push_back(new DiscountCard(0, nilaiKartu, durasiKartu));
                 } 
                 else {
-                    hand.push_back(new SkillCard(jenisKartu)); 
+                    SkillCard* parsed = createSkillCardByType(jenisKartu);
+                    if (parsed != nullptr) {
+                        hand.push_back(parsed);
+                    }
                 }
             }
             vector<Property*> emptyProperties;
@@ -190,7 +211,10 @@ void GameState::deserialize(const string& data) {
             string jenisKartu;
             ss >> jenisKartu;
 
-            skillDeckCards.push_back(new SkillCard(jenisKartu)); 
+            SkillCard* parsed = createSkillCardByType(jenisKartu);
+            if (parsed != nullptr) {
+                skillDeckCards.push_back(parsed);
+            }
         }
     }
     int logSize;

@@ -6,7 +6,6 @@
 #include "TransactionLogger.hpp"
 #include "FestivalEffect.hpp"
 #include "../Card/CardDeck.hpp"
-#include ""
 #include <vector>
 using namespace std;
 
@@ -37,6 +36,7 @@ class GameManager {
         void advanceToNextPlayer();
         bool isGameOver();
         Player& getWinner();
+        vector<Player>& getPlayers();
         void moveCurrentPlayer(int steps);
         void executePurchase(Player& player, Property& prop);
         void executeRentPayer(Player&, Player& owner, Property& prop, int amount);

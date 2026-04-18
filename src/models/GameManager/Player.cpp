@@ -1,10 +1,11 @@
 #include "Player.hpp"
+#include "JailManager.hpp"
 
 // posisi dan properties belum sesuai dengan load
-Player::Player(string username, int startingCash, int startPosition = 0, PlayerStatus state, vector<Card*> startHand, vector<Property*> startProperty, int usedAbility = 0, bool shield = false, int discPercent = 0, int discRemain = 0) 
+Player::Player(string username, int startingCash, int startPosition, PlayerStatus state, vector<Card*> startHand, vector<Property*> startProperty, int usedAbility, bool shield, int discPercent, int discRemain) 
 : username(username), cash(startingCash), position(startPosition), 
-status(state), hand(startHand), properties(startProperty), usedAbilityThisTurn(false),
-hasShield(shield), discountPercentage(discPercent), discountRemainingTurns(discRemain){}
+status(state), hand(startHand), properties(startProperty), usedAbilityThisTurn(usedAbility != 0),
+hasShield(shield), discountPercentage(discPercent), discountRemainingTurns(discRemain){}{}
 string Player::getUsername() { 
     return username;
 }
@@ -127,9 +128,9 @@ bool Player::hasShieldActive() const {
 }
 
 // Belum selesai
-void Player::applyDiscount(int pct) {
+void Player::applyDiscount(int pct, int duration) {
     discountPercentage = pct;
-    discountRemainingTurns = 1;
+    discountRemainingTurns = (duration > 0) ? duration : 1;
 }
 
 void Player::tickDiscount() {

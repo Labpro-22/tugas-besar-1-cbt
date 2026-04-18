@@ -19,8 +19,19 @@ std::string ShieldCard::getType() const {
 }
 
 void ShieldCard::use(Player* p, GameManager* gm) {
-    (void)p;
-    (void)gm;
+    if (p == nullptr || gm == nullptr) {
+        return;
+    }
+
+    if (!p->canUseAbility()) {
+        gm->addLogEntry(p->getUsername() + " gagal menggunakan ShieldCard (ability sudah dipakai)");
+        return;
+    }
+
+    p->activateShield();
+
     markAsUsed();
-    // implement effect through GameManager (later)
+    p->setUsedAbility();
+    p->removeCard(this);
+    gm->addLogEntry(p->getUsername() + " mengaktifkan shield");
 }

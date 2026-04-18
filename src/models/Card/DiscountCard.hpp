@@ -1,5 +1,8 @@
 #pragma once
 #include "SkillCard.hpp"
+#include <algorithm>
+#include "../GameManager/Player.hpp"
+#include "../GameManager/GameManager.hpp"
 
 class DiscountCard : public SkillCard {
     private:

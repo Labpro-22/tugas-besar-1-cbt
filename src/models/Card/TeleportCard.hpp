@@ -1,5 +1,8 @@
 #pragma once
 #include "SkillCard.hpp"
+#include "../GameManager/Player.hpp"
+#include "../GameManager/GameManager.hpp"
+#include <iostream>
 
 class TeleportCard : public SkillCard {
     public:
