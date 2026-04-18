@@ -4,9 +4,11 @@
 #include <string>
 #include <vector>
 
-#include "models/GameManager/Player.hpp"
-#include "models/Property/Property.hpp"
-#include "models/Command.hpp"
+#include "../models/Command.hpp"
+
+class Player;
+class Property;
+class InputHandler;
 
 class AuctionView {
 private:
@@ -18,6 +20,7 @@ public:
 
     void showAuctionStart(Property* property, const std::vector<Player*>& order);
     Command promptAuctionAction(Player* player, int currentBid);
+    Command promptAuctionAction(Player* player, int currentBid, InputHandler& input);
     void showBidUpdate(Player* bidder, int amount);
     void showAuctionWinner(Player* winner, int amount, Property* property);
 };

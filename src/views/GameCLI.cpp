@@ -1,6 +1,16 @@
-#include "views/GameCLI.hpp"
+#include "GameCLI.hpp"
 
 #include <iostream>
+#include <string>
+#include <vector>
+
+#define state _state = ACTIVE
+#define startHand _startHand = std::vector<Card*>()
+#define startProperty _startProperty = std::vector<Property*>()
+#include "../models/GameManager/Player.hpp"
+#undef startProperty
+#undef startHand
+#undef state
 
 GameCLI::GameCLI()
     : input(),
@@ -35,8 +45,24 @@ void GameCLI::showTurnHeader(Player* current, int turn, int maxTurn) const {
 }
 
 Command GameCLI::readCommand() {
-    std::string raw = input.readLine();
-    return commandParser.parse(raw);
+    while (true) {
+        std::string raw = input.readLine();
+        if (raw.empty() && !input.isStreamGood()) {
+            return Command();
+        }
+
+        Command cmd = commandParser.parse(raw);
+
+        if (commandParser.validate(cmd)) {
+            return cmd;
+        }
+
+        if (cmd.name.empty()) {
+            std::cout << "Masukkan command yang valid.\n";
+        } else {
+            std::cout << "Command tidak dikenali atau jumlah argumen tidak sesuai.\n";
+        }
+    }
 }
 
 void GameCLI::showMessage(const std::string& msg) const {
@@ -48,19 +74,7 @@ void GameCLI::showError(const std::string& err) const {
 }
 
 void GameCLI::showWinner(const std::vector<Player*>& winners) const {
-    std::cout << "\n=== HASIL PERMAINAN ===\n";
-
-    if (winners.empty()) {
-        std::cout << "Tidak ada pemenang.\n";
-        return;
-    }
-
-    std::cout << "Pemenang:\n";
-    for (Player* player : winners) {
-        if (player != nullptr) {
-            std::cout << "- " << player->getUsername() << '\n';
-        }
-    }
+    statusView.showVictory(winners);
 }
 
 void GameCLI::showLoadSuccess(const std::string& filename) const {

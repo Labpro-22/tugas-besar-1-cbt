@@ -1,6 +1,39 @@
-#include "views/PropertyView.hpp"
+#include "PropertyView.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <iostream>
+#include <string>
+#include <vector>
+
+#include "InputHandler.hpp"
+#include "../models/Property/Property.hpp"
+#define state _state = ACTIVE
+#define startHand _startHand = std::vector<Card*>()
+#define startProperty _startProperty = std::vector<Property*>()
+#include "../models/GameManager/Player.hpp"
+#undef startProperty
+#undef startHand
+#undef state
+
+namespace {
+
+std::string normalizeAnswer(std::string answer) {
+    std::transform(answer.begin(), answer.end(), answer.begin(),
+                   [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+    return answer;
+}
+
+int resolveCardWidth(const Property* property, int preferredWidth) {
+    if (property == nullptr) {
+        return preferredWidth;
+    }
+
+    const int minimumWidth = static_cast<int>(property->getName().size() + property->getCode().size()) + 8;
+    return std::max(preferredWidth, minimumWidth);
+}
+
+}  // namespace
 
 PropertyView::PropertyView(int cardWidth) : cardWidth(cardWidth) {}
 
@@ -10,13 +43,15 @@ void PropertyView::showDeed(Property* property) const {
         return;
     }
 
-    std::cout << "+" << std::string(cardWidth, '=') << "+\n";
+    const int width = resolveCardWidth(property, cardWidth);
+
+    std::cout << "+" << std::string(width, '=') << "+\n";
     std::cout << "| AKTA KEPEMILIKAN\n";
     std::cout << "| " << property->getName() << " (" << property->getCode() << ")\n";
-    std::cout << "+" << std::string(cardWidth, '=') << "+\n";
+    std::cout << "+" << std::string(width, '=') << "+\n";
     std::cout << "| Harga Beli   : M" << property->getBuyPrice() << "\n";
     std::cout << "| Nilai Gadai  : M" << property->getMortgageValue() << "\n";
-    std::cout << "+" << std::string(cardWidth, '=') << "+\n";
+    std::cout << "+" << std::string(width, '=') << "+\n";
 }
 
 void PropertyView::showPlayerProperties(Player* player) const {
@@ -45,21 +80,38 @@ void PropertyView::showPlayerProperties(Player* player) const {
 }
 
 bool PropertyView::showBuyPrompt(Property* property, int playerCash) const {
+    InputHandler input;
+    return showBuyPrompt(property, playerCash, input);
+}
+
+bool PropertyView::showBuyPrompt(Property* property, int playerCash, InputHandler& input) const {
     if (property == nullptr) {
         std::cout << "Properti tidak valid.\n";
         return false;
     }
 
-    std::cout << "Kamu mendarat di " << property->getName()
-              << " (" << property->getCode() << ")!\n";
-    std::cout << "Harga beli : M" << property->getBuyPrice() << "\n";
-    std::cout << "Uang kamu  : M" << playerCash << "\n";
-    std::cout << "Apakah kamu ingin membeli properti ini? (y/n): ";
+    while (true) {
+        std::cout << "Kamu mendarat di " << property->getName()
+                  << " (" << property->getCode() << ")!\n";
+        std::cout << "Harga beli : M" << property->getBuyPrice() << "\n";
+        std::cout << "Uang kamu  : M" << playerCash << "\n";
+        std::cout << "Apakah kamu ingin membeli properti ini? (y/n): ";
 
-    std::string answer;
-    std::cin >> answer;
+        std::string answer = normalizeAnswer(input.readLine());
+        if (answer.empty() && !input.isStreamGood()) {
+            return false;
+        }
 
-    return (answer == "y" || answer == "Y");
+        if (answer == "y" || answer == "yes") {
+            return true;
+        }
+
+        if (answer == "n" || answer == "no") {
+            return false;
+        }
+
+        std::cout << "Input tidak valid. Masukkan y/n.\n";
+    }
 }
 
 void PropertyView::showMortgageOptions(const std::vector<Property*>& properties) const {
@@ -94,7 +146,7 @@ void PropertyView::showRedeemOptions(const std::vector<Property*>& mortgaged) co
             std::cout << (i + 1) << ". "
                       << mortgaged[i]->getName()
                       << " (" << mortgaged[i]->getCode() << ")"
-                      << " | Harga Tebus: M" << mortgaged[i]->getBuyPrice()
+                      << " | Nilai Tebus: M" << mortgaged[i]->getMortgageValue()
                       << "\n";
         }
     }

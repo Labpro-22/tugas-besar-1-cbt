@@ -1,10 +1,22 @@
-#include "views/AuctionView.hpp"
+#include "AuctionView.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
+
+#include "InputHandler.hpp"
+#include "../utils/CommandParser.hpp"
+#include "../models/Property/Property.hpp"
+#define state _state = ACTIVE
+#define startHand _startHand = std::vector<Card*>()
+#define startProperty _startProperty = std::vector<Property*>()
+#include "../models/GameManager/Player.hpp"
+#undef startProperty
+#undef startHand
+#undef state
 
 AuctionView::AuctionView() : highestBidShown(0), currentPropertyCode("") {}
 
@@ -33,36 +45,35 @@ void AuctionView::showAuctionStart(Property* property, const std::vector<Player*
 }
 
 Command AuctionView::promptAuctionAction(Player* player, int currentBid) {
+    InputHandler input;
+    return promptAuctionAction(player, currentBid, input);
+}
+
+Command AuctionView::promptAuctionAction(Player* player, int currentBid, InputHandler& input) {
     if (player == nullptr) {
         std::cout << "Pemain tidak valid.\n";
         return Command();
     }
 
-    std::cout << "Giliran: " << player->getUsername() << '\n';
-    std::cout << "Penawaran tertinggi saat ini: M" << currentBid << '\n';
-    std::cout << "Aksi (PASS / BID <jumlah>): ";
+    CommandParser parser;
 
-    std::string line;
-    std::getline(std::cin >> std::ws, line);
+    while (true) {
+        std::cout << "Giliran: " << player->getUsername() << '\n';
+        std::cout << "Penawaran tertinggi saat ini: M" << currentBid << '\n';
+        std::cout << "Aksi (PASS / BID <jumlah>): ";
 
-    std::stringstream ss(line);
-    std::string name;
-    ss >> name;
+        std::string line = input.readLine();
+        if (line.empty() && !input.isStreamGood()) {
+            return Command();
+        }
 
-    std::transform(name.begin(), name.end(), name.begin(),
-                   [](unsigned char ch) { return static_cast<char>(std::toupper(ch)); });
+        Command cmd = parser.parse(line);
+        if (parser.validate(cmd) && (cmd.name == "PASS" || cmd.name == "BID")) {
+            return cmd;
+        }
 
-    std::vector<std::string> args;
-    std::string arg;
-    while (ss >> arg) {
-        args.push_back(arg);
+        std::cout << "Input lelang tidak valid. Gunakan PASS atau BID <jumlah>.\n";
     }
-
-    if (name.empty()) {
-        return Command();
-    }
-
-    return Command(name, args);
 }
 
 void AuctionView::showBidUpdate(Player* bidder, int amount) {

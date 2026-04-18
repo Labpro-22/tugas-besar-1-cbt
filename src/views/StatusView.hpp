@@ -4,10 +4,9 @@
 #include <string>
 #include <vector>
 
-// Sesuaikan path ini dengan posisi header timmu
-#include "models/GameManager/Player.hpp"
-#include "models/Property/Property.hpp"
-#include "models/Card/Card.hpp"
+class Player;
+class Property;
+class Card;
 
 class StatusView {
 public:

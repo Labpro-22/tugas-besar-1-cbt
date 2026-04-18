@@ -1,44 +1,56 @@
-#include "views/LogView.hpp"
+#include "LogView.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
+
+#define state _state = ACTIVE
+#define startHand _startHand = std::vector<Card*>()
+#define startProperty _startProperty = std::vector<Property*>()
+#include "../models/GameManager/LogEntry.hpp"
+#undef startProperty
+#undef startHand
+#undef state
 
 LogView::LogView(int maxPreviewWidth) : maxPreviewWidth(maxPreviewWidth) {}
 
-std::string LogView::formatEntry(const LogEntry* entry) const {
-    if (entry == nullptr) {
-        return "[LOG INVALID]";
-    }
-
+std::string LogView::formatEntry(const LogEntry& entry) const {
     std::stringstream ss;
-    ss << "[Turn " << entry->getTurn() << "] "
-       << entry->getUsername() << " | "
-       << entry->getActionType() << " | "
-       << entry->getDetail();
+    ss << "[Turn " << entry.turn << "] "
+       << entry.username << " | "
+       << entry.actionType << " | "
+       << entry.detail;
 
     std::string result = ss.str();
 
-    if (static_cast<int>(result.length()) > maxPreviewWidth) {
+    if (maxPreviewWidth > 3 && static_cast<int>(result.length()) > maxPreviewWidth) {
         result = result.substr(0, maxPreviewWidth - 3) + "...";
     }
 
     return result;
 }
 
-void LogView::showLogs(const std::vector<LogEntry*>& logs) const {
+void LogView::showLogs(const LogEntry* logs, std::size_t count) const {
     std::cout << "=== Log Transaksi Penuh ===\n";
 
-    if (logs.empty()) {
+    if (count == 0) {
         std::cout << "Belum ada log.\n";
         return;
     }
 
-    for (const LogEntry* entry : logs) {
-        std::cout << formatEntry(entry) << '\n';
+    if (logs == nullptr) {
+        std::cout << "Data log tidak valid.\n";
+        return;
+    }
+
+    for (std::size_t i = 0; i < count; ++i) {
+        std::cout << formatEntry(logs[i]) << '\n';
     }
 }
 
-void LogView::showLastLogs(const std::vector<LogEntry*>& logs, int n) const {
+void LogView::showLastLogs(const LogEntry* logs, std::size_t count, int n) const {
     if (n <= 0) {
         std::cout << "Jumlah log harus lebih dari 0.\n";
         return;
@@ -46,17 +58,20 @@ void LogView::showLastLogs(const std::vector<LogEntry*>& logs, int n) const {
 
     std::cout << "=== Log Transaksi (" << n << " Terakhir) ===\n";
 
-    if (logs.empty()) {
+    if (count == 0) {
         std::cout << "Belum ada log.\n";
         return;
     }
 
-    int start = 0;
-    if (static_cast<int>(logs.size()) > n) {
-        start = static_cast<int>(logs.size()) - n;
+    if (logs == nullptr) {
+        std::cout << "Data log tidak valid.\n";
+        return;
     }
 
-    for (int i = start; i < static_cast<int>(logs.size()); ++i) {
+    std::size_t visibleCount = std::min<std::size_t>(count, static_cast<std::size_t>(n));
+    std::size_t start = count - visibleCount;
+
+    for (std::size_t i = start; i < count; ++i) {
         std::cout << formatEntry(logs[i]) << '\n';
     }
 }

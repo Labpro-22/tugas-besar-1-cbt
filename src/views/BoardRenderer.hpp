@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 
-#include "core/Board.hpp"
-#include "core/Tile.hpp"
-#include "models/GameManager/Player.hpp"
+class Board;
+class Tile;
+class Player;
 
 class BoardRenderer {
 private:

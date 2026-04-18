@@ -4,15 +4,16 @@
 #include <string>
 #include <vector>
 
-#include "models/Command.hpp"
-#include "models/GameManager/Player.hpp"
-#include "utils/CommandParser.hpp"
-#include "views/AuctionView.hpp"
-#include "views/BoardRenderer.hpp"
-#include "views/InputHandler.hpp"
-#include "views/LogView.hpp"
-#include "views/PropertyView.hpp"
-#include "views/StatusView.hpp"
+#include "../models/Command.hpp"
+#include "../utils/CommandParser.hpp"
+#include "AuctionView.hpp"
+#include "BoardRenderer.hpp"
+#include "InputHandler.hpp"
+#include "LogView.hpp"
+#include "PropertyView.hpp"
+#include "StatusView.hpp"
+
+class Player;
 
 class GameCLI {
 private:

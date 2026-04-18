@@ -1,6 +1,19 @@
-#include "views/StatusView.hpp"
+#include "StatusView.hpp"
 
+#include <algorithm>
 #include <iostream>
+#include <string>
+#include <vector>
+
+#include "../models/Card/Card.hpp"
+#include "../models/Property/Property.hpp"
+#define state _state = ACTIVE
+#define startHand _startHand = std::vector<Card*>()
+#define startProperty _startProperty = std::vector<Property*>()
+#include "../models/GameManager/Player.hpp"
+#undef startProperty
+#undef startHand
+#undef state
 
 void StatusView::showDiceResult(int d1, int d2, const std::string& destination) const {
     std::cout << "Hasil: " << d1 << " + " << d2 << " = " << (d1 + d2) << '\n';
