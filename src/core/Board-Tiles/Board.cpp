@@ -1,5 +1,6 @@
 #include "core/Board-Tiles/Board.hpp"
 #include "core/Board-Tiles/ChanceTile.hpp"
+#include "core/Board-Tiles/ActionTile.hpp"
 #include "core/Board-Tiles/CommunityChestTile.hpp"
 #include "core/Board-Tiles/FestivalTile.hpp"
 #include "core/Board-Tiles/FreeParkingTile.hpp"
@@ -514,8 +515,18 @@ int Board::findJailPosition() const {
   for (int i = 0; i < tileCount; ++i) {
     if (tiles[i] == nullptr)
       continue;
-    std::string tType = toLower(tiles[i]->getType());
-    if (tType == "jail" || tType == "penjara") {
+    const std::string tileType = toLower(tiles[i]->getType());
+    const std::string tileCode = toLower(tiles[i]->getCode());
+    const std::string tileName = toLower(tiles[i]->getName());
+
+    if (tileType == "jail" || tileType == "penjara" || tileCode == "pen" ||
+        tileName == "penjara") {
+      return i;
+    }
+
+    const auto *actionTile = dynamic_cast<const ActionTile *>(tiles[i]);
+    if (actionTile != nullptr &&
+        toLower(actionTile->getActionType()) == "jail") {
       return i;
     }
   }

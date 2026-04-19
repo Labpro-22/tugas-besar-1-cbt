@@ -21,12 +21,11 @@ void GameManager::startNewGame() {
 
 void GameManager::processTurn() {
   Player &currentPlayer = getCurrentPlayer();
+  currentPlayer.resetTurn();
 
   if (currentPlayer.isJailed()) {
     return;
   }
-
-  currentPlayer.resetTurn();
 }
 
 void GameManager::processCommand(string cmd) {
@@ -140,7 +139,12 @@ void GameManager::moveCurrentPlayer(int steps) {
 }
 
 void GameManager::executePurchase(Player &player, Property &prop) {
-  int price = prop.getBuyPrice();
+  const int basePrice = prop.getBuyPrice();
+  int price = basePrice;
+  if (player.hasDiscount()) {
+    const int discount = std::clamp(player.getDiscountPercentage(), 0, 100);
+    price -= (price * discount / 100);
+  }
 
   cout << "Kamu mendarat di " << prop.getName() << " (" << prop.getCode()
        << ")!\n";
@@ -162,7 +166,10 @@ void GameManager::executePurchase(Player &player, Property &prop) {
   }
 
   if (!automaticPurchase) {
-    cout << "Harga beli : M" << price << "\n";
+    cout << "Harga beli : M" << basePrice << "\n";
+    if (price != basePrice) {
+      cout << "Harga setelah diskon : M" << price << "\n";
+    }
     cout << "Uang kamu  : M" << player.getCash() << "\n";
     InputHandler input;
     const bool shouldBuy = input.readYesNo(
@@ -195,29 +202,47 @@ void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop,
   cout << "Kamu mendarat di " << prop.getName() << " (" << prop.getCode()
        << "), milik " << owner.getUsername() << "!\n";
 
-  if (payer.canPay(amount)) {
+  if (payer.hasShieldActive()) {
+    cout << "[SHIELD ACTIVE]: Efek ShieldCard melindungi Anda!\n";
+    cout << "Tagihan sewa dibatalkan. Uang Anda tetap: M" << payer.getCash()
+         << ".\n";
+    logger.log(currentTurn, payer.getUsername(), "SHIELD",
+               "ShieldCard membatalkan sewa " + prop.getCode());
+    return;
+  }
+
+  int effectiveAmount = amount;
+  if (payer.hasDiscount()) {
+    const int discount = std::clamp(payer.getDiscountPercentage(), 0, 100);
+    effectiveAmount -= (effectiveAmount * discount / 100);
+  }
+
+  if (payer.canPay(effectiveAmount)) {
     const int payerBefore = payer.getCash();
     const int ownerBefore = owner.getCash();
-    payer.reduceCash(amount);
-    owner.addCash(amount);
+    payer.reduceCash(effectiveAmount);
+    owner.addCash(effectiveAmount);
     cout << "Sewa         : M" << amount << "\n";
+    if (effectiveAmount != amount) {
+      cout << "Sewa setelah diskon : M" << effectiveAmount << "\n";
+    }
     cout << "Uang kamu     : M" << payerBefore << " -> M" << payer.getCash()
          << "\n";
     cout << "Uang " << owner.getUsername() << " : M" << ownerBefore
          << " -> M" << owner.getCash() << "\n";
     logger.log(currentTurn, payer.getUsername(), "SEWA",
-               "Bayar M" + to_string(amount) + " ke " + owner.getUsername() +
+               "Bayar M" + to_string(effectiveAmount) + " ke " + owner.getUsername() +
                    " (" + prop.getCode() + ")");
   } else {
-    cout << "Kamu tidak mampu membayar sewa penuh! (M" << amount << ")\n";
+    cout << "Kamu tidak mampu membayar sewa penuh! (M" << effectiveAmount << ")\n";
     cout << "Uang kamu saat ini: M" << payer.getCash() << "\n";
-    BankruptcyHandler bh(payer, &owner, amount);
+    BankruptcyHandler bh(payer, &owner, effectiveAmount);
     if (bh.initiateLiquidation()) {
-      payer.reduceCash(amount);
-      owner.addCash(amount);
+      payer.reduceCash(effectiveAmount);
+      owner.addCash(effectiveAmount);
       addLogEntry("Sewa dibayar setelah likuidasi");
     } else {
-      executeBankruptcy(payer, &owner, amount);
+      executeBankruptcy(payer, &owner, effectiveAmount);
     }
   }
 }
@@ -254,17 +279,35 @@ void GameManager::executeFestival(Player &, string propCode) {
 void GameManager::executeTaxPayment(Player &player, int amount, bool toBank) {
   (void)toBank;
 
-  if (player.canPay(amount)) {
+  if (player.hasShieldActive()) {
+    cout << "[SHIELD ACTIVE]: Efek ShieldCard melindungi Anda!\n";
+    cout << "Tagihan M" << amount << " dibatalkan. Uang Anda tetap: M"
+         << player.getCash() << ".\n";
+    logger.log(currentTurn, player.getUsername(), "SHIELD",
+               "ShieldCard membatalkan tagihan M" + to_string(amount));
+    return;
+  }
+
+  int effectiveAmount = amount;
+  if (player.hasDiscount()) {
+    const int discount = std::clamp(player.getDiscountPercentage(), 0, 100);
+    effectiveAmount -= (effectiveAmount * discount / 100);
+  }
+
+  if (player.canPay(effectiveAmount)) {
     const int before = player.getCash();
-    player.reduceCash(amount);
+    player.reduceCash(effectiveAmount);
     cout << "Pajak sebesar M" << amount << " langsung dipotong.\n";
+    if (effectiveAmount != amount) {
+      cout << "Pajak setelah diskon: M" << effectiveAmount << "\n";
+    }
     cout << "Uang kamu: M" << before << " -> M" << player.getCash() << "\n";
     logger.log(currentTurn, player.getUsername(), "PAJAK",
-               "Membayar pajak M" + to_string(amount));
+               "Membayar pajak M" + to_string(effectiveAmount));
   } else {
-    BankruptcyHandler bh(player, nullptr, amount);
+    BankruptcyHandler bh(player, nullptr, effectiveAmount);
     if (bh.initiateLiquidation()) {
-      player.reduceCash(amount);
+      player.reduceCash(effectiveAmount);
       addLogEntry("Pajak dibayar setelah likuidasi");
     } else {
       bh.declareBankrupt();

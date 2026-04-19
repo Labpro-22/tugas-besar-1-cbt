@@ -65,11 +65,5 @@ void PropertyTile::onLanded(Player &player, GameManager &game) {
                 rentDue *= festivalMultiplier;
         }
 
-        if (!player.canPay(rentDue)) {
-                Player *creditor = owner;
-                game.executeBankruptcy(player, creditor, rentDue);
-                return;
-        }
-
         game.executeRentPayer(player, *owner, prop, rentDue);
 }

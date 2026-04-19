@@ -80,11 +80,19 @@ private:
     int inspectedPlayerIndex;
     int commandScrollColumn;
     int commandScrollMaxColumn;
+    int logScrollLine;
+    bool logAutoScroll;
+    bool logScrollbarDragging;
+    float logScrollbarGrabOffset;
     std::array<int, 6> visibleCommandIndices;
     std::array<std::string, 6> quickButtonLabels;
     std::array<bool, 6> quickButtonEnabled;
     bool manualEnabled;
     Font georgiaFont;
+    Vector2 modalPosition;
+    Vector2 modalDragOffset;
+    bool modalDragging;
+    bool modalPositionInitialized;
 
     void startSession();
     void stopSession();
@@ -101,6 +109,7 @@ private:
     InputPromptResponse requestBackendPrompt(const InputPromptRequest& request);
     std::string currentStatusText(const GameSnapshot& currentSnapshot) const;
     int effectiveInspectedPlayerIndex(const GameSnapshot& currentSnapshot) const;
+    Rectangle modalDialogRect() const;
 
     Layout computeLayout(int screenWidth, int screenHeight,
                          const GameSnapshot& currentSnapshot) const;
@@ -115,7 +124,7 @@ private:
     void drawRoster(const Layout& layout, const GameSnapshot& currentSnapshot) const;
     void drawBoard(const Layout& layout, const GameSnapshot& currentSnapshot) const;
     void drawActionBar(const Layout& layout, const GameSnapshot& currentSnapshot) const;
-    void drawLogPanel(const Layout& layout) const;
+    void drawLogPanel(const Layout& layout);
     void drawModal() const;
 };
 

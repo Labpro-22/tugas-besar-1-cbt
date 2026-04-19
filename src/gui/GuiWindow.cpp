@@ -3,9 +3,11 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -282,15 +284,6 @@ void drawWrappedText(const Font& font, const std::string& text,
     }
 }
 
-void drawTextRight(const Font& font, const std::string& text,
-                   const Rectangle& rect, const float fontSize,
-                   const float spacing, const Color color) {
-    const Vector2 size = MeasureTextEx(font, text.c_str(), fontSize, spacing);
-    const Vector2 position = {rect.x + rect.width - size.x,
-                              rect.y + (rect.height - size.y) / 2.0F};
-    DrawTextEx(font, text.c_str(), position, fontSize, spacing, color);
-}
-
 void drawTextCentered(const Font& font, const std::string& text,
                       const Rectangle& rect, const float fontSize,
                       const float spacing, const Color color) {
@@ -332,6 +325,54 @@ void drawButton(const Font& font, const Rectangle& rect, const std::string& labe
 bool isButtonPressed(const Rectangle& rect, const bool enabled) {
     return enabled && IsMouseButtonReleased(MOUSE_LEFT_BUTTON) &&
            pointInsideRect(rect, GetMousePosition());
+}
+
+Rectangle computeScrollbarThumb(const Rectangle& trackRect,
+                                const int visibleLines,
+                                const int totalLines,
+                                const int startLine) {
+    if (totalLines <= visibleLines || trackRect.height <= 0.0F) {
+        return Rectangle{};
+    }
+
+    const int maxStartLine = std::max(0, totalLines - visibleLines);
+    const float thumbHeight = std::max(
+        28.0F, trackRect.height *
+                   (static_cast<float>(visibleLines) /
+                    static_cast<float>(std::max(visibleLines, totalLines))));
+    const float thumbTravel = std::max(0.0F, trackRect.height - thumbHeight);
+    const float ratio = maxStartLine > 0
+                            ? static_cast<float>(startLine) /
+                                  static_cast<float>(maxStartLine)
+                            : 0.0F;
+    return Rectangle{trackRect.x + 1.0F,
+                     trackRect.y + ratio * thumbTravel,
+                     trackRect.width - 2.0F,
+                     thumbHeight};
+}
+
+Font loadSystemFontFromMemory(const std::string& path, const int baseFontSize,
+                              int* codepoints, const int codepointCount) {
+    std::ifstream fontFile(path, std::ios::binary);
+    if (!fontFile) {
+        return Font{};
+    }
+
+    fontFile.seekg(0, std::ios::end);
+    const std::streamsize size = fontFile.tellg();
+    fontFile.seekg(0, std::ios::beg);
+    if (size <= 0) {
+        return Font{};
+    }
+
+    std::vector<unsigned char> bytes(static_cast<std::size_t>(size));
+    if (!fontFile.read(reinterpret_cast<char*>(bytes.data()), size)) {
+        return Font{};
+    }
+
+    return LoadFontFromMemory(".ttf", bytes.data(),
+                              static_cast<int>(bytes.size()), baseFontSize,
+                              codepoints, codepointCount);
 }
 
 SideDistribution computeSideDistribution(const int totalTiles) {
@@ -544,10 +585,19 @@ GuiWindow::GuiWindow()
       inspectedPlayerIndex(-1),
       commandScrollColumn(0),
       commandScrollMaxColumn(0),
+      logScrollLine(0),
+      logAutoScroll(true),
+      logScrollbarDragging(false),
+      logScrollbarGrabOffset(0.0F),
       visibleCommandIndices{{-1, -1, -1, -1, -1, -1}},
       quickButtonLabels{{"", "", "", "", "", ""}},
       quickButtonEnabled{{false, false, false, false, false, false}},
-      manualEnabled(false) {}
+      manualEnabled(false),
+      georgiaFont{},
+      modalPosition{0.0F, 0.0F},
+      modalDragOffset{0.0F, 0.0F},
+      modalDragging(false),
+      modalPositionInitialized(false) {}
 
 GuiWindow::~GuiWindow() { stopSession(); }
 
@@ -555,44 +605,33 @@ int GuiWindow::run() {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
     InitWindow(kWindowWidth, kWindowHeight, "NIMONSPOLI GUI");
     SetTargetFPS(60);
-    SetTextLineSpacing(-8);  // Slightly negative for better compact rendering
+    SetTextLineSpacing(-8);
 
     // Load high-quality font from system with optimized size
     // Try best fonts with correct Windows font file names
     const char* fontPaths[] = {
-        "C:\\Windows\\Fonts\\segoeuib.ttf",   // Segoe UI Bold
-        "C:\\Windows\\Fonts\\segoeuil.ttf",   // Segoe UI Light
-        "C:\\Windows\\Fonts\\segoeui.ttf",    // Segoe UI
-        "C:\\Windows\\Fonts\\georgia.ttf",    // Georgia
-        "C:\\Windows\\Fonts\\arial.ttf",      // Arial
+        "C:/Windows/Fonts/georgia.ttf",
+        "C:/Windows/Fonts/georgiab.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
+        "C:/Windows/Fonts/arial.ttf",
     };
     bool fontLoaded = false;
-    int baseFontSize = 48;  // Larger base size for better quality
-    
-    // Create glyph ranges for better coverage
-    int codepointCount = 224;
-    int* codepoints = new int[codepointCount];
-    // Load printable ASCII + extended characters
-    for (int i = 0; i < 224; i++) {
-        codepoints[i] = 32 + i;  // ASCII 32-255
-    }
-    
-    // Try loading each font path
-    for (int fontIdx = 0; fontIdx < 5 && !fontLoaded; fontIdx++) {
-        georgiaFont = LoadFontEx(fontPaths[fontIdx], baseFontSize, codepoints, codepointCount);
+    const int baseFontSize = 48;
+    for (int fontIdx = 0; fontIdx < 4 && !fontLoaded; fontIdx++) {
+        georgiaFont =
+            loadSystemFontFromMemory(fontPaths[fontIdx], baseFontSize, nullptr, 0);
         if (georgiaFont.texture.id != 0 && georgiaFont.glyphCount > 0) {
             fontLoaded = true;
-            // Debug output to console
+            SetTextureFilter(georgiaFont.texture, TEXTURE_FILTER_BILINEAR);
             std::cout << "✓ Font loaded: " << fontPaths[fontIdx] << std::endl;
             break;
         }
     }
     
-    delete[] codepoints;  // Free allocated memory
     
     if (!fontLoaded) {
-        // Final fallback to default
         georgiaFont = GetFontDefault();
+        SetTextureFilter(georgiaFont.texture, TEXTURE_FILTER_BILINEAR);
         std::cout << "⚠ All font loading failed, using default raylib font" << std::endl;
     }
 
@@ -821,6 +860,8 @@ void GuiWindow::openLocalDialog(const LocalDialogType type,
     modal.title = title;
     modal.prompt = prompt;
     modal.inputText = initialText;
+    modalDragging = false;
+    modalPositionInitialized = false;
 }
 
 void GuiWindow::confirmLocalDialog() {
@@ -839,6 +880,7 @@ void GuiWindow::confirmLocalDialog() {
         modal.response.value = current.inputText;
         modal.backendResolved = true;
         modal.active = false;
+        modalDragging = false;
         modalCondition.notify_all();
         return;
     }
@@ -889,6 +931,7 @@ void GuiWindow::confirmLocalDialog() {
     }
 
     std::lock_guard<std::mutex> lock(modalMutex);
+    modalDragging = false;
     modal = ModalState{};
 }
 
@@ -903,10 +946,12 @@ void GuiWindow::cancelLocalDialog() {
         modal.response.value.clear();
         modal.backendResolved = true;
         modal.active = false;
+        modalDragging = false;
         modalCondition.notify_all();
         return;
     }
 
+    modalDragging = false;
     modal = ModalState{};
 }
 
@@ -927,12 +972,15 @@ InputPromptResponse GuiWindow::requestBackendPrompt(
     modal.prompt = request.prompt;
     modal.inputText = request.initialValue;
     modal.backendResolved = false;
+    modalDragging = false;
+    modalPositionInitialized = false;
     lock.unlock();
 
     std::unique_lock<std::mutex> waitLock(modalMutex);
     modalCondition.wait(waitLock,
                         [this]() { return shuttingDown || modal.backendResolved; });
     InputPromptResponse response = modal.response;
+    modalDragging = false;
     modal = ModalState{};
     waitLock.unlock();
     modalCondition.notify_all();
@@ -976,20 +1024,23 @@ int GuiWindow::effectiveInspectedPlayerIndex(
     return 0;
 }
 
+Rectangle GuiWindow::modalDialogRect() const {
+    return Rectangle{modalPosition.x, modalPosition.y, 500.0F, 260.0F};
+}
+
 GuiWindow::Layout GuiWindow::computeLayout(const int screenWidth,
                                            const int screenHeight,
                                            const GameSnapshot& currentSnapshot) const {
     Layout layout;
     const float outerPadding = 18.0F;
-    const float gap = 16.0F;
+    const float gap = 12.0F;
     const float headerHeight = 78.0F;
     const float commandHeight = 154.0F;
     const float availableWidth = screenWidth - outerPadding * 2.0F - gap * 2.0F;
 
-    float sideWidth =
-        clampFloat(availableWidth / 5.0F, 240.0F, 320.0F);
-    if (availableWidth - sideWidth * 2.0F < 420.0F) {
-        sideWidth = std::max(200.0F, (availableWidth - 420.0F) / 2.0F);
+    float sideWidth = clampFloat(availableWidth / 5.5F, 200.0F, 290.0F);
+    if (availableWidth - sideWidth * 2.0F < 520.0F) {
+        sideWidth = std::max(185.0F, (availableWidth - 520.0F) / 2.0F);
     }
 
     layout.headerRect =
@@ -1076,7 +1127,7 @@ GuiWindow::Layout GuiWindow::computeLayout(const int screenWidth,
         const int borderThickness =
             clampInt(static_cast<int>(std::min(boardSurface.width, boardSurface.height) /
                                       7.0F),
-                     64, 108);
+                     56, 96);
         const Rectangle centerField{
             boardSurface.x + borderThickness,
             boardSurface.y + borderThickness,
@@ -1126,9 +1177,7 @@ void GuiWindow::updateFrame(const Layout& layout,
             }
         }
 
-        const Rectangle dialogRect{
-            GetScreenWidth() / 2.0F - 250.0F, GetScreenHeight() / 2.0F - 130.0F,
-            500.0F, 260.0F};
+        const Rectangle dialogRect = modalDialogRect();
         const Rectangle okRect{dialogRect.x + dialogRect.width - 210.0F,
                                dialogRect.y + dialogRect.height - 58.0F, 90.0F,
                                34.0F};
@@ -1163,6 +1212,72 @@ void GuiWindow::updateFrame(const Layout& layout,
     }
 
     const Vector2 mouse = GetMousePosition();
+    {
+        const float logLineHeight = 19.0F;
+        const float logScrollbarWidth = 12.0F;
+        const Rectangle textRect{
+            layout.logRect.x,
+            layout.logRect.y,
+            std::max(20.0F, layout.logRect.width - logScrollbarWidth - 10.0F),
+            layout.logRect.height};
+
+        std::string outputCopy;
+        {
+            std::lock_guard<std::mutex> lock(outputMutex);
+            outputCopy = outputText;
+        }
+
+        const auto lines =
+            wrapText(georgiaFont, outputCopy, 15.0F, 1.0F, textRect.width, 100000);
+        const int visibleLines =
+            std::max(1, static_cast<int>(layout.logRect.height / logLineHeight));
+        const int maxStartLine =
+            std::max(0, static_cast<int>(lines.size()) - visibleLines);
+        const Rectangle scrollbarTrack{
+            layout.logRect.x + layout.logRect.width - logScrollbarWidth,
+            layout.logRect.y,
+            logScrollbarWidth,
+            layout.logRect.height};
+        const Rectangle scrollbarThumb =
+            computeScrollbarThumb(scrollbarTrack, visibleLines,
+                                  static_cast<int>(lines.size()), logScrollLine);
+
+        if (pointInsideRect(layout.logRect, mouse)) {
+            const float wheelMove = GetMouseWheelMove();
+            if (wheelMove != 0.0F) {
+                logScrollLine = clampInt(
+                    logScrollLine - static_cast<int>(wheelMove) * 3, 0, maxStartLine);
+                logAutoScroll = logScrollLine >= maxStartLine;
+            }
+        }
+
+        if (!logScrollbarDragging && maxStartLine > 0 &&
+            IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
+            pointInsideRect(scrollbarThumb, mouse)) {
+            logScrollbarDragging = true;
+            logScrollbarGrabOffset = mouse.y - scrollbarThumb.y;
+        }
+
+        if (logScrollbarDragging) {
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+                const float thumbTravel =
+                    std::max(1.0F, scrollbarTrack.height - scrollbarThumb.height);
+                const float newThumbY = clampFloat(
+                    mouse.y - logScrollbarGrabOffset, scrollbarTrack.y,
+                    scrollbarTrack.y + scrollbarTrack.height - scrollbarThumb.height);
+                const float ratio = (newThumbY - scrollbarTrack.y) / thumbTravel;
+                logScrollLine = clampInt(static_cast<int>(std::round(ratio * maxStartLine)),
+                                         0, maxStartLine);
+                logAutoScroll = logScrollLine >= maxStartLine;
+            } else {
+                logScrollbarDragging = false;
+            }
+        } else if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) &&
+                   !pointInsideRect(scrollbarThumb, mouse)) {
+            logScrollbarDragging = false;
+        }
+    }
+
     if (pointInsideRect(layout.rosterRect, mouse) &&
         IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
         for (std::size_t i = 0; i < currentSnapshot.players.size(); ++i) {
@@ -1226,7 +1341,44 @@ void GuiWindow::updateFrame(const Layout& layout,
     }
 }
 
-void GuiWindow::updateModalInput() {}
+void GuiWindow::updateModalInput() {
+    std::lock_guard<std::mutex> lock(modalMutex);
+    if (!modal.active) {
+        modalDragging = false;
+        return;
+    }
+
+    if (!modalPositionInitialized) {
+        modalPosition = Vector2{
+            (GetScreenWidth() - 500.0F) / 2.0F,
+            std::max(96.0F, GetScreenHeight() * 0.18F),
+        };
+        modalPositionInitialized = true;
+    }
+
+    Rectangle dialogRect = modalDialogRect();
+    const Rectangle dragRect{dialogRect.x, dialogRect.y, dialogRect.width, 42.0F};
+    const Vector2 mouse = GetMousePosition();
+
+    if (!modalDragging && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
+        pointInsideRect(dragRect, mouse)) {
+        modalDragging = true;
+        modalDragOffset = Vector2{mouse.x - dialogRect.x, mouse.y - dialogRect.y};
+    }
+
+    if (modalDragging) {
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+            modalPosition = Vector2{mouse.x - modalDragOffset.x,
+                                    mouse.y - modalDragOffset.y};
+            modalPosition.x = clampFloat(
+                modalPosition.x, 10.0F, GetScreenWidth() - dialogRect.width - 10.0F);
+            modalPosition.y = clampFloat(
+                modalPosition.y, 10.0F, GetScreenHeight() - dialogRect.height - 10.0F);
+        } else {
+            modalDragging = false;
+        }
+    }
+}
 
 void GuiWindow::drawFrame(const Layout& layout,
                           const GameSnapshot& currentSnapshot) {
@@ -1281,10 +1433,15 @@ void GuiWindow::drawHeader(const Layout& layout,
             currentSnapshot
                 .players[static_cast<std::size_t>(currentSnapshot.activePlayerIndex)]
                 .name;
-        drawTextRight(font, turnText,
-                      Rectangle{layout.headerRect.x + layout.headerRect.width - 280.0F,
-                                layout.headerRect.y + 12.0F, 180.0F, 52.0F},
-                      14.0F, 1.0F, kAccentDark);
+        const Rectangle turnRect{
+            layout.headerRect.x + layout.headerRect.width - 300.0F,
+            layout.headerRect.y + 16.0F, 190.0F, 34.0F};
+        DrawRectangleRec(turnRect, Color{248, 241, 232, 255});
+        DrawRectangleLinesEx(turnRect, 1.0F, Color{198, 184, 170, 255});
+        drawTextCentered(font,
+                         truncateText(font, turnText, 17.0F, 1.0F,
+                                      turnRect.width - 12.0F),
+                         turnRect, 17.0F, 1.0F, kAccentDark);
     }
 
     DrawTextEx(font, "[ ] #",
@@ -1409,7 +1566,7 @@ void GuiWindow::drawBoard(const Layout& layout,
     const int borderThickness =
         clampInt(static_cast<int>(std::min(boardSurface.width, boardSurface.height) /
                                   7.0F),
-                 64, 108);
+                 56, 96);
     const Rectangle centerField{boardSurface.x + borderThickness,
                                 boardSurface.y + borderThickness,
                                 boardSurface.width - borderThickness * 2.0F,
@@ -1450,27 +1607,34 @@ void GuiWindow::drawBoard(const Layout& layout,
         }
         DrawRectangleRec(stripRect, colorFromKey(tile.colorKey));
 
-        drawTextCentered(font, tile.code,
-                         Rectangle{tileRect.x + 6.0F, tileRect.y + 4.0F,
-                                   tileRect.width - 12.0F, 18.0F},
-                         16.0F, 1.0F, kAccentDark);
+        const bool isCorner = side == TileSide::BottomRightCorner ||
+                              side == TileSide::BottomLeftCorner ||
+                              side == TileSide::TopLeftCorner ||
+                              side == TileSide::TopRightCorner;
+        const float codeFontSize = isCorner ? 15.0F : 14.0F;
+        const float nameFontSize =
+            isCorner ? 13.0F : (tileRect.width < 78.0F ? 11.0F : 12.0F);
 
-        const std::string nameText =
-            truncateText(font, tile.name, 14.0F, 1.0F, tileRect.width - 10.0F);
-        drawTextCentered(font, nameText,
-                         Rectangle{tileRect.x + 5.0F, tileRect.y + 24.0F,
-                                   tileRect.width - 10.0F, tileRect.height - 42.0F},
-                         14.0F, 1.0F, kInk);
+        drawTextCentered(font, tile.code,
+                         Rectangle{tileRect.x + 4.0F, tileRect.y + 4.0F,
+                                   tileRect.width - 8.0F, 18.0F},
+                         codeFontSize, 1.0F, kAccentDark);
+
+        const Rectangle nameRect{tileRect.x + 5.0F, tileRect.y + 24.0F,
+                                 tileRect.width - 10.0F, tileRect.height - 44.0F};
+        drawWrappedText(font, tile.name, nameRect, nameFontSize, 1.0F, kInk, 2);
 
         const std::string footer = tileFooter(tile);
         if (!footer.empty() && tileRect.width >= 52.0F) {
+            const float footerFontSize = tileRect.width < 78.0F ? 10.0F : 11.0F;
             const std::string footerText =
-                truncateText(font, footer, 12.0F, 1.0F, tileRect.width - 10.0F);
+                truncateText(font, footer, footerFontSize, 1.0F,
+                             tileRect.width - 10.0F);
             drawTextCentered(font, footerText,
                              Rectangle{tileRect.x + 5.0F,
-                                       tileRect.y + tileRect.height - 20.0F,
-                                       tileRect.width - 10.0F, 16.0F},
-                             12.0F, 1.0F, kMuted);
+                                        tileRect.y + tileRect.height - 20.0F,
+                                        tileRect.width - 10.0F, 16.0F},
+                             footerFontSize, 1.0F, kMuted);
         }
     }
 
@@ -1575,7 +1739,7 @@ void GuiWindow::drawActionBar(const Layout& layout,
                manualEnabled, false);
 }
 
-void GuiWindow::drawLogPanel(const Layout& layout) const {
+void GuiWindow::drawLogPanel(const Layout& layout) {
     const Font& font = georgiaFont;
     DrawTextEx(font, "CATATAN TRANSAKSI",
                Vector2{layout.rightPanelRect.x + 22.0F,
@@ -1588,24 +1752,64 @@ void GuiWindow::drawLogPanel(const Layout& layout) const {
         outputCopy = outputText;
     }
 
-    const auto lines = wrapText(font, trimWhitespace(outputCopy), 15.0F, 1.0F,
-                                layout.logRect.width, 120);
+    const float scrollbarWidth = 12.0F;
+    const Rectangle textRect{
+        layout.logRect.x,
+        layout.logRect.y,
+        std::max(20.0F, layout.logRect.width - scrollbarWidth - 10.0F),
+        layout.logRect.height};
+    const auto lines =
+        wrapText(font, outputCopy, 15.0F, 1.0F, textRect.width, 100000);
     const float lineHeight = 19.0F;
     const int visibleLines = std::max(1, static_cast<int>(layout.logRect.height / lineHeight));
-    const int startLine =
+    const int maxStartLine =
         std::max(0, static_cast<int>(lines.size()) - visibleLines);
+    if (logAutoScroll) {
+        logScrollLine = maxStartLine;
+    } else {
+        logScrollLine = clampInt(logScrollLine, 0, maxStartLine);
+    }
+    const int startLine = logScrollLine;
 
-    BeginScissorMode(static_cast<int>(layout.logRect.x),
-                     static_cast<int>(layout.logRect.y),
-                     static_cast<int>(layout.logRect.width),
-                     static_cast<int>(layout.logRect.height));
-    float y = layout.logRect.y;
+    BeginScissorMode(static_cast<int>(textRect.x),
+                     static_cast<int>(textRect.y),
+                     static_cast<int>(textRect.width),
+                     static_cast<int>(textRect.height));
+    float y = textRect.y;
     for (int i = startLine; i < static_cast<int>(lines.size()); ++i) {
+        if (y > textRect.y + textRect.height - lineHeight) {
+            break;
+        }
         DrawTextEx(font, lines[static_cast<std::size_t>(i)].c_str(),
-                   Vector2{layout.logRect.x, y}, 15.0F, 1.0F, kInk);
+                   Vector2{textRect.x, y}, 15.0F, 1.0F, kInk);
         y += lineHeight;
     }
     EndScissorMode();
+
+    const Rectangle scrollbarTrack{
+        layout.logRect.x + layout.logRect.width - scrollbarWidth,
+        layout.logRect.y,
+        scrollbarWidth,
+        layout.logRect.height};
+    DrawRectangleRec(scrollbarTrack, Color{236, 231, 221, 255});
+    DrawRectangleLinesEx(scrollbarTrack, 1.0F, kPanelBorder);
+
+    if (maxStartLine > 0) {
+        const float thumbHeight = std::max(
+            28.0F, scrollbarTrack.height *
+                       (static_cast<float>(visibleLines) /
+                        static_cast<float>(std::max(visibleLines, static_cast<int>(lines.size())))));
+        const float thumbTravel = scrollbarTrack.height - thumbHeight;
+        const float ratio =
+            static_cast<float>(startLine) / static_cast<float>(maxStartLine);
+        const Rectangle thumb{
+            scrollbarTrack.x + 1.0F,
+            scrollbarTrack.y + ratio * thumbTravel,
+            scrollbarTrack.width - 2.0F,
+            thumbHeight};
+        DrawRectangleRec(thumb, Color{176, 162, 149, 255});
+        DrawRectangleLinesEx(thumb, 1.0F, kAccentDark);
+    }
 }
 
 void GuiWindow::drawModal() const {
@@ -1622,11 +1826,11 @@ void GuiWindow::drawModal() const {
     const Font& font = georgiaFont;
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Color{0, 0, 0, 110});
 
-    const Rectangle dialogRect{GetScreenWidth() / 2.0F - 250.0F,
-                               GetScreenHeight() / 2.0F - 130.0F, 500.0F, 260.0F};
-    const Rectangle promptRect{dialogRect.x + 18.0F, dialogRect.y + 52.0F,
+    const Rectangle dialogRect = modalDialogRect();
+    const Rectangle titleBarRect{dialogRect.x, dialogRect.y, dialogRect.width, 42.0F};
+    const Rectangle promptRect{dialogRect.x + 18.0F, dialogRect.y + 56.0F,
                                dialogRect.width - 36.0F, 82.0F};
-    const Rectangle inputRect{dialogRect.x + 18.0F, dialogRect.y + 144.0F,
+    const Rectangle inputRect{dialogRect.x + 18.0F, dialogRect.y + 146.0F,
                               dialogRect.width - 36.0F, 34.0F};
     const Rectangle okRect{dialogRect.x + dialogRect.width - 210.0F,
                            dialogRect.y + dialogRect.height - 58.0F, 90.0F, 34.0F};
@@ -1635,9 +1839,14 @@ void GuiWindow::drawModal() const {
 
     DrawRectangleRec(dialogRect, kWhitePanel);
     DrawRectangleLinesEx(dialogRect, 2.0F, kAccentDark);
+    DrawRectangleRec(titleBarRect, Color{245, 232, 225, 255});
+    DrawRectangleLinesEx(titleBarRect, 1.0F, kAccentDark);
     DrawTextEx(font, current.title.c_str(),
-               Vector2{dialogRect.x + 18.0F, dialogRect.y + 18.0F}, 24.0F, 1.0F,
+               Vector2{dialogRect.x + 18.0F, dialogRect.y + 10.0F}, 24.0F, 1.0F,
                kAccentDark);
+    DrawTextEx(font, "geser judul untuk pindah",
+               Vector2{dialogRect.x + dialogRect.width - 198.0F, dialogRect.y + 14.0F},
+               12.0F, 1.0F, kMuted);
     drawWrappedText(font, current.prompt, promptRect, 18.0F, 1.0F, kInk, 5);
 
     if (!current.yesNo || !current.backendOwned) {
@@ -1661,4 +1870,3 @@ void GuiWindow::drawModal() const {
                current.yesNo && current.backendOwned ? "TIDAK" : "BATAL", true,
                false);
 }
-

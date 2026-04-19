@@ -9,12 +9,5 @@ int PBMTaxTile::getFlatTax() const { return pbm_flat; }
 
 void PBMTaxTile::onLanded(Player &player, GameManager &game) {
     const int finalTax = calculateTax(player, getFlatTax());
-
-    if (!player.canPay(finalTax)) {
-        Player *creditor = nullptr;
-        game.executeBankruptcy(player, creditor, finalTax);
-        return;
-    }
-
     game.executeTaxPayment(player, finalTax, true);
 }

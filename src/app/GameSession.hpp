@@ -3,10 +3,12 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "../core/Board-Tiles/Board.hpp"
+#include "../models/Card/SkillCard.hpp"
 #include "../models/GameManager/Dice.hpp"
 #include "../models/GameManager/GameManager.hpp"
 #include "../placeholder/Configuration.hpp"
@@ -79,11 +81,16 @@ private:
     bool running;
     bool gameStarted;
     bool turnActionTaken;
+    bool diceRolledThisTurn;
     std::string startupMode;
     std::string startupPrompt;
     int startupExpectedPlayers;
     int startupCollectedPlayers;
     SnapshotCallback snapshotCallback;
+    std::map<std::string, int> jailAttemptCounts;
+    std::vector<std::unique_ptr<SkillCard>> ownedSkillCards;
+    std::vector<std::string> skillDeck;
+    std::vector<std::string> skillDiscard;
 
     bool initializeGameFromMenu();
     bool initializeNewGame();
@@ -93,6 +100,7 @@ private:
     void resetSessionState();
     void printWelcome() const;
     void printStartupMenu() const;
+    void startTurn(bool drawSkillCard = true);
     void handleCommand(const Command& command);
     void handlePrintBoard();
     void handleRollDice(bool manual, int d1 = 0, int d2 = 0);
@@ -107,6 +115,27 @@ private:
     void handleLoad(const Command& command) const;
     void finishTurn();
     void announceWinner();
+    void markPlayerJailed(Player& player);
+    void releasePlayerFromJail(Player& player);
+    int getJailAttemptCount(const Player& player) const;
+    void initializeSkillDeck();
+    void shuffleSkillDeck();
+    void ensureSkillDeckAvailable();
+    SkillCard* createSkillCardInstance(const std::string& type,
+                                       int value = 0,
+                                       int duration = 0);
+    SkillCard* drawSkillCard();
+    void awardSkillCardAtTurnStart();
+    void discardSkillCard(Player& player, SkillCard* card);
+    bool executeSkillCard(Player& player, SkillCard* card);
+    bool executeMoveCard(Player& player, SkillCard& card);
+    bool executeDiscountCard(Player& player, SkillCard& card);
+    bool executeShieldCard(Player& player, SkillCard& card);
+    bool executeTeleportCard(Player& player, SkillCard& card);
+    bool executeLassoCard(Player& player, SkillCard& card);
+    bool executeDemolitionCard(Player& player, SkillCard& card);
+    void resolveLandingAfterAbility(Player& player, bool grantGoSalary = false);
+    int applyDiscountToAmount(const Player& player, int amount) const;
     void updateStartupState(const std::string& mode, const std::string& prompt,
                             int expectedPlayers = 0, int collectedPlayers = 0);
     void notifySnapshot();
