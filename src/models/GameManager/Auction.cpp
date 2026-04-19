@@ -68,10 +68,10 @@ void Auction::pass(Player* player) {
     cout << "-- " << player->getUsername() << " memilih PASS (Mundur).\n";
     passCount++;
     
-    if (passCount >= participants.size() - 1 && winnerIndex != -1) {
+    if (passCount >= static_cast<int>(participants.size()) - 1 && winnerIndex != -1) {
         determineWinner();
     } 
-    else if (passCount >= participants.size()) {
+    else if (passCount >= static_cast<int>(participants.size())) {
         determineWinner();
     } 
     else {

@@ -5,9 +5,11 @@
 #include "models/GameManager/GameManager.hpp"
 #include "models/GameManager/Player.hpp"
 #include "models/Property/Property.hpp"
+#include "views/InputHandler.hpp"
 
 #include <iostream>
 #include <unordered_map>
+#include <string>
 #include <vector>
 
 FestivalTile::FestivalTile(const std::string &code, const std::string &name, int pos)
@@ -34,17 +36,39 @@ void FestivalTile::onLanded(Player &player, GameManager &game) {
     }
 
     if (ownedTiles.empty()) {
+        std::cout << "Kamu mendarat di petak Festival!\n";
+        std::cout << "Kamu belum memiliki properti untuk diberi efek festival.\n";
         return;
     }
 
-    int selectedIndex = 0;
-    std::cin >> selectedIndex;
+    std::cout << "Kamu mendarat di petak Festival!\n\n";
+    std::cout << "Daftar properti milikmu:\n";
+    for (PropertyTile *tile : ownedTiles) {
+        if (tile == nullptr) {
+            continue;
+        }
 
-    if (selectedIndex < 0 || selectedIndex >= static_cast<int>(ownedTiles.size())) {
-        selectedIndex = 0;
+        std::cout << "- " << tile->getProperty().getCode() << " ("
+                  << tile->getProperty().getName() << ")\n";
     }
 
-    PropertyTile *selectedTile = ownedTiles[static_cast<std::size_t>(selectedIndex)];
+    PropertyTile *selectedTile = nullptr;
+    InputHandler input;
+    while (selectedTile == nullptr) {
+        std::string propertyCode = input.readPromptLine(
+            "Masukkan kode properti: ", "Festival");
+
+        for (PropertyTile *tile : ownedTiles) {
+            if (tile != nullptr && tile->getProperty().getCode() == propertyCode) {
+                selectedTile = tile;
+                break;
+            }
+        }
+
+        if (selectedTile == nullptr) {
+            std::cout << "-> Kode properti tidak valid!\n";
+        }
+    }
 
     int currentMultiplier = 1;
     const auto multiplierIt = festivalMultiplierByTile.find(selectedTile);
@@ -57,6 +81,23 @@ void FestivalTile::onLanded(Player &player, GameManager &game) {
         nextMultiplier *= 2;
     }
 
+    if (currentMultiplier == 1) {
+        std::cout << "\nEfek festival aktif!\n";
+    } else if (nextMultiplier == currentMultiplier) {
+        std::cout << "\nEfek sudah maksimum (harga sewa sudah digandakan tiga kali)\n";
+    } else {
+        std::cout << "\nEfek diperkuat!\n";
+    }
+
+    const int baseRent = selectedTile->getProperty().getPropertyDetail();
     festivalMultiplierByTile[selectedTile] = nextMultiplier;
     selectedTile->applyFestivalEffect(nextMultiplier, 3);
+
+    if (currentMultiplier > 1) {
+        std::cout << "Sewa sebelumnya: M" << (baseRent * currentMultiplier) << "\n";
+    } else {
+        std::cout << "Sewa awal: M" << baseRent << "\n";
+    }
+    std::cout << "Sewa sekarang: M" << (baseRent * nextMultiplier) << "\n";
+    std::cout << "Durasi: 3 giliran\n";
 }

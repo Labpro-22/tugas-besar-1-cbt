@@ -1,4 +1,5 @@
 #include "DemolitionCard.hpp"
+#include "views/InputHandler.hpp"
 
 // ctor
 DemolitionCard::DemolitionCard() : SkillCard() {}
@@ -48,18 +49,16 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
 
     std::cout << "Pilih properti untuk DemolitionCard:\n";
     for (size_t i = 0; i < targets.size(); ++i) {
-        std::cout << i << ". " << targets[i]->getCode()
+        std::cout << (i + 1) << ". " << targets[i]->getCode()
             << " (bangunan: " << targets[i]->getBuildingCount() << ")\n";
     }
 
-    int choice = -1;
-    std::cin >> choice;
-    if (choice < 0 || choice >= static_cast<int>(targets.size())) {
-        std::cout << "Pilihan properti tidak valid.\n";
-        return;
-    }
+    InputHandler input;
+    const int choice =
+        input.readChoice(1, static_cast<int>(targets.size()),
+                         "Pilih properti untuk DemolitionCard: ");
 
-    Property* target = targets[choice];
+    Property* target = targets[static_cast<std::size_t>(choice - 1)];
     target->demolish();
     gm->addLogEntry(p->getUsername() + " menghancurkan bangunan di " + target->getCode());
     markAsUsed();

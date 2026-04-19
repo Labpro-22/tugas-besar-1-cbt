@@ -16,6 +16,9 @@ PropertyTile::~PropertyTile() {
 void PropertyTile::applyFestivalEffect(int mult, int dur) {
         festivalMultiplier = mult;
         festivalDuration = dur;
+        if (property != nullptr) {
+                property->setFestival(mult, dur);
+        }
 }
 
 void PropertyTile::checkFestivalEffect() {
@@ -24,10 +27,15 @@ void PropertyTile::checkFestivalEffect() {
                 if (festivalDuration == 0) {
                         festivalMultiplier = 1;
                 }
+                if (property != nullptr) {
+                        property->setFestival(festivalMultiplier, festivalDuration);
+                }
         }
 }
 
 Property &PropertyTile::getProperty() { return *property; }
+
+const Property &PropertyTile::getProperty() const { return *property; }
 
 void PropertyTile::onLanded(Player &player, GameManager &game) {
         if (property == nullptr) {

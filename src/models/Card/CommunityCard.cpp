@@ -41,7 +41,7 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
     const int giftAmount = 100;
 
     for (Player &other : gm->getPlayers()) {
-      if (&other == p || other.getStatus() != ACTIVE) {
+      if (&other == p || other.getStatus() == BANKRUPT) {
         continue;
       }
 
@@ -68,7 +68,7 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
     // Spesifikasi: "Bayar M200 kepada setiap pemain"
     const int campaignFee = 200;
     for (Player &other : gm->getPlayers()) {
-      if (&other == p || other.getStatus() != ACTIVE) {
+      if (&other == p || other.getStatus() == BANKRUPT) {
         continue;
       }
 

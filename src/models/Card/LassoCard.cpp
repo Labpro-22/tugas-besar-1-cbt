@@ -1,4 +1,5 @@
 #include "LassoCard.hpp"
+#include "views/InputHandler.hpp"
 
 // ctor
 LassoCard::LassoCard() : SkillCard() {}
@@ -32,7 +33,7 @@ void LassoCard::use(Player *p, GameManager *gm) {
         if (&player == p) {
             continue;
         }
-        if (player.getStatus() != ACTIVE) {
+        if (player.getStatus() == BANKRUPT) {
             continue;
         }
         candidates.push_back(&player);
@@ -45,18 +46,16 @@ void LassoCard::use(Player *p, GameManager *gm) {
 
     std::cout << "Pilih target LassoCard:\n";
     for (size_t i = 0; i < candidates.size(); ++i) {
-        std::cout << i << ". " << candidates[i]->getUsername() << " (tile "
+        std::cout << (i + 1) << ". " << candidates[i]->getUsername() << " (tile "
             << candidates[i]->getPosition() << ")\n";
     }
 
-    int choice = -1;
-    std::cin >> choice;
-    if (choice < 0 || choice >= static_cast<int>(candidates.size())) {
-        std::cout << "Pilihan target tidak valid.\n";
-        return;
-    }
+    InputHandler input;
+    const int choice =
+        input.readChoice(1, static_cast<int>(candidates.size()),
+                         "Pilih target LassoCard: ");
 
-    Player *target = candidates[choice];
+    Player *target = candidates[static_cast<std::size_t>(choice - 1)];
     target->setPosition(p->getPosition());
     gm->addLogEntry(p->getUsername() + " menarik " + target->getUsername() +
         " dengan LassoCard");

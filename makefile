@@ -1,8 +1,24 @@
 # Makefile for C++ OOP Project (Optimized & Recursive)
 
 # Compiler settings
-CXX      := g++
-CXXFLAGS := -Wall -Wextra -std=c++17 -I src
+CXX        := g++
+PKG_CONFIG := pkg-config
+CXXFLAGS   := -Wall -Wextra -std=c++17 -I include -I src
+LDFLAGS    :=
+
+ifeq ($(OS),Windows_NT)
+	CXX := C:/msys64/ucrt64/bin/g++.exe
+	PKG_CONFIG := C:/msys64/ucrt64/bin/pkg-config.exe
+	CXXFLAGS += $(shell "$(PKG_CONFIG)" --cflags raylib)
+	LDFLAGS += $(shell "$(PKG_CONFIG)" --libs raylib) -lopengl32 -lgdi32 -lwinmm
+	TARGET := bin/game.exe
+	RUN_CMD := .\bin\game.exe
+else
+	CXXFLAGS += $(shell $(PKG_CONFIG) --cflags raylib)
+	LDFLAGS += $(shell $(PKG_CONFIG) --libs raylib)
+	TARGET := bin/game
+	RUN_CMD := ./bin/game
+endif
 
 # Directories
 SRC_DIR     := src
@@ -12,15 +28,10 @@ INCLUDE_DIR := include
 DATA_DIR    := data
 CONFIG_DIR  := config
 
-# Target executable
-TARGET := $(BIN_DIR)/game
-
 # 1. Recursive Source Finding
-# Secara otomatis mencari semua file .cpp di dalam src/ dan semua sub-foldernya
 SRCS := $(shell find $(SRC_DIR) -name '*.cpp')
 
 # 2. Dynamic Object Mapping
-# Mengubah path src/xxx/yyy.cpp menjadi build/xxx/yyy.o
 OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 
 # Main targets
@@ -32,7 +43,7 @@ directories:
 
 # Link object files to create executable
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 	@echo "Build successful! Executable is at $(TARGET)"
 
 # Compile source files into object files
@@ -42,7 +53,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 # Run the game
 run: all
-	./$(TARGET)
+	$(RUN_CMD)
 
 # Clean up generated files
 clean:

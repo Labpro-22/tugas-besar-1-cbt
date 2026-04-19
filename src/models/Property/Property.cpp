@@ -65,6 +65,8 @@ void Property::setCode(std::string newCode) { code = newCode; }
 
 void Property::setName(std::string newName) { name = newName; }
 
+void Property::setMortgageValue(int value) { mortgageValue = value; }
+
 std::string Property::getStatusString() const {
     if (status == PropertyStatus::BANK)
         return "BANK";

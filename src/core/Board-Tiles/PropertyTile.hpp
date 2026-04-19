@@ -22,6 +22,7 @@ class PropertyTile : public Tile {
         void applyFestivalEffect(int mult, int dur);
         void checkFestivalEffect();
         Property &getProperty();
+        const Property &getProperty() const;
 
         // Override function onLanded dari Tile
         void onLanded(Player &player, GameManager &game) override;

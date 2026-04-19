@@ -13,6 +13,9 @@
 #include "models/Card/Card.hpp"
 #include "models/Card/CardDeck.hpp"
 #include "models/Property/Property.hpp"
+#include "models/Property/Railroad.hpp"
+#include "models/Property/Street.hpp"
+#include "models/Property/Utility.hpp"
 #include "placeholder/Configuration.hpp"
 
 #include <algorithm>
@@ -53,6 +56,36 @@ std::string toLower(const std::string &text) {
       result.begin(), result.end(), result.begin(),
       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
   return result;
+}
+
+std::string toUpper(const std::string &text) {
+  std::string result = text;
+  std::transform(
+      result.begin(), result.end(), result.begin(),
+      [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+  return result;
+}
+
+ColorGroup parseColorGroup(const std::string &value) {
+  const std::string normalized = toUpper(value);
+
+  if (normalized == "COKLAT")
+    return ColorGroup::COKLAT;
+  if (normalized == "BIRU_MUDA")
+    return ColorGroup::BIRU_MUDA;
+  if (normalized == "MERAH_MUDA" || normalized == "PINK")
+    return ColorGroup::MERAH_MUDA;
+  if (normalized == "ORANGE")
+    return ColorGroup::ORANGE;
+  if (normalized == "MERAH")
+    return ColorGroup::MERAH;
+  if (normalized == "KUNING")
+    return ColorGroup::KUNING;
+  if (normalized == "HIJAU")
+    return ColorGroup::HIJAU;
+  if (normalized == "BIRU_TUA")
+    return ColorGroup::BIRU_TUA;
+  return ColorGroup::ABU_ABU;
 }
 
 CardDeck<Card> chanceDeck;
@@ -218,12 +251,44 @@ std::string getPropertyNameFromConfig(const ConfigType &cfg,
   return fallback;
 }
 
-template <typename ConfigType>
-Property *buildPropertyFromConfig(const std::string &code,
-                                  const std::string &fallbackName,
-                                  const ConfigType &cfg) {
+Property *buildPropertyFromConfig(const PropertyConfig &cfg,
+                                  const Configuration &configuration,
+                                  const std::string &fallbackName) {
+  const std::string propertyType = toUpper(cfg.propertyType);
+
+  if (propertyType == "STREET") {
+    Street *street = new Street(
+        cfg.buyPrice, parseColorGroup(cfg.colorGroup), cfg.rentLevels,
+        cfg.houseUpgradeCost, cfg.hotelUpgradeCost, BuildingLevel::EMPTY, 1);
+    street->setCode(cfg.code);
+    street->setName(cfg.name.empty() ? fallbackName : cfg.name);
+    street->setMortgageValue(cfg.mortgageValue);
+    street->setStatusStr("BANK");
+    return street;
+  }
+
+  if (propertyType == "RAILROAD") {
+    Railroad *railroad = new Railroad(cfg.buyPrice,
+                                      configuration.getRailroadRentTable());
+    railroad->setCode(cfg.code);
+    railroad->setName(cfg.name.empty() ? fallbackName : cfg.name);
+    railroad->setMortgageValue(cfg.mortgageValue);
+    railroad->setStatusStr("BANK");
+    return railroad;
+  }
+
+  if (propertyType == "UTILITY") {
+    Utility *utility =
+        new Utility(cfg.buyPrice, configuration.getUtilityMultiplierTable());
+    utility->setCode(cfg.code);
+    utility->setName(cfg.name.empty() ? fallbackName : cfg.name);
+    utility->setMortgageValue(cfg.mortgageValue);
+    utility->setStatusStr("BANK");
+    return utility;
+  }
+
   return new BoardInitializedProperty(
-      code, getPropertyNameFromConfig(cfg, fallbackName),
+      cfg.code, cfg.name.empty() ? fallbackName : cfg.name,
       getBuyPriceFromConfig(cfg), getPropertyDetailFromConfig(cfg),
       getMortgageValueFromConfig(cfg), getPropertyTypeFromConfig(cfg));
 }
@@ -360,7 +425,7 @@ void Board::initialize(Configuration &config) {
       Property *property = nullptr;
 
       if (propConfig != nullptr) {
-        property = buildPropertyFromConfig(refCode, entry.name, *propConfig);
+        property = buildPropertyFromConfig(*propConfig, config, entry.name);
       } else {
         BoardInitializedProperty *fallbackProperty =
             new BoardInitializedProperty(refCode, entry.name, 0, 0, 0,
@@ -382,7 +447,23 @@ void Board::initialize(Configuration &config) {
   tileCount = static_cast<int>(tiles.size());
 }
 
+void Board::setTiles(std::vector<Tile *> newTiles) {
+  for (Tile *tile : tiles) {
+    delete tile;
+  }
+
+  tiles = std::move(newTiles);
+  tileCount = static_cast<int>(tiles.size());
+}
+
 Tile &Board::getTile(int pos) {
+  if (pos < 0 || pos >= static_cast<int>(tiles.size())) {
+    throw std::out_of_range("Board::getTile position out of range");
+  }
+  return *tiles[static_cast<std::size_t>(pos)];
+}
+
+const Tile &Board::getTile(int pos) const {
   if (pos < 0 || pos >= static_cast<int>(tiles.size())) {
     throw std::out_of_range("Board::getTile position out of range");
   }
@@ -401,15 +482,18 @@ Tile *Board::getTilebyCode(const std::string &code) {
 int Board::getTileCount() const { return tileCount; }
 
 int Board::findNearestStation(int currentPos) const {
-  // Scan tiles for railroad-type property tiles ahead of currentPos
   int bestPos = -1;
   int firstStation = -1;
   for (int i = 0; i < tileCount; ++i) {
     if (tiles[i] == nullptr)
       continue;
-    // Check if this tile's type contains "railroad" or "stasiun"
-    std::string tType = toLower(tiles[i]->getType());
-    if (tType == "railroad" || tType == "station") {
+
+    const PropertyTile *propertyTile = dynamic_cast<const PropertyTile *>(tiles[i]);
+    if (propertyTile == nullptr) {
+      continue;
+    }
+
+    if (toUpper(propertyTile->getProperty().getType()) == "RAILROAD") {
       if (firstStation < 0)
         firstStation = i;
       if (i > currentPos && bestPos < 0) {

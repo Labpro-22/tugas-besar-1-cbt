@@ -21,9 +21,11 @@ public:
 
   // Method inisiasi data board
   void initialize(Configuration &config);
+  void setTiles(std::vector<Tile *> newTiles);
 
   // Getter tile
   Tile &getTile(int pos);
+  const Tile &getTile(int pos) const;
   Tile *getTilebyCode(const std::string &code);
   int getTileCount() const;
 

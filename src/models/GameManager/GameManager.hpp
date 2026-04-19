@@ -41,10 +41,20 @@ public:
   void processCommand(string cmd);
   bool checkWinCondition();
   Player &getCurrentPlayer();
+  const Player &getCurrentPlayer() const;
   void advanceToNextPlayer();
   bool isGameOver();
   Player &getWinner();
   vector<Player> &getPlayers();
+  const vector<Player> &getPlayers() const;
+  int getCurrentTurn() const;
+  int getMaxTurn() const;
+  int getActivePlayerIndex() const;
+  void setCurrentTurn(int turn);
+  void setActivePlayerIndex(int index);
+  void setMaxTurn(int turns);
+  void setBoard(Board *newBoard);
+  void setConfiguration(const Configuration &newConfig);
   void moveCurrentPlayer(int steps);
   void executePurchase(Player &player, Property &prop);
   void executeRentPayer(Player &, Player &owner, Property &prop, int amount);
@@ -52,8 +62,13 @@ public:
   void executeBankruptcy(Player &debtor, Player *creditor, int amount);
   void executeFestival(Player &player, string propCode);
   void executeTaxPayment(Player &player, int amount, bool toBank);
+  void executeSalary(Player &player, int amount);
+  void visitJail(Player &player);
+  void goToJail(Player &player);
   void addLogEntry(string action);
   Board &getBoard();
+  TransactionLogger &getLogger();
+  const TransactionLogger &getLogger() const;
 
   // Dynamic board accessors for card/tile logic
   int getGoSalary() const;

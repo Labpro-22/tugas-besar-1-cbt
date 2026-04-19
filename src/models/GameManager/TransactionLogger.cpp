@@ -27,7 +27,7 @@ void TransactionLogger::printLast(int n) const {
     if (n <= 0) {
         return;
     }
-    if (n >= entries.size()) {
+    if (static_cast<std::size_t>(n) >= entries.size()) {
         printAll();
         return;
     }

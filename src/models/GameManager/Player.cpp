@@ -10,7 +10,7 @@ Player::Player(string username, int startingCash, PlayerStatus state,
         usedAbilityThisTurn(usedAbility != 0), hasShield(shield),
         discountPercentage(discPercent), discountRemainingTurns(discRemain) {}
 
-string Player::getUsername() { return username; }
+string Player::getUsername() const { return username; }
 int Player::getCash() const { return cash; }
 int Player::getPosition() const { return position; }
 PlayerStatus Player::getStatus() const { return status; }
@@ -42,6 +42,7 @@ void Player::removeProperty(Property *prop) {
 }
 
 vector<Property *> &Player::getProperties() { return properties; }
+const vector<Property *> &Player::getProperties() const { return properties; }
 int Player::getPropertyCount() const { return properties.size(); }
 
 void Player::addCard(SkillCard *card) { hand.push_back(card); }
@@ -54,6 +55,7 @@ void Player::removeCard(SkillCard *card) {
 }
 
 vector<Card *> &Player::getHand() { return hand; }
+const vector<Card *> &Player::getHand() const { return hand; }
 
 int Player::getCardCount() const { return hand.size(); }
 

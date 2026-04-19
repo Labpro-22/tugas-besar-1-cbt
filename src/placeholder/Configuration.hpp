@@ -1,9 +1,9 @@
 #pragma once
+
 #include <map>
 #include <string>
 #include <vector>
 
-// Placeholder structs for Board initialization
 struct BoardTileConfig {
     std::string code;
     std::string name;
@@ -18,12 +18,16 @@ struct TaxConfig {
 };
 
 struct PropertyConfig {
+    int id = 0;
+    std::string code;
     std::string name;
+    std::string propertyType;
+    std::string colorGroup;
     int buyPrice = 0;
     int mortgageValue = 0;
-    int propertyDetail = 0;
-    std::string propertyType;
-    std::string type;
+    int houseUpgradeCost = 0;
+    int hotelUpgradeCost = 0;
+    std::vector<int> rentLevels;
 };
 
 struct SpecialConfig {
@@ -36,53 +40,51 @@ struct MiscConfig {
     int startingCash = 1000;
 };
 
-// Placeholder Configuration class
 class Configuration {
 private:
+    std::string configDir;
     std::vector<BoardTileConfig> boardLayout;
     std::map<std::string, PropertyConfig> propertyConfigs;
+    std::map<int, int> railroadRentTable;
+    std::map<int, int> utilityMultiplierTable;
     TaxConfig taxConfig;
     SpecialConfig specialConfig;
     MiscConfig miscConfig;
-    bool loaded = false;
+    bool loaded;
+
+    bool loadProperties();
+    bool loadRailroadConfig();
+    bool loadUtilityConfig();
+    bool loadTaxConfig();
+    bool loadSpecialConfig();
+    bool loadMiscConfig();
+    bool loadBoardLayout();
+    bool validateBoardLayout() const;
 
 public:
-    Configuration() = default;
-    Configuration(const std::string & /*dir*/) {}
+    Configuration();
+    explicit Configuration(const std::string& dir);
 
-    bool loadAllConfigs() { return false; }
-    bool isConfigLoaded() const { return loaded; }
+    bool loadAllConfigs();
+    bool isConfigLoaded() const;
 
-    const std::vector<BoardTileConfig> &getBoardLayout() const {
-        return boardLayout;
-    }
+    const std::string& getConfigDir() const;
+    const std::vector<BoardTileConfig>& getBoardLayout() const;
+    const std::map<int, int>& getRailroadRentTable() const;
+    const std::map<int, int>& getUtilityMultiplierTable() const;
 
-    PropertyConfig *getPropertyConfig(const std::string &code) {
-        auto it = propertyConfigs.find(code);
-        if (it != propertyConfigs.end())
-            return &it->second;
-        return nullptr;
-    }
+    PropertyConfig* getPropertyConfig(const std::string& code);
+    const PropertyConfig* getPropertyConfig(const std::string& code) const;
+    std::vector<PropertyConfig> getAllPropertyConfigs() const;
 
-    std::vector<PropertyConfig> getAllPropertyConfigs() const {
-        std::vector<PropertyConfig> result;
-        for (auto &p : propertyConfigs)
-            result.push_back(p.second);
-        return result;
-    }
+    const TaxConfig& getTaxConfig() const;
+    const SpecialConfig& getSpecialConfig() const;
+    const MiscConfig& getMiscConfig() const;
 
-    const TaxConfig &getTaxConfig() const { return taxConfig; }
-    const SpecialConfig &getSpecialConfig() const { return specialConfig; }
-    const MiscConfig &getMiscConfig() const { return miscConfig; }
+    int getGoSalary() const;
+    int getJailFine() const;
+    int getMaxTurn() const;
+    int getStartingCash() const;
 
-    int getGoSalary() const { return specialConfig.goSalary; }
-    int getJailFine() const { return specialConfig.jailFine; }
-    int getMaxTurn() const { return miscConfig.maxTurn; }
-    int getStartingCash() const { return miscConfig.startingCash; }
-
-    void reset() {
-        boardLayout.clear();
-        propertyConfigs.clear();
-        loaded = false;
-    }
+    void reset();
 };

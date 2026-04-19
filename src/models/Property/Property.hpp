@@ -51,9 +51,10 @@ public:
 
     void setCode(std::string newCode);
     void setName(std::string newName);
+    void setMortgageValue(int value);
     void setStatusStr(std::string statusStr);
-    virtual void setFestival(int fmult, int fdur) {}
-    virtual void setBuildingCount(int count) {}
+    virtual void setFestival(int, int) {}
+    virtual void setBuildingCount(int) {}
 
     // Mortgage the property, returns the mortgage amount given to the player
     virtual int mortgage();

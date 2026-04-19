@@ -34,7 +34,7 @@ public:
         int startPosition = 0, vector<Card *> startHand = {},
         vector<Property *> startProperty = {}, int usedAbility = 0,
         bool shield = false, int discPercent = 0, int discRemain = 0);
-    string getUsername();
+    string getUsername() const;
     int getCash() const;
     int getPosition() const;
     PlayerStatus getStatus() const;
@@ -45,10 +45,12 @@ public:
     void addProperty(Property *prop);
     void removeProperty(Property *prop);
     vector<Property *> &getProperties();
+    const vector<Property *> &getProperties() const;
     int getPropertyCount() const;
     void addCard(SkillCard *card);
     void removeCard(SkillCard *card);
     vector<Card *> &getHand();
+    const vector<Card *> &getHand() const;
     int getCardCount() const;
     bool canUseAbility() const;
     void setUsedAbility();

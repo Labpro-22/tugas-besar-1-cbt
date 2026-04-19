@@ -1,4 +1,5 @@
 #include "TeleportCard.hpp"
+#include "views/InputHandler.hpp"
 
 // ctor
 TeleportCard::TeleportCard() : SkillCard() {}
@@ -29,14 +30,10 @@ void TeleportCard::use(Player *p, GameManager *gm) {
 
   int boardSize = gm->getBoardSize();
 
-  int targetTile = 0;
-  std::cout << "Pilih tile tujuan teleport (0-" << (boardSize - 1) << "): ";
-  std::cin >> targetTile;
-
-  if (targetTile < 0 || targetTile >= boardSize) {
-    std::cout << "Input tidak valid. Teleport dibatalkan.\n";
-    return;
-  }
+  InputHandler input;
+  const int targetTile = input.readChoice(
+      0, boardSize - 1,
+      "Pilih tile tujuan teleport (0-" + std::to_string(boardSize - 1) + "): ");
 
   p->setPosition(targetTile);
   gm->addLogEntry(p->getUsername() + " berteleportasi ke tile " +
