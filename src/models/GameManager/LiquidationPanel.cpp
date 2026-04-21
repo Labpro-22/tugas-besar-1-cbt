@@ -1,5 +1,6 @@
 #include "LiquidationPanel.hpp"
 #include "../Property/Property.hpp"
+#include "../Property/Street.hpp"
 #include "Player.hpp"
 #include <algorithm>
 using namespace std;
@@ -8,8 +9,15 @@ LiquidationPanel::LiquidationPanel(Player *p, int initialDebt)
     : debtor(p), debtAmount(initialDebt), remainingDebt(initialDebt) {
     if (debtor != nullptr) {
         for (Property *prop : debtor->getProperties()) {
-            sellableProperties.push_back(prop);
-            mortgageableProperties.push_back(prop);
+            if (prop == nullptr) {
+                continue;
+            }
+            if (prop->getStatusString() == "OWNED") {
+                sellableProperties.push_back(prop);
+                if (prop->getBuildingCount() == 0) {
+                    mortgageableProperties.push_back(prop);
+                }
+            }
         }
     }
 }
@@ -38,14 +46,22 @@ bool LiquidationPanel::sellToBank(Property *prop) {
         }
 
         int sellValue = prop->getBuyPrice();
-
-        if (remainingDebt - sellValue > 0) {
-            debtor->addCash(remainingDebt - sellValue);
+        Street *street = dynamic_cast<Street *>(prop);
+        if (street != nullptr) {
+            const int buildingCount = street->getBuildingCount();
+            if (buildingCount >= static_cast<int>(BuildingLevel::HOTEL)) {
+                sellValue += street->getHotelCost() / 2;
+            } else if (buildingCount > 0) {
+                sellValue += (buildingCount * street->getHouseCost()) / 2;
+            }
         }
-        remainingDebt -= sellValue;
 
+        debtor->addCash(sellValue);
         debtor->removeProperty(prop);
         prop->setOwner(nullptr);
+        prop->setStatusStr("BANK");
+        prop->setFestival(1, 0);
+        prop->setBuildingCount(0);
 
         return true;
     }
@@ -63,9 +79,10 @@ bool LiquidationPanel::mortgage(Property *prop) {
 
         int mortgageValue = prop->getMortgageValue();
 
-        debtor->addCash(mortgageValue);
-        remainingDebt -= mortgageValue;
-        prop->setStatusStr("MORTGAGED");
+        if (prop->getStatusString() == "OWNED") {
+            debtor->addCash(mortgageValue);
+            prop->setStatusStr("MORTGAGED");
+        }
 
         return true;
     }
@@ -75,16 +92,12 @@ bool LiquidationPanel::mortgage(Property *prop) {
 bool LiquidationPanel::isDebtSatisfied() {
     if (debtor == nullptr)
         return false;
-    return (debtor->getCash() >= remainingDebt) || (remainingDebt <= 0);
+    return debtor->getCash() >= debtAmount;
 }
 
 int LiquidationPanel::getRemainingDebt() {
     if (debtor == nullptr) {
         return 0;
     }
-    int needed = remainingDebt - debtor->getCash();
-    if (needed < 0) {
-        return needed;
-    }
-    return 0;
+    return max(0, debtAmount - debtor->getCash());
 }

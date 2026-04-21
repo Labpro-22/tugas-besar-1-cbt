@@ -1,7 +1,9 @@
 #include "BankruptcyHandler.hpp"
 #include "../Property/Property.hpp"
+#include "../Property/Street.hpp"
 #include "LiquidationPanel.hpp"
 #include "Player.hpp"
+#include <algorithm>
 
 BankruptcyHandler::BankruptcyHandler(Player &debtor, Player *creditor, int debt)
     : debtor(debtor), creditor(creditor), debtAmount(debt),
@@ -17,7 +19,21 @@ int BankruptcyHandler::calculateMaxLiquidation() {
     vector<Property *> sellList = panel->getSellableProperties();
 
     for (size_t i = 0; i < sellList.size(); i++) {
-        total += sellList[i]->getBuyPrice();
+        if (sellList[i] == nullptr) {
+            continue;
+        }
+
+        int sellValue = sellList[i]->getBuyPrice();
+        Street *street = dynamic_cast<Street *>(sellList[i]);
+        if (street != nullptr) {
+            const int buildingCount = street->getBuildingCount();
+            if (buildingCount >= static_cast<int>(BuildingLevel::HOTEL)) {
+                sellValue += street->getHotelCost() / 2;
+            } else if (buildingCount > 0) {
+                sellValue += (buildingCount * street->getHouseCost()) / 2;
+            }
+        }
+        total += sellValue;
     }
     return total;
 }
@@ -25,6 +41,10 @@ bool BankruptcyHandler::canCoverDebt() {
     return calculateMaxLiquidation() >= debtAmount;
 }
 bool BankruptcyHandler::initiateLiquidation() {
+    if (!canCoverDebt()) {
+        return false;
+    }
+
     if (panel->isDebtSatisfied()) {
         return true;
     }
@@ -48,10 +68,8 @@ bool BankruptcyHandler::initiateLiquidation() {
     }
 
     if (panel->isDebtSatisfied()) {
-        debtor.reduceCash(debtAmount);
         return true;
     }
-    declareBankrupt();
     return false;
 }
 void BankruptcyHandler::sellPropertyToBank(Property &prop) {
@@ -76,22 +94,39 @@ void BankruptcyHandler::transferAssets() {
     vector<Property *> props = debtor.getProperties();
 
     for (size_t i = 0; i < props.size(); i++) {
+        if (props[i] == nullptr) {
+            continue;
+        }
         creditor->addProperty(props[i]);
         props[i]->setOwner(creditor);
     }
 
-    creditor->addCash(debtor.getCash());
+    const int cashToTransfer = max(0, debtor.getCash());
+    creditor->addCash(cashToTransfer);
     debtor.reduceCash(debtor.getCash());
+    for (Property *prop : props) {
+        if (prop != nullptr) {
+            debtor.removeProperty(prop);
+        }
+    }
 }
 void BankruptcyHandler::repossessProperties() {
     vector<Property *> props = debtor.getProperties();
 
     for (size_t i = 0; i < props.size(); i++) {
+        if (props[i] == nullptr) {
+            continue;
+        }
         props[i]->setOwner(nullptr);
+        props[i]->setStatusStr("BANK");
+        props[i]->setFestival(1, 0);
+        props[i]->setBuildingCount(0);
     }
 
     for (size_t i = 0; i < props.size(); i++) {
-        debtor.removeProperty(props[i]);
+        if (props[i] != nullptr) {
+            debtor.removeProperty(props[i]);
+        }
     }
     debtor.reduceCash(debtor.getCash());
 }

@@ -260,7 +260,6 @@ void GameManager::executeBankruptcy(Player &debtor, Player *creditor,
        << ".\n";
   BankruptcyHandler bh(debtor, creditor, amount);
   bh.declareBankrupt();
-  bh.transferAssets();
   if (creditor) {
     cout << debtor.getUsername() << " dinyatakan BANGKRUT!\n";
     cout << "Kreditor: " << creditor->getUsername() << "\n";
@@ -311,7 +310,6 @@ void GameManager::executeTaxPayment(Player &player, int amount, bool toBank) {
       addLogEntry("Pajak dibayar setelah likuidasi");
     } else {
       bh.declareBankrupt();
-      bh.repossessProperties();
       addLogEntry("Bangkrut karena pajak");
     }
   }
