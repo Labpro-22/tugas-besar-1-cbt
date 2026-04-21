@@ -41,10 +41,7 @@ void MoveCard::use(Player *p, GameManager *gm) {
     int newPos = (oldPos + steps) % boardSize;
     if (newPos < 0)
       newPos += boardSize;
-    p->setPosition(newPos);
-    if (newPos < oldPos) {
-      p->addCash(gm->getGoSalary());
-    }
+    gm->movePlayerTo(*p, newPos, true);
   }
 
   markAsUsed();

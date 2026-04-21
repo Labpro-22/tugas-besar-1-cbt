@@ -13,6 +13,7 @@ public:
     QueueInputBuffer();
 
     void submitLine(const std::string& line);
+    bool readLine(std::string& line);
     void close();
 
 protected:

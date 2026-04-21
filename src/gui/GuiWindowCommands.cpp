@@ -2,6 +2,48 @@
 
 using namespace gui_internal;
 
+namespace {
+
+std::string lowercaseText(std::string text) {
+    std::transform(text.begin(), text.end(), text.begin(),
+                   [](unsigned char ch) {
+                       return static_cast<char>(std::tolower(ch));
+                   });
+    return text;
+}
+
+bool promptExplicitlyAllowsCancel(const InputPromptRequest& request) {
+    if (request.kind != InputPromptKind::Choice || request.minValue > 0 ||
+        request.maxValue < 0) {
+        return false;
+    }
+
+    std::string prompt = lowercaseText(request.prompt);
+    return prompt.find("batal") != std::string::npos;
+}
+
+bool isStartupExitChoice(const InputPromptRequest& request,
+                         const InputPromptResponse& response) {
+    if (!response.accepted || trimWhitespace(response.value) != "0") {
+        return false;
+    }
+
+    const std::string prompt = lowercaseText(request.prompt);
+    return request.kind == InputPromptKind::Choice &&
+           prompt.find("pilih menu") != std::string::npos;
+}
+
+bool shouldUseInlineStartupMenu(const InputPromptRequest& request) {
+    if (request.kind != InputPromptKind::Choice) {
+        return false;
+    }
+
+    const std::string prompt = lowercaseText(request.prompt);
+    return prompt.find("pilih menu") != std::string::npos;
+}
+
+}  // namespace
+
 void GuiWindow::updateQuickButtons(const GameSnapshot& currentSnapshot) {
     visibleCommandIndices.fill(-1);
     quickButtonLabels.fill("-");
@@ -27,7 +69,20 @@ void GuiWindow::updateQuickButtons(const GameSnapshot& currentSnapshot) {
         return;
     }
 
-    const int totalCommands = static_cast<int>(kStartedQuickActions.size());
+    if (currentSnapshot.gameOver) {
+        commandScrollColumn = 0;
+        commandScrollMaxColumn = 0;
+        quickButtonLabels = {"NEW GAME", "LOAD GAME", "EXIT", "-", "-", "-"};
+        quickButtonEnabled = {true, true, true, false, false, false};
+        visibleCommandIndices = {11, 12, 13, -1, -1, -1};
+        manualEnabled = false;
+        return;
+    }
+
+    const int postGameCommandCount = 3;
+    const int totalCommands =
+        static_cast<int>(kStartedQuickActions.size()) -
+        (currentSnapshot.gameOver ? 0 : postGameCommandCount);
     const int totalColumns = (totalCommands + 1) / 2;
     const int visibleColumns = 3;
     commandScrollMaxColumn = std::max(0, totalColumns - visibleColumns);
@@ -97,6 +152,17 @@ void GuiWindow::executeStartedCommand(const int specIndex) {
         case StartedQuickAction::Save:
             openLocalDialog(LocalDialogType::SaveFile, "Simpan Game",
                             "Masukkan nama file save.\nContoh: sesi1.txt");
+            return;
+        case StartedQuickAction::NewGame:
+            submitInputLine("NEW_GAME");
+            return;
+        case StartedQuickAction::LoadGame:
+            openLocalDialog(LocalDialogType::LoadFile, "Load Game",
+                            "Masukkan nama file save.\nContoh: sesi1.txt");
+            return;
+        case StartedQuickAction::Exit:
+            submitInputLine("EXIT");
+            exitRequested.store(true);
             return;
     }
 }
@@ -183,6 +249,16 @@ void GuiWindow::confirmLocalDialog() {
             }
             submitInputLine("SIMPAN " + value);
             break;
+        case LocalDialogType::LoadFile:
+            if (value.empty()) {
+                std::lock_guard<std::mutex> lock(modalMutex);
+                modal.errorText = "Nama file tidak boleh kosong.";
+                return;
+            }
+            submitInputLine("LOAD_GAME " + value);
+            break;
+        case LocalDialogType::ErrorMessage:
+            break;
         case LocalDialogType::None:
             break;
     }
@@ -199,12 +275,18 @@ void GuiWindow::cancelLocalDialog() {
     }
 
     if (modal.backendOwned) {
+        if (promptExplicitlyAllowsCancel(modal.request)) {
+            modal.response.accepted = true;
+            modal.response.value = "0";
+            modal.backendResolved = true;
+            modal.active = false;
+            modalDragging = false;
+            modalCondition.notify_all();
+            return;
+        }
+
+        modal.errorText = "Input ini wajib dan tidak bisa dibatalkan.";
         modal.response.accepted = false;
-        modal.response.value.clear();
-        modal.backendResolved = true;
-        modal.active = false;
-        modalDragging = false;
-        modalCondition.notify_all();
         return;
     }
 
@@ -214,6 +296,17 @@ void GuiWindow::cancelLocalDialog() {
 
 InputPromptResponse GuiWindow::requestBackendPrompt(
     const InputPromptRequest& request) {
+    if (shouldUseInlineStartupMenu(request)) {
+        std::string line;
+        if (!inputBuffer.readLine(line)) {
+            return {};
+        }
+        if (trimWhitespace(line) == "0") {
+            exitRequested.store(true);
+        }
+        return InputPromptResponse{true, line};
+    }
+
     std::unique_lock<std::mutex> lock(modalMutex);
     modalCondition.wait(lock, [this]() { return shuttingDown || !modal.active; });
     if (shuttingDown) {
@@ -237,10 +330,14 @@ InputPromptResponse GuiWindow::requestBackendPrompt(
     modalCondition.wait(waitLock,
                         [this]() { return shuttingDown || modal.backendResolved; });
     InputPromptResponse response = modal.response;
+    const InputPromptRequest originalRequest = modal.request;
     modalDragging = false;
     modal = ModalState{};
     waitLock.unlock();
     modalCondition.notify_all();
+    if (isStartupExitChoice(originalRequest, response)) {
+        exitRequested.store(true);
+    }
     return response;
 }
 

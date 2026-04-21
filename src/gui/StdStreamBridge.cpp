@@ -15,6 +15,28 @@ void QueueInputBuffer::submitLine(const std::string& line) {
     condition.notify_one();
 }
 
+bool QueueInputBuffer::readLine(std::string& line) {
+    line.clear();
+    std::unique_lock<std::mutex> lock(mutex);
+
+    while (true) {
+        condition.wait(lock, [this]() { return closed || !queuedChars.empty(); });
+
+        while (!queuedChars.empty()) {
+            const char ch = queuedChars.front();
+            queuedChars.pop_front();
+            if (ch == '\n') {
+                return true;
+            }
+            line.push_back(ch);
+        }
+
+        if (closed) {
+            return !line.empty();
+        }
+    }
+}
+
 void QueueInputBuffer::close() {
     {
         std::lock_guard<std::mutex> lock(mutex);

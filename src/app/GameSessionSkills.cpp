@@ -61,33 +61,7 @@ void GameSession::ensureSkillDeckAvailable() {
 SkillCard* GameSession::createSkillCardInstance(const std::string& type,
                                                 int value,
                                                 int duration) {
-    const std::string normalized = uppercase(type);
-    std::unique_ptr<SkillCard> card;
-
-    if (normalized == "MOVECARD") {
-        const int steps = value > 0 ? value : randomInt(1, 6);
-        card = std::make_unique<MoveCard>(0, steps);
-    } else if (normalized == "DISCOUNTCARD") {
-        const int discount = value > 0 ? value : (randomInt(1, 5) * 10);
-        const int effectiveDuration = duration > 0 ? duration : 1;
-        card = std::make_unique<DiscountCard>(0, discount, effectiveDuration);
-    } else if (normalized == "SHIELDCARD") {
-        card = std::make_unique<ShieldCard>();
-    } else if (normalized == "TELEPORTCARD") {
-        card = std::make_unique<TeleportCard>();
-    } else if (normalized == "LASSOCARD") {
-        card = std::make_unique<LassoCard>();
-    } else if (normalized == "DEMOLITIONCARD") {
-        card = std::make_unique<DemolitionCard>();
-    }
-
-    if (!card) {
-        return nullptr;
-    }
-
-    SkillCard* rawCard = card.get();
-    ownedSkillCards.push_back(std::move(card));
-    return rawCard;
+    return skillCardFactory.create(type, value, duration);
 }
 
 SkillCard* GameSession::drawSkillCard() {
@@ -154,12 +128,7 @@ void GameSession::discardSkillCard(Player& player, SkillCard* card) {
 
     skillDiscard.push_back(card->getType());
     player.removeCard(card);
-    ownedSkillCards.erase(
-        std::remove_if(ownedSkillCards.begin(), ownedSkillCards.end(),
-                       [card](const std::unique_ptr<SkillCard>& ownedCard) {
-                           return ownedCard.get() == card;
-                       }),
-        ownedSkillCards.end());
+    skillCardFactory.release(card);
 }
 
 bool GameSession::executeSkillCard(Player& player, SkillCard* card) {
@@ -167,22 +136,23 @@ bool GameSession::executeSkillCard(Player& player, SkillCard* card) {
         return false;
     }
 
-    if (dynamic_cast<MoveCard*>(card) != nullptr) {
+    const std::string type = uppercase(card->getType());
+    if (type == "MOVECARD") {
         return executeMoveCard(player, *card);
     }
-    if (dynamic_cast<DiscountCard*>(card) != nullptr) {
+    if (type == "DISCOUNTCARD") {
         return executeDiscountCard(player, *card);
     }
-    if (dynamic_cast<ShieldCard*>(card) != nullptr) {
+    if (type == "SHIELDCARD") {
         return executeShieldCard(player, *card);
     }
-    if (dynamic_cast<TeleportCard*>(card) != nullptr) {
+    if (type == "TELEPORTCARD") {
         return executeTeleportCard(player, *card);
     }
-    if (dynamic_cast<LassoCard*>(card) != nullptr) {
+    if (type == "LASSOCARD") {
         return executeLassoCard(player, *card);
     }
-    if (dynamic_cast<DemolitionCard*>(card) != nullptr) {
+    if (type == "DEMOLITIONCARD") {
         return executeDemolitionCard(player, *card);
     }
 
@@ -245,17 +215,19 @@ bool GameSession::executeTeleportCard(Player& player, SkillCard&) {
                 return std::isdigit(ch) != 0;
             });
 
-        targetPosition = numeric ? std::stoi(token) : findTilePositionByCode(token);
+        targetPosition = numeric ? std::stoi(token)
+                                 : queries.findTilePositionByCode(token);
         if (targetPosition < 0 || targetPosition >= board.getTileCount()) {
             std::cout << "Kode petak tidak valid.\n";
         }
     }
 
-    player.setPosition(targetPosition);
+    game.movePlayerTo(player, targetPosition, true);
     std::cout << "TeleportCard diaktifkan! Bidak dipindahkan ke "
-              << board.getTile(targetPosition).getName() << ".\n";
+              << board.getTile(player.getPosition()).getName() << ".\n";
     game.getLogger().log(game.getCurrentTurn(), player.getUsername(), "KARTU",
-                         "TeleportCard -> " + board.getTile(targetPosition).getCode());
+                         "TeleportCard -> " +
+                             board.getTile(player.getPosition()).getCode());
     resolveLandingAfterAbility(player, false);
     return true;
 }

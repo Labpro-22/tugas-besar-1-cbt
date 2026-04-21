@@ -1,6 +1,6 @@
 #pragma once
-#include "../../placeholder/Configuration.hpp"
-#include "../../placeholder/DiscardPile.hpp"
+#include "../../data/Configuration.hpp"
+#include "../Card/DiscardPile.hpp"
 #include "../Card/CardDeck.hpp"
 #include "../Card/ChanceCard.hpp"
 #include "../Card/CommunityCard.hpp"
@@ -39,11 +39,11 @@ public:
   void startNewGame();
   void processTurn();
   void processCommand(string cmd);
-  bool checkWinCondition();
+  bool checkWinCondition() const;
   Player &getCurrentPlayer();
   const Player &getCurrentPlayer() const;
   void advanceToNextPlayer();
-  bool isGameOver();
+  bool isGameOver() const;
   Player &getWinner();
   vector<Player> &getPlayers();
   const vector<Player> &getPlayers() const;
@@ -56,6 +56,8 @@ public:
   void setBoard(Board *newBoard);
   void setConfiguration(const Configuration &newConfig);
   void moveCurrentPlayer(int steps);
+  void movePlayerTo(Player &player, int targetPosition, bool grantGoSalary);
+  bool crossesOrLandsOnGo(int oldPosition, int newPosition) const;
   void executePurchase(Player &player, Property &prop);
   void executeRentPayer(Player &, Player &owner, Property &prop, int amount);
   void executeAuction(Property &prop);

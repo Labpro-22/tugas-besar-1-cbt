@@ -41,7 +41,8 @@ enum class TileSide {
     Right,
 };
 
-struct SideDistribution {
+class SideDistribution {
+public:
     int bottomInner = 0;
     int leftInner = 0;
     int topInner = 0;
@@ -60,14 +61,18 @@ enum class StartedQuickAction {
     Build,
     UseAbility,
     Save,
+    NewGame,
+    LoadGame,
+    Exit,
 };
 
-struct StartedQuickActionSpec {
+class StartedQuickActionSpec {
+public:
     const char* label;
     StartedQuickAction action;
 };
 
-constexpr std::array<StartedQuickActionSpec, 11> kStartedQuickActions = {{
+constexpr std::array<StartedQuickActionSpec, 14> kStartedQuickActions = {{
     {"CETAK_PAPAN", StartedQuickAction::PrintBoard},
     {"CETAK_PROPERTI", StartedQuickAction::PrintProperties},
     {"LEMPAR_DADU", StartedQuickAction::RollDice},
@@ -79,6 +84,9 @@ constexpr std::array<StartedQuickActionSpec, 11> kStartedQuickActions = {{
     {"BANGUN", StartedQuickAction::Build},
     {"GUNAKAN_KEMAMPUAN", StartedQuickAction::UseAbility},
     {"SIMPAN", StartedQuickAction::Save},
+    {"NEW GAME", StartedQuickAction::NewGame},
+    {"LOAD GAME", StartedQuickAction::LoadGame},
+    {"EXIT", StartedQuickAction::Exit},
 }};
 
 inline int clampInt(const int value, const int minimum, const int maximum) {

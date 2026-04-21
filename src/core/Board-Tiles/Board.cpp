@@ -17,7 +17,7 @@
 #include "models/Property/Railroad.hpp"
 #include "models/Property/Street.hpp"
 #include "models/Property/Utility.hpp"
-#include "placeholder/Configuration.hpp"
+#include "data/Configuration.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -93,85 +93,88 @@ CardDeck<Card> chanceDeck;
 CardDeck<Card> communityChestDeck;
 
 template <typename T, typename = void>
-struct HasGetChanceCards : std::false_type {};
+class HasGetChanceCards : public std::false_type {};
 
 template <typename T>
-struct HasGetChanceCards<
+class HasGetChanceCards<
     T, std::void_t<decltype(std::declval<T &>().getChanceCards())>>
-    : std::true_type {};
+    : public std::true_type {};
 
 template <typename T, typename = void>
-struct HasGetCommunityChestCards : std::false_type {};
+class HasGetCommunityChestCards : public std::false_type {};
 
 template <typename T>
-struct HasGetCommunityChestCards<
+class HasGetCommunityChestCards<
     T, std::void_t<decltype(std::declval<T &>().getCommunityChestCards())>>
-    : std::true_type {};
-
-template <typename T, typename = void> struct HasSetDeck : std::false_type {};
-
-template <typename T>
-struct HasSetDeck<T, std::void_t<decltype(std::declval<T &>().setDeck(
-                         std::declval<CardDeck<Card> *>()))>> : std::true_type {
-};
+    : public std::true_type {};
 
 template <typename T, typename = void>
-struct HasSetCardDeck : std::false_type {};
+class HasSetDeck : public std::false_type {};
 
 template <typename T>
-struct HasSetCardDeck<T, std::void_t<decltype(std::declval<T &>().setCardDeck(
+class HasSetDeck<T, std::void_t<decltype(std::declval<T &>().setDeck(
+                         std::declval<CardDeck<Card> *>()))>>
+    : public std::true_type {};
+
+template <typename T, typename = void>
+class HasSetCardDeck : public std::false_type {};
+
+template <typename T>
+class HasSetCardDeck<T, std::void_t<decltype(std::declval<T &>().setCardDeck(
                              std::declval<CardDeck<Card> *>()))>>
-    : std::true_type {};
-
-template <typename T, typename = void> struct HasNameField : std::false_type {};
-
-template <typename T>
-struct HasNameField<T, std::void_t<decltype(std::declval<T>().name)>>
-    : std::true_type {};
+    : public std::true_type {};
 
 template <typename T, typename = void>
-struct HasMortgageValueField : std::false_type {};
+class HasNameField : public std::false_type {};
 
 template <typename T>
-struct HasMortgageValueField<
+class HasNameField<T, std::void_t<decltype(std::declval<T>().name)>>
+    : public std::true_type {};
+
+template <typename T, typename = void>
+class HasMortgageValueField : public std::false_type {};
+
+template <typename T>
+class HasMortgageValueField<
     T, std::void_t<decltype(std::declval<T>().mortgageValue)>>
-    : std::true_type {};
+    : public std::true_type {};
 
 template <typename T, typename = void>
-struct HasBuyPriceField : std::false_type {};
+class HasBuyPriceField : public std::false_type {};
 
 template <typename T>
-struct HasBuyPriceField<T, std::void_t<decltype(std::declval<T>().buyPrice)>>
-    : std::true_type {};
+class HasBuyPriceField<T, std::void_t<decltype(std::declval<T>().buyPrice)>>
+    : public std::true_type {};
 
 template <typename T, typename = void>
-struct HasPriceField : std::false_type {};
+class HasPriceField : public std::false_type {};
 
 template <typename T>
-struct HasPriceField<T, std::void_t<decltype(std::declval<T>().price)>>
-    : std::true_type {};
+class HasPriceField<T, std::void_t<decltype(std::declval<T>().price)>>
+    : public std::true_type {};
 
 template <typename T, typename = void>
-struct HasPropertyDetailField : std::false_type {};
+class HasPropertyDetailField : public std::false_type {};
 
 template <typename T>
-struct HasPropertyDetailField<
+class HasPropertyDetailField<
     T, std::void_t<decltype(std::declval<T>().propertyDetail)>>
-    : std::true_type {};
+    : public std::true_type {};
 
 template <typename T, typename = void>
-struct HasPropertyTypeField : std::false_type {};
+class HasPropertyTypeField : public std::false_type {};
 
 template <typename T>
-struct HasPropertyTypeField<
-    T, std::void_t<decltype(std::declval<T>().propertyType)>> : std::true_type {
-};
+class HasPropertyTypeField<
+    T, std::void_t<decltype(std::declval<T>().propertyType)>>
+    : public std::true_type {};
 
-template <typename T, typename = void> struct HasTypeField : std::false_type {};
+template <typename T, typename = void>
+class HasTypeField : public std::false_type {};
 
 template <typename T>
-struct HasTypeField<T, std::void_t<decltype(std::declval<T>().type)>>
-    : std::true_type {};
+class HasTypeField<T, std::void_t<decltype(std::declval<T>().type)>>
+    : public std::true_type {};
 
 template <typename TileType>
 void attachDeckIfSupported(TileType &tile, CardDeck<Card> *deck) {
@@ -294,7 +297,8 @@ Property *buildPropertyFromConfig(const PropertyConfig &cfg,
       getMortgageValueFromConfig(cfg), getPropertyTypeFromConfig(cfg));
 }
 
-struct TileInitTracker {
+class TileInitTracker {
+public:
   static int actionCount;
   static int propertyCount;
   static int taxCount;
@@ -481,6 +485,19 @@ Tile *Board::getTilebyCode(const std::string &code) {
 }
 
 int Board::getTileCount() const { return tileCount; }
+
+int Board::findGoPosition() const {
+  for (int i = 0; i < tileCount; ++i) {
+    if (tiles[i] == nullptr)
+      continue;
+
+    const auto *actionTile = dynamic_cast<const ActionTile *>(tiles[i]);
+    if (actionTile != nullptr && toLower(actionTile->getActionType()) == "go") {
+      return i;
+    }
+  }
+  return 0;
+}
 
 int Board::findNearestStation(int currentPos) const {
   int bestPos = -1;

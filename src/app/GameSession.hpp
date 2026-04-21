@@ -8,14 +8,18 @@
 #include <vector>
 
 #include "../core/Board-Tiles/Board.hpp"
+#include "GameSessionQueries.hpp"
+#include "SkillCardFactory.hpp"
 #include "../models/Card/SkillCard.hpp"
 #include "../models/GameManager/Dice.hpp"
 #include "../models/GameManager/GameManager.hpp"
-#include "../placeholder/Configuration.hpp"
+#include "../data/Configuration.hpp"
+#include "../data/GameSessionPersistence.hpp"
 #include "../views/BoardRenderer.hpp"
 #include "../views/GameCLI.hpp"
 
-struct PlayerSnapshot {
+class PlayerSnapshot {
+public:
     std::string name;
     int cash = 0;
     int position = 0;
@@ -27,7 +31,8 @@ struct PlayerSnapshot {
     std::string detailText;
 };
 
-struct TileSnapshot {
+class TileSnapshot {
+public:
     int position = 0;
     std::string code;
     std::string name;
@@ -40,8 +45,10 @@ struct TileSnapshot {
     int festivalDuration = 0;
 };
 
-struct GameSnapshot {
+class GameSnapshot {
+public:
     bool gameStarted = false;
+    bool gameOver = false;
     int currentTurn = 0;
     int maxTurn = 0;
     int activePlayerIndex = 0;
@@ -64,6 +71,7 @@ class Street;
 class GameSession {
 public:
     using SnapshotCallback = std::function<void(const GameSnapshot&)>;
+    friend class GameSessionPersistence;
 
     GameSession();
 
@@ -78,17 +86,20 @@ private:
     BoardRenderer boardRenderer;
     Dice dice;
     Configuration configuration;
+    GameSessionQueries queries;
+    GameSessionPersistence persistence;
     bool running;
     bool gameStarted;
     bool turnActionTaken;
     bool diceRolledThisTurn;
+    bool gameOverAnnounced;
     std::string startupMode;
     std::string startupPrompt;
     int startupExpectedPlayers;
     int startupCollectedPlayers;
     SnapshotCallback snapshotCallback;
     std::map<std::string, int> jailAttemptCounts;
-    std::vector<std::unique_ptr<SkillCard>> ownedSkillCards;
+    SkillCardFactory skillCardFactory;
     std::vector<std::string> skillDeck;
     std::vector<std::string> skillDiscard;
 
@@ -144,12 +155,6 @@ private:
     std::string buildHeaderText() const;
     std::string buildStatusText() const;
     std::string buildPlayerDetailText(const Player& player) const;
-    std::vector<Property*> getAllProperties() const;
-    Property* findPropertyByCode(const std::string& code) const;
-    int findTilePositionByCode(const std::string& code) const;
-    std::vector<Property*> getMortgageableProperties() const;
-    std::vector<Property*> getRedeemableProperties() const;
-    std::vector<Street*> getBuildableStreets() const;
     bool saveToFile(const std::string& filename) const;
     bool loadFromFile(const std::string& filename);
 };

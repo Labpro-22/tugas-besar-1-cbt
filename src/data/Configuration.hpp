@@ -4,20 +4,23 @@
 #include <string>
 #include <vector>
 
-struct BoardTileConfig {
+class BoardTileConfig {
+public:
     std::string code;
     std::string name;
     std::string type;
     std::string propertyCode;
 };
 
-struct TaxConfig {
+class TaxConfig {
+public:
     int pphFlat = 150;
     int pphPercentage = 10;
     int pbmFlat = 200;
 };
 
-struct PropertyConfig {
+class PropertyConfig {
+public:
     int id = 0;
     std::string code;
     std::string name;
@@ -30,12 +33,14 @@ struct PropertyConfig {
     std::vector<int> rentLevels;
 };
 
-struct SpecialConfig {
+class SpecialConfig {
+public:
     int goSalary = 200;
     int jailFine = 50;
 };
 
-struct MiscConfig {
+class MiscConfig {
+public:
     int maxTurn = 15;
     int startingCash = 1000;
 };
@@ -51,6 +56,7 @@ private:
     SpecialConfig specialConfig;
     MiscConfig miscConfig;
     bool loaded;
+    std::string lastError;
 
     bool loadProperties();
     bool loadRailroadConfig();
@@ -59,7 +65,8 @@ private:
     bool loadSpecialConfig();
     bool loadMiscConfig();
     bool loadBoardLayout();
-    bool validateBoardLayout() const;
+    bool validateBoardLayout();
+    void setLastError(const std::string& message);
 
 public:
     Configuration();
@@ -67,6 +74,7 @@ public:
 
     bool loadAllConfigs();
     bool isConfigLoaded() const;
+    const std::string& getLastError() const;
 
     const std::string& getConfigDir() const;
     const std::vector<BoardTileConfig>& getBoardLayout() const;

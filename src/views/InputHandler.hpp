@@ -16,7 +16,8 @@ enum class InputPromptKind {
     YesNo,
 };
 
-struct InputPromptRequest {
+class InputPromptRequest {
+public:
     InputPromptKind kind = InputPromptKind::Line;
     std::string title;
     std::string prompt;
@@ -25,7 +26,8 @@ struct InputPromptRequest {
     int maxValue = 0;
 };
 
-struct InputPromptResponse {
+class InputPromptResponse {
+public:
     bool accepted = false;
     std::string value;
 };

@@ -1,6 +1,7 @@
 #include "Auction.hpp"
 #include <iostream>
 #include <algorithm>
+#include <exception>
 
 // Constructor
 Auction::Auction(Property* prop, vector<Player*> participants) {
@@ -38,8 +39,10 @@ bool Auction::submitBid(Player* player, int amount) {
         return false;
     }
     if (amount > currentBid && amount >= minimumBid) {
-        if (!player->canPay(amount)) {
-            cout << "Uang " << player->getUsername() << " tidak cukup untuk tawaran " << amount << "!\n";
+        try {
+            player->ensureCanPay(amount);
+        } catch (const std::exception& e) {
+            cout << e.what() << "\n";
             return false;
         }
 

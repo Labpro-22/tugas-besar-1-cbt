@@ -2,11 +2,13 @@
 #define GUI_WINDOW_HPP
 
 #include <array>
+#include <atomic>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include <raylib.h>
 
@@ -27,9 +29,12 @@ private:
         LogCount,
         SetDice,
         SaveFile,
+        LoadFile,
+        ErrorMessage,
     };
 
-    struct ModalState {
+    class ModalState {
+    public:
         bool active = false;
         bool backendOwned = false;
         bool yesNo = false;
@@ -43,7 +48,8 @@ private:
         std::string errorText;
     };
 
-    struct Layout {
+    class Layout {
+    public:
         Rectangle headerRect{};
         Rectangle leftPanelRect{};
         Rectangle rightPanelRect{};
@@ -75,8 +81,11 @@ private:
     mutable std::mutex modalMutex;
     std::condition_variable modalCondition;
     ModalState modal;
+    mutable std::mutex pendingErrorMutex;
+    std::vector<std::string> pendingErrorPopups;
 
     bool shuttingDown;
+    std::atomic_bool exitRequested;
     int inspectedPlayerIndex;
     int commandScrollColumn;
     int commandScrollMaxColumn;
@@ -98,6 +107,8 @@ private:
     void stopSession();
     void submitInputLine(const std::string& line);
     void appendOutput(const std::string& text);
+    void queueErrorPopupIfNeeded(const std::string& text);
+    void openPendingErrorPopup();
     void applySnapshot(const GameSnapshot& nextSnapshot);
     void updateQuickButtons(const GameSnapshot& currentSnapshot);
     void executeStartedCommand(int specIndex);
@@ -125,7 +136,7 @@ private:
     void drawBoard(const Layout& layout, const GameSnapshot& currentSnapshot) const;
     void drawActionBar(const Layout& layout, const GameSnapshot& currentSnapshot) const;
     void drawLogPanel(const Layout& layout);
-    void drawModal() const;
+    void drawModal(const GameSnapshot& currentSnapshot) const;
 };
 
 #endif

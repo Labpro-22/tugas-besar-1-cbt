@@ -13,13 +13,13 @@ CommunityCard::~CommunityCard() {}
 std::string CommunityCard::getDescription() const {
   switch (communityType) {
   case CommunityCardType::BIRTHDAY:
-    return "It is your birthday. Collect money from each player.";
+    return "Ini adalah hari ulang tahun Anda. Dapatkan M100 dari setiap pemain.";
   case CommunityCardType::DOCTOR_FEE:
-    return "Doctor's fee. Pay treatment costs.";
+    return "Biaya dokter. Bayar M700.";
   case CommunityCardType::CAMPAIGN_FEE:
-    return "Campaign fee is due. Pay campaign contribution.";
+    return "Anda mau nyaleg. Bayar M200 kepada setiap pemain.";
   default:
-    return "Unknown community card.";
+    return "Kartu dana umum tidak dikenal.";
   }
 }
 
@@ -57,10 +57,17 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
   }
 
   if (communityType == CommunityCardType::DOCTOR_FEE) {
-    // Spesifikasi: "Biaya dokter. Bayar M700"
     const int doctorFee = 700;
-    gm->executeTaxPayment(*p, doctorFee, true);
-    gm->addLogEntry(p->getUsername() + " membayar doctor fee");
+    if (p->canPay(doctorFee)) {
+      p->reduceCash(doctorFee);
+      std::cout << "Kamu membayar M" << doctorFee << " ke Bank."
+                << " Sisa Uang = M" << p->getCash() << ".\n";
+      gm->addLogEntry(p->getUsername() + " membayar biaya dokter M" + std::to_string(doctorFee));
+    } else {
+      std::cout << "Kamu tidak mampu membayar biaya dokter! (M" << doctorFee << ")\n";
+      std::cout << "Uang kamu saat ini: M" << p->getCash() << "\n";
+      gm->executeBankruptcy(*p, nullptr, doctorFee);
+    }
     return;
   }
 

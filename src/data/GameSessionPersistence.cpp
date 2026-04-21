@@ -1,5 +1,7 @@
-﻿#include "GameSession.hpp"
-#include "GameSessionUtil.hpp"
+﻿#include "GameSessionPersistence.hpp"
+
+#include "../app/GameSession.hpp"
+#include "../app/GameSessionUtil.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -29,95 +31,14 @@
 
 using namespace app;
 
-std::vector<Property*> GameSession::getAllProperties() const {
-    std::vector<Property*> properties;
-    for (int i = 0; i < board.getTileCount(); ++i) {
-        const Tile& tile = board.getTile(i);
-        const PropertyTile* propertyTile =
-            dynamic_cast<const PropertyTile*>(&tile);
-        if (propertyTile != nullptr) {
-            properties.push_back(
-                const_cast<Property*>(&propertyTile->getProperty()));
-        }
-    }
-    return properties;
-}
+bool GameSessionPersistence::save(const GameSession& session,
+                                  const std::string& rawFilename) const {
+    const Configuration& configuration = session.configuration;
+    const GameManager& game = session.game;
+    const GameSessionQueries& queries = session.queries;
+    const std::vector<std::string>& skillDeck = session.skillDeck;
+    const std::vector<std::string>& skillDiscard = session.skillDiscard;
 
-Property* GameSession::findPropertyByCode(const std::string& code) const {
-    const std::string normalizedCode = uppercase(code);
-    for (Property* property : getAllProperties()) {
-        if (property != nullptr &&
-            uppercase(property->getCode()) == normalizedCode) {
-            return property;
-        }
-    }
-    return nullptr;
-}
-
-int GameSession::findTilePositionByCode(const std::string& code) const {
-    const std::string normalized = uppercase(code);
-    const std::vector<BoardTileConfig>& layout = configuration.getBoardLayout();
-    for (int i = 0; i < board.getTileCount(); ++i) {
-        const std::string tileCode =
-            i < static_cast<int>(layout.size()) ? layout[static_cast<std::size_t>(i)].code
-                                                : board.getTile(i).getCode();
-        if (uppercase(tileCode) == normalized) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-std::vector<Property*> GameSession::getMortgageableProperties() const {
-    std::vector<Property*> result;
-    const Player& currentPlayer = game.getCurrentPlayer();
-    for (Property* property : currentPlayer.getProperties()) {
-        if (property == nullptr) {
-            continue;
-        }
-        if (property->getStatus() != PropertyStatus::OWNED) {
-            continue;
-        }
-        if (property->getBuildingCount() > 0) {
-            continue;
-        }
-        result.push_back(property);
-    }
-    return result;
-}
-
-std::vector<Property*> GameSession::getRedeemableProperties() const {
-    std::vector<Property*> result;
-    const Player& currentPlayer = game.getCurrentPlayer();
-    for (Property* property : currentPlayer.getProperties()) {
-        if (property != nullptr &&
-            property->getStatus() == PropertyStatus::MORTGAGED) {
-            result.push_back(property);
-        }
-    }
-    return result;
-}
-
-std::vector<Street*> GameSession::getBuildableStreets() const {
-    std::vector<Street*> result;
-    const Player& currentPlayer = game.getCurrentPlayer();
-    for (Property* property : currentPlayer.getProperties()) {
-        Street* street = dynamic_cast<Street*>(property);
-        if (street == nullptr) {
-            continue;
-        }
-        if (street->getStatus() != PropertyStatus::OWNED) {
-            continue;
-        }
-        if (!street->isMonopolized()) {
-            continue;
-        }
-        result.push_back(street);
-    }
-    return result;
-}
-
-bool GameSession::saveToFile(const std::string& rawFilename) const {
     std::filesystem::path path(rawFilename);
     if (path.extension().empty()) {
         path.replace_extension(".txt");
@@ -168,7 +89,7 @@ bool GameSession::saveToFile(const std::string& rawFilename) const {
         file << 0 << "\n";
     }
 
-    std::vector<Property*> properties = getAllProperties();
+    std::vector<Property*> properties = queries.getAllProperties();
     file << properties.size() << "\n";
     for (Property* property : properties) {
         file << property->getCode() << " " << lowercase(property->getType()) << " ";
@@ -204,7 +125,14 @@ bool GameSession::saveToFile(const std::string& rawFilename) const {
     return true;
 }
 
-bool GameSession::loadFromFile(const std::string& rawFilename) {
+bool GameSessionPersistence::load(GameSession& session,
+                                  const std::string& rawFilename) const {
+    GameManager& game = session.game;
+    const GameSessionQueries& queries = session.queries;
+    std::vector<std::string>& skillDeck = session.skillDeck;
+    std::vector<std::string>& skillDiscard = session.skillDiscard;
+    std::map<std::string, int>& jailAttemptCounts = session.jailAttemptCounts;
+
     std::filesystem::path path(rawFilename);
     if (path.extension().empty()) {
         path.replace_extension(".txt");
@@ -249,7 +177,7 @@ bool GameSession::loadFromFile(const std::string& rawFilename) {
         if (numericPosition) {
             position = std::stoi(positionToken);
         } else {
-            position = findTilePositionByCode(positionToken);
+            position = queries.findTilePositionByCode(positionToken);
         }
         if (position < 0) {
             return false;
@@ -269,7 +197,8 @@ bool GameSession::loadFromFile(const std::string& rawFilename) {
                 return false;
             }
 
-            SkillCard* card = createSkillCardInstance(type, value, duration);
+            SkillCard* card =
+                session.createSkillCardInstance(type, value, duration);
             if (card != nullptr) {
                 hand.push_back(card);
             }
@@ -330,7 +259,7 @@ bool GameSession::loadFromFile(const std::string& rawFilename) {
             return false;
         }
 
-        Property* property = findPropertyByCode(code);
+        Property* property = queries.findPropertyByCode(code);
         if (property == nullptr) {
             continue;
         }
@@ -415,6 +344,14 @@ bool GameSession::loadFromFile(const std::string& rawFilename) {
             jailAttemptCounts[player.getUsername()] = 0;
         }
     }
-    diceRolledThisTurn = false;
+    session.diceRolledThisTurn = false;
     return true;
+}
+
+bool GameSession::saveToFile(const std::string& filename) const {
+    return persistence.save(*this, filename);
+}
+
+bool GameSession::loadFromFile(const std::string& filename) {
+    return persistence.load(*this, filename);
 }

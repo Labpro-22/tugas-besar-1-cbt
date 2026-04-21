@@ -35,7 +35,7 @@ void TeleportCard::use(Player *p, GameManager *gm) {
       0, boardSize - 1,
       "Pilih tile tujuan teleport (0-" + std::to_string(boardSize - 1) + "): ");
 
-  p->setPosition(targetTile);
+  gm->movePlayerTo(*p, targetTile, true);
   gm->addLogEntry(p->getUsername() + " berteleportasi ke tile " +
                   std::to_string(targetTile));
   markAsUsed();

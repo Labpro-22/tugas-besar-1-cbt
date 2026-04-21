@@ -15,7 +15,7 @@ ifeq ($(OS),Windows_NT)
 	RUN_CMD := .\bin\game.exe
 else
 	CXXFLAGS += $(shell $(PKG_CONFIG) --cflags raylib)
-	LDFLAGS += $(shell $(PKG_CONFIG) --libs raylib)
+	LDFLAGS += $(shell $(PKG_CONFIG) --libs raylib) -lpthread -lm -ldl
 	TARGET := bin/game
 	RUN_CMD := ./bin/game
 endif

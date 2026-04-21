@@ -44,6 +44,7 @@ void GameSession::notifySnapshotImmediate() {
 GameSnapshot GameSession::buildSnapshot() const {
     GameSnapshot snapshot;
     snapshot.gameStarted = gameStarted;
+    snapshot.gameOver = gameStarted && game.isGameOver();
     snapshot.currentTurn = game.getCurrentTurn();
     snapshot.maxTurn = game.getMaxTurn();
     snapshot.activePlayerIndex = game.getActivePlayerIndex();

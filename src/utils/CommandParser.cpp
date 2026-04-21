@@ -80,6 +80,9 @@ CommandParser::CommandParser() {
     expectedArgCount["DROP_KARTU_KEMAMPUAN"] = 0;
     expectedArgCount["PASS"] = 0;
     expectedArgCount["BID"] = 1;
+    expectedArgCount["NEW_GAME"] = 0;
+    expectedArgCount["LOAD_GAME"] = -1;
+    expectedArgCount["EXIT"] = 0;
 }
 
 std::string CommandParser::normalize(const std::string& raw) const {

@@ -5,6 +5,7 @@
 #include "../Property/Property.hpp"
 #include <algorithm>
 #include <cctype>
+#include <exception>
 #include <iostream>
 #include <string>
 
@@ -34,13 +35,13 @@ void GameManager::processCommand(string cmd) {
   }
 }
 
-bool GameManager::checkWinCondition() {
+bool GameManager::checkWinCondition() const {
   if (players.empty()) {
     return false;
   }
 
   int aliveCount = 0;
-  for (Player &p : players) {
+  for (const Player &p : players) {
     if (p.getStatus() != BANKRUPT) {
       aliveCount++;
     }
@@ -99,21 +100,18 @@ void GameManager::advanceToNextPlayer() {
   } while (players[activePlayerIndex].getStatus() == BANKRUPT);
 }
 
-bool GameManager::isGameOver() { return checkWinCondition(); }
+bool GameManager::isGameOver() const { return checkWinCondition(); }
 
 Player &GameManager::getWinner() {
-  int maxWealth = -1;
-  int winnerIndex = 0;
+  int winnerIndex = -1;
   for (size_t i = 0; i < players.size(); i++) {
     if (players[i].getStatus() != BANKRUPT) {
-      int wealth = players[i].getTotalWealth();
-      if (wealth > maxWealth) {
-        maxWealth = wealth;
+      if (winnerIndex < 0 || players[i] > players[winnerIndex]) {
         winnerIndex = i;
       }
     }
   }
-  return players[winnerIndex];
+  return players[std::max(0, winnerIndex)];
 }
 
 vector<Player> &GameManager::getPlayers() { return players; }
@@ -128,14 +126,50 @@ void GameManager::moveCurrentPlayer(int steps) {
   }
 
   int newPos = (oldPos + steps) % boardSize;
-
-  player.setPosition(newPos);
-
-  if (newPos < oldPos || newPos == 0) {
-    executeSalary(player, getGoSalary());
+  if (newPos < 0) {
+    newPos += boardSize;
   }
 
+  movePlayerTo(player, newPos, true);
   addLogEntry("Bergerak ke petak " + to_string(newPos));
+}
+
+void GameManager::movePlayerTo(Player &player, int targetPosition,
+                               bool grantGoSalary) {
+  const int boardSize = getBoardSize();
+  if (boardSize <= 0) {
+    return;
+  }
+
+  const int oldPosition = player.getPosition();
+  int normalizedTarget = targetPosition % boardSize;
+  if (normalizedTarget < 0) {
+    normalizedTarget += boardSize;
+  }
+
+  player.setPosition(normalizedTarget);
+  if (grantGoSalary &&
+      crossesOrLandsOnGo(oldPosition, normalizedTarget)) {
+    executeSalary(player, getGoSalary());
+  }
+}
+
+bool GameManager::crossesOrLandsOnGo(int oldPosition, int newPosition) const {
+  const int boardSize = getBoardSize();
+  if (boardSize <= 0 || oldPosition == newPosition) {
+    return false;
+  }
+
+  const int goPosition = board != nullptr ? board->findGoPosition() : 0;
+  if (newPosition == goPosition) {
+    return true;
+  }
+
+  if (oldPosition < newPosition) {
+    return goPosition > oldPosition && goPosition <= newPosition;
+  }
+
+  return goPosition > oldPosition || goPosition <= newPosition;
 }
 
 void GameManager::executePurchase(Player &player, Property &prop) {
@@ -158,6 +192,11 @@ void GameManager::executePurchase(Player &player, Property &prop) {
       prop.getType() == "Railroad" || prop.getType() == "Utility";
 
   if (!player.canPay(price)) {
+    try {
+      player.ensureCanPay(price);
+    } catch (const std::exception &e) {
+      cout << e.what() << "\n";
+    }
     cout << "Uang kamu saat ini: M" << player.getCash() << "\n";
     cout << "Properti ini akan masuk ke sistem lelang...\n";
     addLogEntry("Gagal membeli " + prop.getCode());
@@ -217,7 +256,8 @@ void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop,
     effectiveAmount -= (effectiveAmount * discount / 100);
   }
 
-  if (payer.canPay(effectiveAmount)) {
+  try {
+    payer.ensureCanPay(effectiveAmount);
     const int payerBefore = payer.getCash();
     const int ownerBefore = owner.getCash();
     payer.reduceCash(effectiveAmount);
@@ -233,8 +273,9 @@ void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop,
     logger.log(currentTurn, payer.getUsername(), "SEWA",
                "Bayar M" + to_string(effectiveAmount) + " ke " + owner.getUsername() +
                    " (" + prop.getCode() + ")");
-  } else {
+  } catch (const std::exception &e) {
     cout << "Kamu tidak mampu membayar sewa penuh! (M" << effectiveAmount << ")\n";
+    cout << e.what() << "\n";
     cout << "Uang kamu saat ini: M" << payer.getCash() << "\n";
     BankruptcyHandler bh(payer, &owner, effectiveAmount);
     if (bh.initiateLiquidation()) {
@@ -293,7 +334,8 @@ void GameManager::executeTaxPayment(Player &player, int amount, bool toBank) {
     effectiveAmount -= (effectiveAmount * discount / 100);
   }
 
-  if (player.canPay(effectiveAmount)) {
+  try {
+    player.ensureCanPay(effectiveAmount);
     const int before = player.getCash();
     player.reduceCash(effectiveAmount);
     cout << "Pajak sebesar M" << amount << " langsung dipotong.\n";
@@ -303,7 +345,8 @@ void GameManager::executeTaxPayment(Player &player, int amount, bool toBank) {
     cout << "Uang kamu: M" << before << " -> M" << player.getCash() << "\n";
     logger.log(currentTurn, player.getUsername(), "PAJAK",
                "Membayar pajak M" + to_string(effectiveAmount));
-  } else {
+  } catch (const std::exception &e) {
+    cout << e.what() << "\n";
     BankruptcyHandler bh(player, nullptr, effectiveAmount);
     if (bh.initiateLiquidation()) {
       player.reduceCash(effectiveAmount);

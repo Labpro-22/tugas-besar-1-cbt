@@ -38,17 +38,19 @@ GameSession::GameSession()
       boardRenderer(),
       dice(),
       configuration("config"),
+      queries(board, configuration, game),
       running(false),
       gameStarted(false),
       turnActionTaken(false),
       diceRolledThisTurn(false),
+      gameOverAnnounced(false),
       startupMode("MAIN_MENU"),
       startupPrompt(),
       startupExpectedPlayers(0),
       startupCollectedPlayers(0),
       snapshotCallback(),
       jailAttemptCounts(),
-      ownedSkillCards(),
+      skillCardFactory(),
       skillDeck(),
       skillDiscard() {}
 
@@ -64,9 +66,13 @@ void GameSession::run() {
         resetSessionState();
 
         if (!configuration.loadAllConfigs()) {
+            const std::string detail = configuration.getLastError().empty()
+                                           ? "Gagal membaca file konfigurasi."
+                                           : configuration.getLastError();
+            std::cerr << "Error: " << detail << "\n";
             std::cout << "Gagal membaca file konfigurasi pada folder config/.\n";
             std::cout << "Pastikan property.txt, railroad.txt, utility.txt, tax.txt, "
-                         "special.txt, misc.txt, dan board.txt tersedia.\n";
+                         "special.txt, misc.txt, dan board.txt tersedia dan valid.\n";
             notifySnapshot();
             return;
         }
@@ -84,10 +90,13 @@ void GameSession::run() {
         notifySnapshot();
 
         while (running) {
-            if (gameStarted && game.isGameOver()) {
+            if (gameStarted && game.isGameOver() && !gameOverAnnounced) {
                 announceWinner();
+                gameOverAnnounced = true;
+                updateStartupState("GAME_OVER",
+                                   "Permainan selesai. Gunakan NEW GAME, "
+                                   "LOAD GAME, atau EXIT dari panel bawah.");
                 notifySnapshot();
-                break;
             }
 
             std::cout << "\n> ";
@@ -214,12 +223,13 @@ void GameSession::resetSessionState() {
     game.setCurrentTurn(0);
     game.setActivePlayerIndex(0);
     jailAttemptCounts.clear();
-    ownedSkillCards.clear();
+    skillCardFactory.clear();
     skillDeck.clear();
     skillDiscard.clear();
     gameStarted = false;
     turnActionTaken = false;
     diceRolledThisTurn = false;
+    gameOverAnnounced = false;
     startupMode = "MAIN_MENU";
     startupPrompt.clear();
     startupExpectedPlayers = 0;
@@ -259,8 +269,46 @@ void GameSession::startTurn(bool drawSkillCard) {
 void GameSession::handleCommand(const Command& command) {
     const bool handled = ExceptionHandler::guard(
         "GameSession::handleCommand(" + command.name + ")", [&]() {
+            if (command.name == "EXIT") {
+                running = false;
+                return;
+            }
+            if (command.name == "NEW_GAME") {
+                if (gameStarted && !game.isGameOver()) {
+                    cli.showError("NEW GAME hanya tersedia setelah permainan selesai.");
+                    return;
+                }
+                std::cout << "Memulai permainan baru...\n";
+                initializeNewGame();
+                printWelcome();
+                return;
+            }
+            if (command.name == "LOAD_GAME") {
+                if (gameStarted && !game.isGameOver()) {
+                    cli.showError("LOAD GAME hanya tersedia setelah permainan selesai.");
+                    return;
+                }
+                const std::string filename =
+                    command.args.empty()
+                        ? cli.getInputHandler().readToken("Masukkan nama file save: ")
+                        : command.args[0];
+                if (initializeLoadedGame(filename)) {
+                    std::cout << "Permainan berhasil dimuat dari: " << filename
+                              << "\n";
+                    printWelcome();
+                } else {
+                    cli.showError("Gagal memuat file save.");
+                }
+                return;
+            }
+
             if (!gameStarted) {
                 cli.showError("Permainan belum dimulai.");
+                return;
+            }
+            if (game.isGameOver()) {
+                cli.showError("Permainan sudah selesai. Pilih NEW GAME, LOAD GAME, "
+                              "atau EXIT.");
                 return;
             }
 

@@ -121,6 +121,7 @@ GuiWindow::Layout GuiWindow::computeLayout(const int screenWidth,
 
 void GuiWindow::updateFrame(const Layout& layout,
                             const GameSnapshot& currentSnapshot) {
+    openPendingErrorPopup();
     updateModalInput();
 
     ModalState currentModal;
@@ -130,7 +131,8 @@ void GuiWindow::updateFrame(const Layout& layout,
     }
 
     if (currentModal.active) {
-        if (!currentModal.backendOwned || !currentModal.yesNo) {
+        if (currentModal.localType != LocalDialogType::ErrorMessage &&
+            (!currentModal.backendOwned || !currentModal.yesNo)) {
             int character = GetCharPressed();
             while (character > 0) {
                 if (character >= 32 && character <= 126 &&
@@ -158,8 +160,53 @@ void GuiWindow::updateFrame(const Layout& layout,
         const Rectangle cancelRect{dialogRect.x + dialogRect.width - 110.0F,
                                    dialogRect.y + dialogRect.height - 58.0F, 90.0F,
                                    34.0F};
+        const Rectangle errorOkRect{dialogRect.x + dialogRect.width - 120.0F,
+                                    dialogRect.y + dialogRect.height - 58.0F,
+                                    90.0F, 34.0F};
 
-        if (currentModal.backendOwned && currentModal.yesNo) {
+        if (currentModal.backendOwned &&
+            currentModal.request.kind == InputPromptKind::Choice &&
+            !currentSnapshot.gameStarted) {
+            for (std::size_t i = 0; i < layout.quickButtonRects.size(); ++i) {
+                if (!isButtonPressed(layout.quickButtonRects[i],
+                                     quickButtonEnabled[i])) {
+                    continue;
+                }
+
+                std::string value;
+                if (currentSnapshot.startupMode == "PLAYER_COUNT") {
+                    if (i == 0) value = "2";
+                    if (i == 1) value = "3";
+                    if (i == 2) value = "4";
+                } else if (currentSnapshot.startupMode == "MAIN_MENU") {
+                    if (i == 0) value = "1";
+                    if (i == 1) value = "2";
+                    if (i == 2) value = "0";
+                }
+
+                if (!value.empty()) {
+                    std::lock_guard<std::mutex> lock(modalMutex);
+                    modal.response.accepted = true;
+                    modal.response.value = value;
+                    modal.backendResolved = true;
+                    modal.active = false;
+                    modalDragging = false;
+                    modalCondition.notify_all();
+                    if (currentSnapshot.startupMode == "MAIN_MENU" &&
+                        value == "0") {
+                        exitRequested.store(true);
+                    }
+                    return;
+                }
+            }
+        }
+
+        if (currentModal.localType == LocalDialogType::ErrorMessage) {
+            if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_ESCAPE) ||
+                isButtonPressed(errorOkRect, true)) {
+                confirmLocalDialog();
+            }
+        } else if (currentModal.backendOwned && currentModal.yesNo) {
             if (isButtonPressed(okRect, true)) {
                 std::lock_guard<std::mutex> lock(modalMutex);
                 modal.response.accepted = true;
@@ -265,7 +312,7 @@ void GuiWindow::updateFrame(const Layout& layout,
         }
     }
 
-    if (currentSnapshot.gameStarted) {
+    if (currentSnapshot.gameStarted && !currentSnapshot.gameOver) {
         if (isButtonPressed(layout.rollButtonRect, true)) {
             submitInputLine("LEMPAR_DADU");
             return;
@@ -301,6 +348,11 @@ void GuiWindow::updateFrame(const Layout& layout,
             continue;
         }
 
+        if (currentSnapshot.gameStarted && currentSnapshot.gameOver) {
+            executeStartedCommand(visibleCommandIndices[i]);
+            return;
+        }
+
         if (currentSnapshot.startupMode == "PLAYER_COUNT") {
             if (i == 0) submitInputLine("2");
             if (i == 1) submitInputLine("3");
@@ -310,7 +362,10 @@ void GuiWindow::updateFrame(const Layout& layout,
 
         if (i == 0) submitInputLine("1");
         if (i == 1) submitInputLine("2");
-        if (i == 2) submitInputLine("0");
+        if (i == 2) {
+            submitInputLine("0");
+            exitRequested.store(true);
+        }
         return;
     }
 }

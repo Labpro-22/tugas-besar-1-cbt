@@ -87,36 +87,60 @@ bool parsePairFile(const std::filesystem::path& path, std::map<int, int>& target
 
 }  // namespace
 
-Configuration::Configuration() : configDir("config"), loaded(false) {}
+Configuration::Configuration() : configDir("config"), loaded(false), lastError() {}
 
 Configuration::Configuration(const std::string& dir)
-    : configDir(dir), loaded(false) {}
+    : configDir(dir), loaded(false), lastError() {}
 
 bool Configuration::loadAllConfigs() {
     reset();
 
     if (!loadProperties()) {
+        if (lastError.empty()) {
+            setLastError("Gagal membaca property.txt atau tidak ada properti valid.");
+        }
         return false;
     }
     if (!loadRailroadConfig()) {
+        if (lastError.empty()) {
+            setLastError("Gagal membaca railroad.txt atau tabel sewa kosong.");
+        }
         return false;
     }
     if (!loadUtilityConfig()) {
+        if (lastError.empty()) {
+            setLastError("Gagal membaca utility.txt atau tabel multiplier kosong.");
+        }
         return false;
     }
     if (!loadTaxConfig()) {
+        if (lastError.empty()) {
+            setLastError("Gagal membaca tax.txt atau format pajak tidak valid.");
+        }
         return false;
     }
     if (!loadSpecialConfig()) {
+        if (lastError.empty()) {
+            setLastError("Gagal membaca special.txt atau format petak spesial tidak valid.");
+        }
         return false;
     }
     if (!loadMiscConfig()) {
+        if (lastError.empty()) {
+            setLastError("Gagal membaca misc.txt atau format misc tidak valid.");
+        }
         return false;
     }
     if (!loadBoardLayout()) {
+        if (lastError.empty()) {
+            setLastError("Gagal membaca board.txt atau tidak ada petak valid.");
+        }
         return false;
     }
     if (!validateBoardLayout()) {
+        if (lastError.empty()) {
+            setLastError("Papan tidak valid.");
+        }
         return false;
     }
 
@@ -125,6 +149,8 @@ bool Configuration::loadAllConfigs() {
 }
 
 bool Configuration::isConfigLoaded() const { return loaded; }
+
+const std::string& Configuration::getLastError() const { return lastError; }
 
 const std::string& Configuration::getConfigDir() const { return configDir; }
 
@@ -188,6 +214,11 @@ void Configuration::reset() {
     specialConfig = SpecialConfig();
     miscConfig = MiscConfig();
     loaded = false;
+    lastError.clear();
+}
+
+void Configuration::setLastError(const std::string& message) {
+    lastError = message;
 }
 
 bool Configuration::loadProperties() {
@@ -329,6 +360,7 @@ bool Configuration::loadBoardLayout() {
         file.open(fallback);
     }
     if (!file.is_open()) {
+        setLastError("Papan tidak valid: file board.txt atau board_layout.txt tidak ditemukan.");
         return false;
     }
 
@@ -354,11 +386,19 @@ bool Configuration::loadBoardLayout() {
         boardLayout.push_back(tile);
     }
 
-    return !boardLayout.empty();
+    if (boardLayout.empty()) {
+        setLastError("Papan tidak valid: board.txt tidak berisi petak valid.");
+        return false;
+    }
+
+    return true;
 }
 
-bool Configuration::validateBoardLayout() const {
+bool Configuration::validateBoardLayout() {
     if (boardLayout.size() < 20 || boardLayout.size() > 60) {
+        setLastError("Papan tidak valid: jumlah petak " +
+                     std::to_string(boardLayout.size()) +
+                     ", harus minimal 20 dan maksimal 60.");
         return false;
     }
 
@@ -367,6 +407,18 @@ bool Configuration::validateBoardLayout() const {
 
     for (const BoardTileConfig& tile : boardLayout) {
         const std::string type = toLower(tile.type);
+        const bool knownType =
+            type == "go" || type == "jail" || type == "go_to_jail" ||
+            type == "free_parking" || type == "chance" ||
+            type == "community_chest" || type == "festival" ||
+            type == "pph_tax" || type == "pph" || type == "pbm_tax" ||
+            type == "pbm" || type == "property";
+        if (!knownType) {
+            setLastError("Papan tidak valid: tipe petak '" + tile.type +
+                         "' pada kode " + tile.code + " tidak dikenali.");
+            return false;
+        }
+
         if (type == "go") {
             goCount++;
         } else if (type == "jail") {
@@ -375,10 +427,26 @@ bool Configuration::validateBoardLayout() const {
             const std::string refCode =
                 tile.propertyCode.empty() ? tile.code : tile.propertyCode;
             if (propertyConfigs.find(toUpper(refCode)) == propertyConfigs.end()) {
+                setLastError("Papan tidak valid: properti " + toUpper(refCode) +
+                             " pada petak " + tile.code +
+                             " tidak ditemukan di property.txt.");
                 return false;
             }
         }
     }
 
-    return goCount == 1 && jailCount == 1;
+    if (goCount != 1) {
+        setLastError("Papan tidak valid: harus ada tepat 1 petak GO, ditemukan " +
+                     std::to_string(goCount) + ".");
+        return false;
+    }
+
+    if (jailCount != 1) {
+        setLastError(
+            "Papan tidak valid: harus ada tepat 1 petak Penjara/JAIL, ditemukan " +
+            std::to_string(jailCount) + ".");
+        return false;
+    }
+
+    return true;
 }

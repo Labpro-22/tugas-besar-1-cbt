@@ -14,13 +14,13 @@ ChanceCard::~ChanceCard() {}
 std::string ChanceCard::getDescription() const {
   switch (chanceType) {
   case ChanceCardType::GO_TO_NEAREST_STATION:
-    return "Go to nearest station.";
+    return "Pergi ke stasiun terdekat.";
   case ChanceCardType::MOVE_BACK_3:
-    return "Move back 3 tiles.";
+    return "Mundur 3 petak.";
   case ChanceCardType::GO_TO_JAIL:
-    return "Go directly to jail.";
+    return "Masuk Penjara.";
   default:
-    return "Unknown chance card.";
+    return "Kartu kesempatan tidak dikenal.";
   }
 }
 
@@ -35,31 +35,26 @@ void ChanceCard::execute(Player *p, GameManager *gm) {
 
   switch (chanceType) {
   case ChanceCardType::GO_TO_NEAREST_STATION: {
-    int destination = gm->getBoard().findNearestStation(p->getPosition());
-
-    int oldPos = p->getPosition();
-    int newPos = destination % boardSize;
-    if (newPos < 0)
-      newPos += boardSize;
-    p->setPosition(newPos);
-    if (newPos < oldPos) {
-      p->addCash(gm->getGoSalary());
-    }
-    gm->addLogEntry(p->getUsername() + " menuju stasiun terdekat");
+    int newPos = gm->getBoard().findNearestStation(p->getPosition());
+    newPos = ((newPos % boardSize) + boardSize) % boardSize;
+    gm->movePlayerTo(*p, newPos, true);
+    Tile &tile = gm->getBoard().getTile(newPos);
+    std::cout << "Bidak dipindahkan ke " << tile.getName() << ".\n";
+    gm->addLogEntry(p->getUsername() + " menuju stasiun terdekat: " + tile.getName());
+    tile.onLanded(*p, *gm);
     break;
   }
   case ChanceCardType::MOVE_BACK_3: {
-    int newPos = (p->getPosition() - 3) % boardSize;
-    if (newPos < 0)
-      newPos += boardSize;
+    int newPos = ((p->getPosition() - 3) % boardSize + boardSize) % boardSize;
     p->setPosition(newPos);
-    gm->addLogEntry(p->getUsername() + " mundur 3 petak");
+    Tile &tile = gm->getBoard().getTile(newPos);
+    std::cout << "Bidak dipindahkan ke " << tile.getName() << ".\n";
+    gm->addLogEntry(p->getUsername() + " mundur 3 petak ke " + tile.getName());
+    tile.onLanded(*p, *gm);
     break;
   }
   case ChanceCardType::GO_TO_JAIL: {
-    p->setPosition(gm->getJailPosition());
-    p->setStatus(JAILED);
-    gm->addLogEntry(p->getUsername() + " dikirim ke penjara");
+    gm->goToJail(*p);
     break;
   }
   }

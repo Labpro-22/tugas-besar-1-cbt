@@ -10,7 +10,7 @@ void GuiWindow::drawActionBar(const Layout& layout,
                    quickButtonEnabled[i], false);
     }
 
-    if (currentSnapshot.gameStarted) {
+    if (currentSnapshot.gameStarted && !currentSnapshot.gameOver) {
         drawButton(font, layout.scrollLeftRect, "<", commandScrollColumn > 0, false);
         drawButton(font, layout.scrollRightRect, ">", commandScrollColumn < commandScrollMaxColumn,
                    false);
@@ -107,7 +107,7 @@ void GuiWindow::drawLogPanel(const Layout& layout) {
     }
 }
 
-void GuiWindow::drawModal() const {
+void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
     ModalState current;
     {
         std::lock_guard<std::mutex> lock(modalMutex);
@@ -119,16 +119,29 @@ void GuiWindow::drawModal() const {
     }
 
     const Font& font = georgiaFont;
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Color{0, 0, 0, 110});
+    const bool isErrorModal = current.localType == LocalDialogType::ErrorMessage;
+    std::string activePlayerName;
+    if (currentSnapshot.gameStarted && currentSnapshot.activePlayerIndex >= 0 &&
+        currentSnapshot.activePlayerIndex <
+            static_cast<int>(currentSnapshot.players.size())) {
+        activePlayerName =
+            currentSnapshot
+                .players[static_cast<std::size_t>(currentSnapshot.activePlayerIndex)]
+                .name;
+    }
 
     const Rectangle dialogRect = modalDialogRect();
     const Rectangle titleBarRect{dialogRect.x, dialogRect.y, dialogRect.width, 42.0F};
     const Rectangle promptRect{dialogRect.x + 18.0F, dialogRect.y + 56.0F,
-                               dialogRect.width - 36.0F, 82.0F};
+                               dialogRect.width - 36.0F,
+                               isErrorModal ? 132.0F : 82.0F};
     const Rectangle inputRect{dialogRect.x + 18.0F, dialogRect.y + 146.0F,
                               dialogRect.width - 36.0F, 34.0F};
     const Rectangle okRect{dialogRect.x + dialogRect.width - 210.0F,
                            dialogRect.y + dialogRect.height - 58.0F, 90.0F, 34.0F};
+    const Rectangle errorOkRect{dialogRect.x + dialogRect.width - 120.0F,
+                                dialogRect.y + dialogRect.height - 58.0F, 90.0F,
+                                34.0F};
     const Rectangle cancelRect{dialogRect.x + dialogRect.width - 110.0F,
                                dialogRect.y + dialogRect.height - 58.0F, 90.0F, 34.0F};
 
@@ -139,12 +152,28 @@ void GuiWindow::drawModal() const {
     DrawTextEx(font, current.title.c_str(),
                Vector2{dialogRect.x + 18.0F, dialogRect.y + 10.0F}, 24.0F, 1.0F,
                kAccentDark);
-    DrawTextEx(font, "geser judul untuk pindah",
-               Vector2{dialogRect.x + dialogRect.width - 198.0F, dialogRect.y + 14.0F},
-               12.0F, 1.0F, kMuted);
-    drawWrappedText(font, current.prompt, promptRect, 18.0F, 1.0F, kInk, 5);
+    if (!activePlayerName.empty()) {
+        const float labelSize = 24.0F;
+        const std::string label = "Giliran: ";
+        const Vector2 labelPos{dialogRect.x + dialogRect.width - 285.0F,
+                               dialogRect.y + 6.0F};
+        DrawTextEx(font, label.c_str(), labelPos, labelSize, 1.0F, kAccentDark);
+        DrawTextEx(font, label.c_str(), Vector2{labelPos.x + 0.7F, labelPos.y},
+                   labelSize, 1.0F, kAccentDark);
 
-    if (!current.yesNo || !current.backendOwned) {
+        const float labelWidth = MeasureTextEx(font, label.c_str(), labelSize, 1.0F).x;
+        const std::string nameText =
+            truncateText(font, activePlayerName, labelSize, 1.0F, 126.0F);
+        const Vector2 namePos{labelPos.x + labelWidth, labelPos.y};
+        DrawTextEx(font, nameText.c_str(), namePos, labelSize, 1.0F, kAccentDark);
+        DrawTextEx(font, nameText.c_str(), Vector2{namePos.x + 0.7F, namePos.y},
+                   labelSize, 1.0F, kAccentDark);
+    }
+    drawWrappedText(font, current.prompt, promptRect, 18.0F, 1.0F,
+                    isErrorModal ? Color{160, 30, 30, 255} : kInk,
+                    isErrorModal ? 7 : 5);
+
+    if (!isErrorModal && (!current.yesNo || !current.backendOwned)) {
         DrawRectangleRec(inputRect, kPanel);
         DrawRectangleLinesEx(inputRect, 1.0F, kPanelBorder);
         const std::string displayText = current.inputText.empty() ? " " : current.inputText;
@@ -159,9 +188,13 @@ void GuiWindow::drawModal() const {
                    14.0F, 1.0F, Color{180, 40, 40, 255});
     }
 
-    drawButton(font, okRect, current.yesNo && current.backendOwned ? "YA" : "OK",
-               true, current.yesNo && current.backendOwned);
-    drawButton(font, cancelRect,
-               current.yesNo && current.backendOwned ? "TIDAK" : "BATAL", true,
-               false);
+    if (isErrorModal) {
+        drawButton(font, errorOkRect, "OK", true, true);
+    } else {
+        drawButton(font, okRect, current.yesNo && current.backendOwned ? "YA" : "OK",
+                   true, current.yesNo && current.backendOwned);
+        drawButton(font, cancelRect,
+                   current.yesNo && current.backendOwned ? "TIDAK" : "BATAL", true,
+                   false);
+    }
 }

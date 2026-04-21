@@ -30,6 +30,7 @@ public:
   int getTileCount() const;
 
   // Dynamic board query helpers
+  int findGoPosition() const;
   int findNearestStation(int currentPos) const;
   int findJailPosition() const;
 };

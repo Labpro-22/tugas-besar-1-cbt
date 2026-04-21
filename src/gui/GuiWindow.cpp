@@ -14,6 +14,15 @@
 
 using namespace gui_internal;
 
+namespace {
+bool shouldShowErrorPopup(const std::string& text) {
+    return text.find("[ERROR]") != std::string::npos ||
+           text.find("[FATAL]") != std::string::npos ||
+           text.rfind("Error:", 0) == 0 ||
+           text.find("\nError:") != std::string::npos;
+}
+} // namespace
+
 GuiWindow::GuiWindow()
     : inputBuffer(),
       outputBuffer(),
@@ -28,7 +37,10 @@ GuiWindow::GuiWindow()
       modalMutex(),
       modalCondition(),
       modal(),
+      pendingErrorMutex(),
+      pendingErrorPopups(),
       shuttingDown(false),
+      exitRequested(false),
       inspectedPlayerIndex(-1),
       commandScrollColumn(0),
       commandScrollMaxColumn(0),
@@ -55,16 +67,23 @@ int GuiWindow::run() {
     SetTextLineSpacing(-8);
 
     // Load high-quality font from system with optimized size
-    // Try best fonts with correct Windows font file names
     const char* fontPaths[] = {
+        // Windows paths
         "C:/Windows/Fonts/georgia.ttf",
         "C:/Windows/Fonts/georgiab.ttf",
         "C:/Windows/Fonts/segoeui.ttf",
         "C:/Windows/Fonts/arial.ttf",
+        // Linux / WSL paths
+        "/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSerif.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
     };
     bool fontLoaded = false;
     const int baseFontSize = 48;
-    for (int fontIdx = 0; fontIdx < 4 && !fontLoaded; fontIdx++) {
+    for (int fontIdx = 0; fontIdx < 10 && !fontLoaded; fontIdx++) {
         georgiaFont =
             loadSystemFontFromMemory(fontPaths[fontIdx], baseFontSize, nullptr, 0);
         if (georgiaFont.texture.id != 0 && georgiaFont.glyphCount > 0) {
@@ -73,13 +92,6 @@ int GuiWindow::run() {
             std::cout << "âœ“ Font loaded: " << fontPaths[fontIdx] << std::endl;
             break;
         }
-    }
-    
-    
-    if (!fontLoaded) {
-        georgiaFont = GetFontDefault();
-        SetTextureFilter(georgiaFont.texture, TEXTURE_FILTER_BILINEAR);
-        std::cout << "âš  All font loading failed, using default raylib font" << std::endl;
     }
 
     outputBuffer.setCallback(
@@ -97,7 +109,7 @@ int GuiWindow::run() {
         std::make_unique<StdStreamRedirector>(inputBuffer, outputBuffer);
     startSession();
 
-    while (!WindowShouldClose()) {
+    while (!WindowShouldClose() && !exitRequested.load()) {
         GameSnapshot currentSnapshot;
         {
             std::lock_guard<std::mutex> lock(snapshotMutex);
@@ -184,6 +196,61 @@ void GuiWindow::appendOutput(const std::string& text) {
     if (outputText.size() > kMaxOutputSize) {
         outputText.erase(0, outputText.size() - kMaxOutputSize);
     }
+
+    queueErrorPopupIfNeeded(text);
+}
+
+void GuiWindow::queueErrorPopupIfNeeded(const std::string& text) {
+    if (!shouldShowErrorPopup(text)) {
+        return;
+    }
+
+    std::string message = trimWhitespace(text);
+    if (message.empty()) {
+        return;
+    }
+
+    constexpr std::size_t kMaxErrorPopups = 8;
+    std::lock_guard<std::mutex> lock(pendingErrorMutex);
+    if (pendingErrorPopups.size() >= kMaxErrorPopups) {
+        pendingErrorPopups.erase(pendingErrorPopups.begin());
+    }
+    pendingErrorPopups.push_back(message);
+}
+
+void GuiWindow::openPendingErrorPopup() {
+    {
+        std::lock_guard<std::mutex> modalLock(modalMutex);
+        if (modal.active) {
+            return;
+        }
+    }
+
+    std::string message;
+    {
+        std::lock_guard<std::mutex> errorLock(pendingErrorMutex);
+        if (pendingErrorPopups.empty()) {
+            return;
+        }
+        message = pendingErrorPopups.front();
+        pendingErrorPopups.erase(pendingErrorPopups.begin());
+    }
+
+    std::lock_guard<std::mutex> modalLock(modalMutex);
+    if (modal.active) {
+        std::lock_guard<std::mutex> errorLock(pendingErrorMutex);
+        pendingErrorPopups.insert(pendingErrorPopups.begin(), message);
+        return;
+    }
+
+    modal = ModalState{};
+    modal.active = true;
+    modal.backendOwned = false;
+    modal.localType = LocalDialogType::ErrorMessage;
+    modal.title = "Error";
+    modal.prompt = message;
+    modalDragging = false;
+    modalPositionInitialized = false;
 }
 
 void GuiWindow::applySnapshot(const GameSnapshot& nextSnapshot) {

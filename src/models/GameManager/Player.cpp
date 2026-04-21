@@ -1,6 +1,8 @@
 #include "Player.hpp"
 #include "JailManager.hpp"
 
+#include <stdexcept>
+
 Player::Player(string username, int startingCash, PlayerStatus state,
     int startPosition, vector<Card *> startHand,
     vector<Property *> startProperty, int usedAbility, bool shield,
@@ -20,9 +22,35 @@ void Player::setPosition(int pos) { position = pos; }
 
 void Player::setActive() { status = ACTIVE; }
 
-void Player::addCash(int amount) { cash += amount; }
-void Player::reduceCash(int amount) { cash -= amount; }
+void Player::addCash(int amount) { *this += amount; }
+void Player::reduceCash(int amount) { *this -= amount; }
 bool Player::canPay(int amount) const { return cash >= amount; }
+
+Player& Player::operator+=(int amount) {
+    cash += amount;
+    return *this;
+}
+
+Player& Player::operator-=(int amount) {
+    cash -= amount;
+    return *this;
+}
+
+bool Player::operator<(const Player& other) const {
+    return getTotalWealth() < other.getTotalWealth();
+}
+
+bool Player::operator>(const Player& other) const {
+    return other < *this;
+}
+
+void Player::ensureCanPay(int amount) const {
+    if (!canPay(amount)) {
+        throw std::runtime_error("Uang " + username + " tidak cukup. Butuh M" +
+                                 std::to_string(amount) + ", tersedia M" +
+                                 std::to_string(cash) + ".");
+    }
+}
 
 int Player::getTotalWealth() const {
     int totalWealth = cash;
@@ -45,7 +73,13 @@ vector<Property *> &Player::getProperties() { return properties; }
 const vector<Property *> &Player::getProperties() const { return properties; }
 int Player::getPropertyCount() const { return properties.size(); }
 
-void Player::addCard(SkillCard *card) { hand.push_back(card); }
+void Player::addCard(SkillCard *card) {
+    if (hand.size() >= 4) {
+        throw std::runtime_error(
+            "Slot kartu skill penuh. Maksimal 3 kartu, kartu ke-4 wajib dibuang.");
+    }
+    hand.push_back(card);
+}
 
 void Player::removeCard(SkillCard *card) {
     auto it = std::find(hand.begin(), hand.end(), card);

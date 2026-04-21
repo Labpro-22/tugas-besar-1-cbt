@@ -209,7 +209,7 @@ void GameSession::handlePrintDeed() {
     std::string code =
         uppercase(cli.getInputHandler().readToken("Masukkan kode petak: "));
 
-    Property* property = findPropertyByCode(code);
+    Property* property = queries.findPropertyByCode(code);
     if (property == nullptr) {
         std::cout << "Petak \"" << code
                   << "\" tidak ditemukan atau bukan properti.\n";
@@ -236,7 +236,7 @@ void GameSession::handlePrintLogs(const Command& command) {
 
 void GameSession::handleMortgage() {
     Player& currentPlayer = game.getCurrentPlayer();
-    std::vector<Property*> mortgageable = getMortgageableProperties();
+    std::vector<Property*> mortgageable = queries.getMortgageableProperties();
     cli.getPropertyView().showMortgageOptions(mortgageable);
     if (mortgageable.empty()) {
         return;
@@ -264,7 +264,7 @@ void GameSession::handleMortgage() {
 
 void GameSession::handleRedeem() {
     Player& currentPlayer = game.getCurrentPlayer();
-    std::vector<Property*> redeemable = getRedeemableProperties();
+    std::vector<Property*> redeemable = queries.getRedeemableProperties();
     cli.getPropertyView().showRedeemOptions(redeemable);
     if (redeemable.empty()) {
         return;
@@ -309,7 +309,7 @@ void GameSession::handleBuild() {
     std::map<std::string, std::vector<Property*>> buildableGroups;
     std::map<std::string, std::vector<Street*>> groupedStreets;
 
-    for (Street* street : getBuildableStreets()) {
+    for (Street* street : queries.getBuildableStreets()) {
         if (street == nullptr) {
             continue;
         }
@@ -451,7 +451,7 @@ void GameSession::handleUseAbility() {
 
     int choice = cli.getInputHandler().readChoice(
         0, static_cast<int>(hand.size()),
-        "Pilih kartu yang ingin digunakan: ");
+        "Pilih kartu yang ingin digunakan (0 untuk batal): ");
     if (choice == 0) {
         return;
     }

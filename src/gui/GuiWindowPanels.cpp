@@ -15,7 +15,7 @@ void GuiWindow::drawFrame(const Layout& layout,
     drawRoster(layout, currentSnapshot);
     drawLogPanel(layout);
     drawActionBar(layout, currentSnapshot);
-    drawModal();
+    drawModal(currentSnapshot);
 }
 
 void GuiWindow::drawHeader(const Layout& layout,
@@ -29,7 +29,7 @@ void GuiWindow::drawHeader(const Layout& layout,
         Color{204, 191, 178, 255});
 
     drawTextCentered(font, "", layout.headerRect, 20.0F, 1.0F, kInk);
-    DrawTextEx(font, "The Grand Tactician",
+    DrawTextEx(font, "Nimonspoli",
                Vector2{layout.headerRect.x + 28.0F, layout.headerRect.y + 22.0F},
                30.0F, 1.0F, kAccentDark);
 
@@ -56,14 +56,14 @@ void GuiWindow::drawHeader(const Layout& layout,
                 .players[static_cast<std::size_t>(currentSnapshot.activePlayerIndex)]
                 .name;
         const Rectangle turnRect{
-            layout.headerRect.x + layout.headerRect.width - 300.0F,
-            layout.headerRect.y + 16.0F, 190.0F, 34.0F};
+            layout.headerRect.x + layout.headerRect.width - 346.0F,
+            layout.headerRect.y + 13.0F, 240.0F, 40.0F};
         DrawRectangleRec(turnRect, Color{248, 241, 232, 255});
         DrawRectangleLinesEx(turnRect, 1.0F, Color{198, 184, 170, 255});
         drawTextCentered(font,
-                         truncateText(font, turnText, 17.0F, 1.0F,
+                         truncateText(font, turnText, 20.0F, 1.0F,
                                       turnRect.width - 12.0F),
-                         turnRect, 17.0F, 1.0F, kAccentDark);
+                         turnRect, 20.0F, 1.0F, kAccentDark);
     }
 
     DrawTextEx(font, "[ ] #",

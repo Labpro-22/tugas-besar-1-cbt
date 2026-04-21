@@ -41,6 +41,11 @@ public:
     void setStatus(int State);
     void addCash(int amount);
     void reduceCash(int amount);
+    Player& operator+=(int amount);
+    Player& operator-=(int amount);
+    bool operator<(const Player& other) const;
+    bool operator>(const Player& other) const;
+    void ensureCanPay(int amount) const;
     int getTotalWealth() const;
     void addProperty(Property *prop);
     void removeProperty(Property *prop);
