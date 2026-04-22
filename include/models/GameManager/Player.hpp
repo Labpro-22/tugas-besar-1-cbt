@@ -34,6 +34,8 @@ public:
         int startPosition = 0, vector<Card *> startHand = {},
         vector<Property *> startProperty = {}, int usedAbility = 0,
         bool shield = false, int discPercent = 0, int discRemain = 0);
+    Player(const Player &other);
+    Player();
     string getUsername() const;
     int getCash() const;
     int getPosition() const;

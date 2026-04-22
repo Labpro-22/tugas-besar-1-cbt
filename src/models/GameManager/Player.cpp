@@ -12,6 +12,12 @@ Player::Player(string username, int startingCash, PlayerStatus state,
         usedAbilityThisTurn(usedAbility != 0), hasShield(shield),
         discountPercentage(discPercent), discountRemainingTurns(discRemain) {}
 
+Player::Player(const Player &other)    : username(other.username), cash(other.cash), position(other.position),
+      status(other.status), hand(other.hand), properties(other.properties),
+      usedAbilityThisTurn(other.usedAbilityThisTurn), hasShield(other.hasShield),  
+      discountPercentage(other.discountPercentage), discountRemainingTurns(other.discountRemainingTurns) {}
+Player::Player() : username(""), cash(0), position(0), status(ACTIVE), hand({}), properties({}), 
+                    usedAbilityThisTurn(false), hasShield(false), discountPercentage(0), discountRemainingTurns(0) {}
 string Player::getUsername() const { return username; }
 int Player::getCash() const { return cash; }
 int Player::getPosition() const { return position; }
@@ -35,6 +41,7 @@ Player& Player::operator-=(int amount) {
     cash -= amount;
     return *this;
 }
+
 
 bool Player::operator<(const Player& other) const {
     return getTotalWealth() < other.getTotalWealth();

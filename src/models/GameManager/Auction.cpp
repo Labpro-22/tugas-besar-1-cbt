@@ -100,9 +100,7 @@ void Auction::determineWinner() {
         cout << "Selamat! Pemenangnya adalah " << participants[winnerIndex]->getUsername() 
              << " dengan harga " << currentBid << "!\n\n";
     } else {
-        cout << "Tidak ada yang menawar. Properti tidak terjual.\n\n";
-        throw AuctionFailedException("Semua peserta lelang memilih pass. Properti " + 
-                                   property->getName() + " tidak terjual.");
+        cout << "Tidak ada yang menawar. Properti dijual tanpa penawar.\n\n";
     }
 }
 
@@ -110,7 +108,7 @@ Player* Auction::getWinner() {
     if (!isActive && winnerIndex != -1) {
         return participants[winnerIndex];
     }
-    return nullptr; 
+    return participants[participants.size() - 1]; 
 }
 
 int Auction::getWinningBid() {

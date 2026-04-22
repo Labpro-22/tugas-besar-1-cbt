@@ -327,13 +327,11 @@ void GameManager::executeAuction(Property &prop) {
   vector<Player *> participants;
   participants.reserve(players.size());
   for (size_t offset = 1; offset <= players.size(); ++offset) {
-    Player &candidate =
-        players[(activePlayerIndex + offset) % players.size()];
+    Player &candidate = players[(activePlayerIndex + offset) % players.size()];
     if (candidate.getStatus() != BANKRUPT) {
       participants.push_back(&candidate);
     }
   }
-
   Auction auction(&prop, participants);
   auction.start();
   InputHandler input;
@@ -375,30 +373,54 @@ void GameManager::executeAuction(Property &prop) {
     cout << "Input lelang tidak valid. Gunakan PASS atau BID <jumlah>.\n";
   }
 
-  Player *winner = auction.getWinner();
+    Player *winner = auction.getWinner();
   const int winningBid = auction.getWinningBid();
-  if (winner == nullptr || winningBid <= 0) {
-    logger.log(currentTurn, getCurrentPlayer().getUsername(), "LELANG",
-               prop.getCode() + " tidak terjual");
-    return;
-  }
 
-  if (!winner->canPay(winningBid)) {
-    cout << "Pemenang tidak mampu membayar hasil lelang.\n";
+  if (winner != nullptr && winningBid > 0) {
+    if (!winner->canPay(winningBid)) {
+      cout << "Pemenang tidak mampu membayar hasil lelang.\n";
+      logger.log(currentTurn, winner->getUsername(), "LELANG",
+                 "Gagal membayar " + prop.getCode());
+      return;
+    }
+
+    winner->reduceCash(winningBid);
+    winner->addProperty(&prop);
+    prop.setOwner(winner);
+    prop.setStatusStr("OWNED");
+    cout << prop.getName() << " kini menjadi milik " << winner->getUsername()
+         << ".\n";
     logger.log(currentTurn, winner->getUsername(), "LELANG",
-               "Gagal membayar " + prop.getCode());
+               "Menang " + prop.getCode() + " seharga M" +
+                   to_string(winningBid));
     return;
   }
+  
+  if (winner != nullptr && winningBid == 0) {
+    
+    cout << "Semua pemain memilih pass. " << winner->getUsername() 
+         << " harus membeli properti dengan harga minimum M" << auction.getCurrentBid() << ".\n";
+    
+    if (!winner->canPay(auction.getCurrentBid())) {
+      cout << winner->getUsername() << " tidak mampu membayar harga minimum.\n";
+      logger.log(currentTurn, winner->getUsername(), "LELANG",
+                 "Gagal membayar minimum bid " + prop.getCode());
+      return;
+    }
 
-  winner->reduceCash(winningBid);
-  winner->addProperty(&prop);
-  prop.setOwner(winner);
-  prop.setStatusStr("OWNED");
-  cout << prop.getName() << " kini menjadi milik " << winner->getUsername()
-       << ".\n";
-  logger.log(currentTurn, winner->getUsername(), "LELANG",
-             "Menang " + prop.getCode() + " seharga M" +
-                 to_string(winningBid));
+    winner->reduceCash(auction.getCurrentBid());
+    winner->addProperty(&prop);
+    prop.setOwner(winner);
+    prop.setStatusStr("OWNED");
+    cout << prop.getName() << " kini menjadi milik " << winner->getUsername()
+         << " dengan harga M" << auction.getCurrentBid() << ".\n";
+    logger.log(currentTurn, winner->getUsername(), "LELANG",
+               "Membeli " + prop.getCode() + " seharga M" + 
+                   to_string(auction.getCurrentBid()) + " (semua pass)");
+    return;
+  }
+  logger.log(currentTurn, getCurrentPlayer().getUsername(), "LELANG",
+             prop.getCode() + " tidak terjual");
 }
 
 void GameManager::executeBankruptcy(Player &debtor, Player *creditor,
