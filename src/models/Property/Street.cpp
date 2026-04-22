@@ -47,7 +47,11 @@ int Street::getPropertyDetail() const {
 
     if (!rentLevels.empty() &&
         static_cast<int>(level) < static_cast<int>(rentLevels.size())) {
-        return rentLevels[static_cast<int>(level)];
+        int rent = rentLevels[static_cast<int>(level)];
+        if (level == BuildingLevel::EMPTY && isMonopolized()) {
+            rent *= 2;
+        }
+        return rent;
     }
 
     throw PropertyBuildException(getCode(), "Level bangunan di luar daftar sewa.");
