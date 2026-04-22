@@ -269,49 +269,115 @@ void GuiWindow::drawTurnChangePopup(const GameSnapshot& currentSnapshot) const {
     }
 
     const Font& font = georgiaFont;
-    const float showDuration = 2.2F;
     const float fadeWindow = 0.35F;
     const float alphaScale = popupTimer < fadeWindow ? popupTimer / fadeWindow : 1.0F;
-    const float cardWidth = 430.0F;
-    const float cardHeight = 116.0F;
-    const Rectangle cardRect{(GetScreenWidth() - cardWidth) / 2.0F, 30.0F, cardWidth,
-                             cardHeight};
+
+    const float cardWidth = 610.0F;
+    const float cardHeight = 340.0F;
+    const Rectangle cardRect{(GetScreenWidth() - cardWidth) / 2.0F,
+                             (GetScreenHeight() - cardHeight) / 2.0F,
+                             cardWidth, cardHeight};
 
     const Color pieceColor = playerPieceColor(resolvedPlayerIndex);
-    const Color textColor = contrastingTextColor(pieceColor);
     const unsigned char panelAlpha =
-        static_cast<unsigned char>(clampFloat(240.0F * alphaScale, 0.0F, 255.0F));
+        static_cast<unsigned char>(clampFloat(238.0F * alphaScale, 0.0F, 255.0F));
     const unsigned char textAlpha =
         static_cast<unsigned char>(clampFloat(255.0F * alphaScale, 0.0F, 255.0F));
     const unsigned char shadowAlpha =
-        static_cast<unsigned char>(clampFloat(90.0F * alphaScale, 0.0F, 255.0F));
-    Color panel = pieceColor;
-    panel.a = panelAlpha;
-    Color text = textColor;
-    text.a = textAlpha;
+        static_cast<unsigned char>(clampFloat(85.0F * alphaScale, 0.0F, 255.0F));
+
+    const Color ink = Color{247, 236, 221, textAlpha};
+    const Color gold = Color{220, 184, 78, textAlpha};
+    const Color goldDim = Color{170, 134, 31, textAlpha};
+
+    Color panelDark = Color{static_cast<unsigned char>(pieceColor.r * 0.55F),
+                            static_cast<unsigned char>(pieceColor.g * 0.45F),
+                            static_cast<unsigned char>(pieceColor.b * 0.45F),
+                            panelAlpha};
+    Color panelMid = Color{static_cast<unsigned char>(pieceColor.r * 0.75F),
+                           static_cast<unsigned char>(pieceColor.g * 0.62F),
+                           static_cast<unsigned char>(pieceColor.b * 0.60F),
+                           panelAlpha};
+
+    DrawRectangleRec(Rectangle{0.0F, 0.0F, static_cast<float>(GetScreenWidth()),
+                               static_cast<float>(GetScreenHeight())},
+                     Color{20, 16, 12,
+                           static_cast<unsigned char>(clampFloat(55.0F * alphaScale, 0.0F,
+                                                                 255.0F))});
 
     DrawRectangleRounded(
-        Rectangle{cardRect.x + 6.0F, cardRect.y + 6.0F, cardRect.width, cardRect.height},
-        0.22F, 16, Color{20, 18, 16, shadowAlpha});
-    DrawRectangleRounded(cardRect, 0.22F, 16, panel);
-    DrawRectangleRoundedLines(cardRect, 0.22F, 16,
-                              Color{255, 255, 255, panelAlpha});
+        Rectangle{cardRect.x + 8.0F, cardRect.y + 12.0F, cardRect.width, cardRect.height},
+        0.02F, 6, Color{18, 12, 10, shadowAlpha});
+    DrawRectangleRec(cardRect, panelDark);
+    DrawRectangleRec(Rectangle{cardRect.x + 8.0F, cardRect.y + 8.0F,
+                               cardRect.width - 16.0F, cardRect.height - 16.0F},
+                     panelMid);
+    DrawRectangleLinesEx(cardRect, 2.0F, goldDim);
+    DrawRectangleLinesEx(Rectangle{cardRect.x + 4.0F, cardRect.y + 4.0F,
+                                   cardRect.width - 8.0F, cardRect.height - 8.0F},
+                         1.0F, gold);
 
-    DrawTextEx(font, "GILIRAN BERGANTI", Vector2{cardRect.x + 18.0F, cardRect.y + 16.0F},
-               24.0F, 1.0F, text);
-    const std::string playerText =
-        currentSnapshot.players[static_cast<std::size_t>(resolvedPlayerIndex)].name;
-    drawTextCentered(font,
-                     truncateText(font, playerText, 34.0F, 1.0F, cardRect.width - 34.0F),
-                     Rectangle{cardRect.x + 12.0F, cardRect.y + 44.0F,
-                               cardRect.width - 24.0F, 56.0F},
-                     34.0F, 1.0F, text);
+    const float decoLen = 18.0F;
+    DrawLineEx(Vector2{cardRect.x + 14.0F, cardRect.y + 14.0F},
+               Vector2{cardRect.x + 14.0F + decoLen, cardRect.y + 14.0F}, 3.0F, gold);
+    DrawLineEx(Vector2{cardRect.x + 14.0F, cardRect.y + 14.0F},
+               Vector2{cardRect.x + 14.0F, cardRect.y + 14.0F + decoLen}, 3.0F, gold);
+    DrawLineEx(Vector2{cardRect.x + cardRect.width - 14.0F,
+                       cardRect.y + cardRect.height - 14.0F},
+               Vector2{cardRect.x + cardRect.width - 14.0F - decoLen,
+                       cardRect.y + cardRect.height - 14.0F},
+               3.0F, gold);
+    DrawLineEx(Vector2{cardRect.x + cardRect.width - 14.0F,
+                       cardRect.y + cardRect.height - 14.0F},
+               Vector2{cardRect.x + cardRect.width - 14.0F,
+                       cardRect.y + cardRect.height - 14.0F - decoLen},
+               3.0F, gold);
 
-    const float progress = clampFloat(popupTimer / showDuration, 0.0F, 1.0F);
-    DrawRectangleRounded(
-        Rectangle{cardRect.x + 20.0F, cardRect.y + cardRect.height - 16.0F,
-                  (cardRect.width - 40.0F) * progress, 6.0F},
-        0.4F, 8, Color{text.r, text.g, text.b, static_cast<unsigned char>(150 * alphaScale)});
+    drawTextCentered(font, "SESI TRANSMISI",
+                     Rectangle{cardRect.x + 20.0F, cardRect.y + 66.0F,
+                               cardRect.width - 40.0F, 24.0F},
+                     30.0F * 0.62F, 3.0F, gold);
+    drawTextCentered(font, "GILIRAN BERGANTI",
+                     Rectangle{cardRect.x + 20.0F, cardRect.y + 96.0F,
+                               cardRect.width - 40.0F, 54.0F},
+                     56.0F, 1.0F, ink);
+    drawTextCentered(font, "ESTATE HOLDER",
+                     Rectangle{cardRect.x + 20.0F, cardRect.y + 148.0F,
+                               cardRect.width - 40.0F, 24.0F},
+                     18.0F, 1.2F, gold);
+
+    const int badgeNumber = resolvedPlayerIndex + 1;
+    drawTextCentered(font, std::to_string(badgeNumber),
+                     Rectangle{cardRect.x + 20.0F, cardRect.y + 168.0F,
+                               cardRect.width - 40.0F, 104.0F},
+                     150.0F, 1.0F, gold);
+
+    DrawLineEx(Vector2{cardRect.x + 16.0F, cardRect.y + 212.0F},
+               Vector2{cardRect.x + 235.0F, cardRect.y + 212.0F}, 1.0F,
+               Color{gold.r, gold.g, gold.b,
+                     static_cast<unsigned char>(clampFloat(110.0F * alphaScale, 0.0F,
+                                                           255.0F))});
+    DrawLineEx(Vector2{cardRect.x + cardRect.width - 16.0F, cardRect.y + 212.0F},
+               Vector2{cardRect.x + cardRect.width - 235.0F, cardRect.y + 212.0F},
+               1.0F,
+               Color{gold.r, gold.g, gold.b,
+                     static_cast<unsigned char>(clampFloat(110.0F * alphaScale, 0.0F,
+                                                           255.0F))});
+
+    drawTextCentered(font, "\"Saatnya mengatur kembali aset Anda.\"",
+                     Rectangle{cardRect.x + 24.0F, cardRect.y + 280.0F,
+                               cardRect.width - 48.0F, 30.0F},
+                     40.0F * 0.58F, 1.0F,
+                     Color{236, 214, 186, static_cast<unsigned char>(textAlpha * 0.92F)});
+
+    const Rectangle actionRect{cardRect.x + cardRect.width / 2.0F - 124.0F,
+                               cardRect.y + cardRect.height - 22.0F, 248.0F, 20.0F};
+    DrawRectangleRec(actionRect, Color{gold.r, gold.g, gold.b,
+                                       static_cast<unsigned char>(clampFloat(
+                                           215.0F * alphaScale, 0.0F, 255.0F))});
+    DrawRectangleLinesEx(actionRect, 2.0F, Color{112, 80, 18, textAlpha});
+    drawTextCentered(font, "LANJUTKAN STRATEGI", actionRect, 24.0F * 0.72F, 1.0F,
+                     Color{56, 39, 10, textAlpha});
 }
 
 void GuiWindow::drawGameOverPopup(const GameSnapshot& currentSnapshot) const {
@@ -409,7 +475,7 @@ void GuiWindow::drawGameOverPopup(const GameSnapshot& currentSnapshot) const {
                                innerRect.width - 40.0F, 22.0F},
                      22.0F, 1.0F, statValue);
 
-    std::string winnerLine = "ESTATE MANAGER: ";
+    std::string winnerLine = "WINNER: ";
     for (std::size_t i = 0; i < currentSnapshot.winnerNames.size(); ++i) {
         if (i > 0) {
             winnerLine += ", ";
