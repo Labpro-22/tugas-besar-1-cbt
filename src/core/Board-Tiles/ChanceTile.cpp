@@ -9,13 +9,12 @@
 #include <random>
 #include <vector>
 
-namespace {
-std::vector<ChanceCardType> makeChanceDeck() {
+static std::vector<ChanceCardType> makeChanceDeck() {
   return {ChanceCardType::GO_TO_NEAREST_STATION, ChanceCardType::MOVE_BACK_3,
           ChanceCardType::GO_TO_JAIL};
 }
 
-ChanceCardType drawChanceCardType() {
+static ChanceCardType drawChanceCardType() {
   static std::vector<ChanceCardType> deck;
   static std::mt19937 rng(std::random_device{}());
 
@@ -24,11 +23,10 @@ ChanceCardType drawChanceCardType() {
     std::shuffle(deck.begin(), deck.end(), rng);
   }
 
-  ChanceCardType cardType = deck.back();
+  const ChanceCardType cardType = deck.back();
   deck.pop_back();
   return cardType;
 }
-} // namespace
 
 ChanceTile::ChanceTile(const std::string &code, const std::string &name,
                        int pos)

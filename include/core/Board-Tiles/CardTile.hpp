@@ -5,7 +5,6 @@
 #include <string>
 
 // Deklarasi di awal
-template <typename T> class CardDeck;
 class Card;
 
 class CardTile : public Tile {

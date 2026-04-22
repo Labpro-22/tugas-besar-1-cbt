@@ -4,10 +4,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-
-// Forward declarations
-class Player;
-class GameManager;
+#include "../../models/GameManager/Player.hpp"
+#include "../../models/GameManager/GameManager.hpp"
 
 class Tile {
     protected:

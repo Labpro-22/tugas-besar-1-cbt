@@ -9,13 +9,12 @@
 #include <random>
 #include <vector>
 
-namespace {
-std::vector<CommunityCardType> makeCommunityDeck() {
+static std::vector<CommunityCardType> makeCommunityDeck() {
   return {CommunityCardType::BIRTHDAY, CommunityCardType::DOCTOR_FEE,
           CommunityCardType::CAMPAIGN_FEE};
 }
 
-CommunityCardType drawCommunityCardType() {
+static CommunityCardType drawCommunityCardType() {
   static std::vector<CommunityCardType> deck;
   static std::mt19937 rng(std::random_device{}());
 
@@ -24,11 +23,10 @@ CommunityCardType drawCommunityCardType() {
     std::shuffle(deck.begin(), deck.end(), rng);
   }
 
-  CommunityCardType cardType = deck.back();
+  const CommunityCardType cardType = deck.back();
   deck.pop_back();
   return cardType;
 }
-} // namespace
 
 CommunityChestTile::CommunityChestTile(const std::string &code,
                                        const std::string &name, int pos)

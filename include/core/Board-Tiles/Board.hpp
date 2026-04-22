@@ -2,11 +2,10 @@
 #define BOARD_HPP
 
 #include "Tile.hpp"
+#include "../../../src/data/Configuration.hpp"
 
 #include <string>
 #include <vector>
-
-class Configuration;
 
 class Board {
 private:

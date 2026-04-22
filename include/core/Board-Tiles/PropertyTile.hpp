@@ -2,6 +2,7 @@
 #define PROPERTY_TILE_HPP
 
 #include "Tile.hpp"
+#include "../../models/Property/Property.hpp"
 
 // Deklarasi terlebih dahulu
 class Property;

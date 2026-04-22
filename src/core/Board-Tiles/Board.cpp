@@ -26,237 +26,50 @@
 #include <type_traits>
 #include <utility>
 
-namespace {
-class BoardInitializedProperty final : public Property {
-private:
-  int buyPrice;
-  int propertyDetail;
-  std::string propertyType;
+// helper internal file-scope (tanpa anonymous namespace / class tracker)
+static CardDeck<Card> chanceDeck;
+static CardDeck<Card> communityChestDeck;
 
-public:
-  BoardInitializedProperty(const std::string &code, const std::string &name,
-                           int buy, int detail, int mortgage,
-                           const std::string &type)
-      : Property(code, name, static_cast<PropertyStatus>(0), mortgage, nullptr),
-        buyPrice(buy), propertyDetail(detail), propertyType(type) {}
+static int gActionCount = 0;
+static int gPropertyCount = 0;
+static int gTaxCount = 0;
+static int gCardCount = 0;
+static int gFestivalCount = 0;
 
-  int getBuyPrice() const override { return buyPrice; }
-  int getPropertyDetail() const override { return propertyDetail; }
-  void printTitle() const override {}
-  void demolish() override {
-    Property::setOwner(nullptr);
-    Property::setStatusStr("BANK");
-  }
-  std::string getType() const override { return propertyType; }
-};
-
-std::string toLower(const std::string &text) {
-  std::string result = text;
-  std::transform(
-      result.begin(), result.end(), result.begin(),
-      [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-  return result;
+static void resetTileCounters() {
+  gActionCount = 0;
+  gPropertyCount = 0;
+  gTaxCount = 0;
+  gCardCount = 0;
+  gFestivalCount = 0;
 }
 
-std::string toUpper(const std::string &text) {
-  std::string result = text;
-  std::transform(
-      result.begin(), result.end(), result.begin(),
-      [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
-  return result;
-}
+static std::string nextTileId(char category) {
+  int *target = nullptr;
+  if (category == 'A')
+    target = &gActionCount;
+  else if (category == 'P')
+    target = &gPropertyCount;
+  else if (category == 'T')
+    target = &gTaxCount;
+  else if (category == 'C')
+    target = &gCardCount;
+  else if (category == 'F')
+    target = &gFestivalCount;
 
-ColorGroup parseColorGroup(const std::string &value) {
-  const std::string normalized = toUpper(value);
-
-  if (normalized == "COKLAT")
-    return ColorGroup::COKLAT;
-  if (normalized == "BIRU_MUDA")
-    return ColorGroup::BIRU_MUDA;
-  if (normalized == "MERAH_MUDA" || normalized == "PINK")
-    return ColorGroup::MERAH_MUDA;
-  if (normalized == "ORANGE")
-    return ColorGroup::ORANGE;
-  if (normalized == "MERAH")
-    return ColorGroup::MERAH;
-  if (normalized == "KUNING")
-    return ColorGroup::KUNING;
-  if (normalized == "HIJAU")
-    return ColorGroup::HIJAU;
-  if (normalized == "BIRU_TUA")
-    return ColorGroup::BIRU_TUA;
-  return ColorGroup::ABU_ABU;
-}
-
-CardDeck<Card> chanceDeck;
-CardDeck<Card> communityChestDeck;
-
-template <typename T, typename = void>
-class HasGetChanceCards : public std::false_type {};
-
-template <typename T>
-class HasGetChanceCards<
-    T, std::void_t<decltype(std::declval<T &>().getChanceCards())>>
-    : public std::true_type {};
-
-template <typename T, typename = void>
-class HasGetCommunityChestCards : public std::false_type {};
-
-template <typename T>
-class HasGetCommunityChestCards<
-    T, std::void_t<decltype(std::declval<T &>().getCommunityChestCards())>>
-    : public std::true_type {};
-
-template <typename T, typename = void>
-class HasSetDeck : public std::false_type {};
-
-template <typename T>
-class HasSetDeck<T, std::void_t<decltype(std::declval<T &>().setDeck(
-                         std::declval<CardDeck<Card> *>()))>>
-    : public std::true_type {};
-
-template <typename T, typename = void>
-class HasSetCardDeck : public std::false_type {};
-
-template <typename T>
-class HasSetCardDeck<T, std::void_t<decltype(std::declval<T &>().setCardDeck(
-                             std::declval<CardDeck<Card> *>()))>>
-    : public std::true_type {};
-
-template <typename T, typename = void>
-class HasNameField : public std::false_type {};
-
-template <typename T>
-class HasNameField<T, std::void_t<decltype(std::declval<T>().name)>>
-    : public std::true_type {};
-
-template <typename T, typename = void>
-class HasMortgageValueField : public std::false_type {};
-
-template <typename T>
-class HasMortgageValueField<
-    T, std::void_t<decltype(std::declval<T>().mortgageValue)>>
-    : public std::true_type {};
-
-template <typename T, typename = void>
-class HasBuyPriceField : public std::false_type {};
-
-template <typename T>
-class HasBuyPriceField<T, std::void_t<decltype(std::declval<T>().buyPrice)>>
-    : public std::true_type {};
-
-template <typename T, typename = void>
-class HasPriceField : public std::false_type {};
-
-template <typename T>
-class HasPriceField<T, std::void_t<decltype(std::declval<T>().price)>>
-    : public std::true_type {};
-
-template <typename T, typename = void>
-class HasPropertyDetailField : public std::false_type {};
-
-template <typename T>
-class HasPropertyDetailField<
-    T, std::void_t<decltype(std::declval<T>().propertyDetail)>>
-    : public std::true_type {};
-
-template <typename T, typename = void>
-class HasPropertyTypeField : public std::false_type {};
-
-template <typename T>
-class HasPropertyTypeField<
-    T, std::void_t<decltype(std::declval<T>().propertyType)>>
-    : public std::true_type {};
-
-template <typename T, typename = void>
-class HasTypeField : public std::false_type {};
-
-template <typename T>
-class HasTypeField<T, std::void_t<decltype(std::declval<T>().type)>>
-    : public std::true_type {};
-
-template <typename TileType>
-void attachDeckIfSupported(TileType &tile, CardDeck<Card> *deck) {
-  if constexpr (HasSetDeck<TileType>::value) {
-    tile.setDeck(deck);
-  } else if constexpr (HasSetCardDeck<TileType>::value) {
-    tile.setCardDeck(deck);
-  }
-}
-
-template <typename DeckType, typename CardContainer>
-void loadDeck(DeckType &deck, const CardContainer &cards) {
-  for (const auto &card : cards) {
-    deck.addCard(card);
-  }
-  deck.shuffle();
-}
-
-template <typename ConfigType> void initializeCardDecks(ConfigType &config) {
-  chanceDeck = CardDeck<Card>();
-  communityChestDeck = CardDeck<Card>();
-
-  if constexpr (HasGetChanceCards<ConfigType>::value) {
-    loadDeck(chanceDeck, config.getChanceCards());
+  if (target == nullptr) {
+    throw std::runtime_error("Unknown tile category for id generation.");
   }
 
-  if constexpr (HasGetCommunityChestCards<ConfigType>::value) {
-    loadDeck(communityChestDeck, config.getCommunityChestCards());
-  }
-}
-
-template <typename ConfigType>
-int getMortgageValueFromConfig(const ConfigType &cfg) {
-  if constexpr (HasMortgageValueField<ConfigType>::value) {
-    return cfg.mortgageValue;
-  }
-  return 0;
-}
-
-template <typename ConfigType>
-int getBuyPriceFromConfig(const ConfigType &cfg) {
-  if constexpr (HasBuyPriceField<ConfigType>::value) {
-    return cfg.buyPrice;
-  }
-  if constexpr (HasPriceField<ConfigType>::value) {
-    return cfg.price;
-  }
-  return 0;
-}
-
-template <typename ConfigType>
-int getPropertyDetailFromConfig(const ConfigType &cfg) {
-  if constexpr (HasPropertyDetailField<ConfigType>::value) {
-    return cfg.propertyDetail;
-  }
-  return 0;
-}
-
-template <typename ConfigType>
-std::string getPropertyTypeFromConfig(const ConfigType &cfg) {
-  if constexpr (HasPropertyTypeField<ConfigType>::value) {
-    return cfg.propertyType;
-  }
-  if constexpr (HasTypeField<ConfigType>::value) {
-    return cfg.type;
-  }
-  return "property";
-}
-
-template <typename ConfigType>
-std::string getPropertyNameFromConfig(const ConfigType &cfg,
-                                      const std::string &fallback) {
-  if constexpr (HasNameField<ConfigType>::value) {
-    if (!cfg.name.empty()) {
-      return cfg.name;
-    }
-  }
-  return fallback;
+  ++(*target);
+  std::ostringstream oss;
+  oss << category << std::setw(2) << std::setfill('0') << *target;
+  return oss.str();
 }
 
 Property *buildPropertyFromConfig(const PropertyConfig &cfg,
-                                  const Configuration &configuration,
-                                  const std::string &fallbackName) {
+                                         const Configuration &configuration,
+                                         const std::string &fallbackName) {
   const std::string propertyType = toUpper(cfg.propertyType);
 
   if (propertyType == "STREET") {
@@ -290,59 +103,9 @@ Property *buildPropertyFromConfig(const PropertyConfig &cfg,
     return utility;
   }
 
-  return new BoardInitializedProperty(
-      cfg.code, cfg.name.empty() ? fallbackName : cfg.name,
-      getBuyPriceFromConfig(cfg), getPropertyDetailFromConfig(cfg),
-      getMortgageValueFromConfig(cfg), getPropertyTypeFromConfig(cfg));
+  throw std::runtime_error("Unknown property type in configuration: " +
+                           cfg.propertyType);
 }
-
-class TileInitTracker {
-public:
-  static int actionCount;
-  static int propertyCount;
-  static int taxCount;
-  static int cardCount;
-  static int festivalCount;
-
-  static void reset() {
-    actionCount = 0;
-    propertyCount = 0;
-    taxCount = 0;
-    cardCount = 0;
-    festivalCount = 0;
-  }
-
-  static std::string nextId(char category) {
-    int *target = nullptr;
-    if (category == 'A') {
-      target = &actionCount;
-    } else if (category == 'P') {
-      target = &propertyCount;
-    } else if (category == 'T') {
-      target = &taxCount;
-    } else if (category == 'C') {
-      target = &cardCount;
-    } else if (category == 'F') {
-      target = &festivalCount;
-    }
-
-    if (target == nullptr) {
-      throw std::runtime_error("Unknown tile category for id generation.");
-    }
-
-    (*target)++;
-    std::ostringstream oss;
-    oss << category << std::setw(2) << std::setfill('0') << *target;
-    return oss.str();
-  }
-};
-
-int TileInitTracker::actionCount = 0;
-int TileInitTracker::propertyCount = 0;
-int TileInitTracker::taxCount = 0;
-int TileInitTracker::cardCount = 0;
-int TileInitTracker::festivalCount = 0;
-} // namespace
 
 Board::Board() : tileCount(0) {}
 
@@ -365,7 +128,7 @@ void Board::initialize(Configuration &config) {
 
   const TaxConfig &tax = config.getTaxConfig();
   const int goSalary = config.getGoSalary();
-  TileInitTracker::reset();
+  resetTileCounters();
 
   tiles.reserve(layout.size());
   for (std::size_t i = 0; i < layout.size(); ++i) {
@@ -375,50 +138,50 @@ void Board::initialize(Configuration &config) {
 
     if (type == "go") {
       tiles.push_back(
-          new GoTile(TileInitTracker::nextId('A'), entry.name, pos, goSalary));
+          new GoTile(nextTileId('A'), entry.name, pos, goSalary));
       continue;
     }
     if (type == "jail") {
       tiles.push_back(
-          new JailTile(TileInitTracker::nextId('A'), entry.name, pos));
+          new JailTile(nextTileId('A'), entry.name, pos));
       continue;
     }
     if (type == "go_to_jail") {
       tiles.push_back(
-          new GoToJailTile(TileInitTracker::nextId('A'), entry.name, pos));
+          new GoToJailTile(nextTileId('A'), entry.name, pos));
       continue;
     }
     if (type == "free_parking") {
       tiles.push_back(
-          new FreeParkingTile(TileInitTracker::nextId('A'), entry.name, pos));
+          new FreeParkingTile(nextTileId('A'), entry.name, pos));
       continue;
     }
     if (type == "chance") {
       ChanceTile *chanceTile =
-          new ChanceTile(TileInitTracker::nextId('C'), entry.name, pos);
+          new ChanceTile(nextTileId('C'), entry.name, pos);
       attachDeckIfSupported(*chanceTile, &chanceDeck);
       tiles.push_back(chanceTile);
       continue;
     }
     if (type == "community_chest") {
       CommunityChestTile *communityChestTile =
-          new CommunityChestTile(TileInitTracker::nextId('C'), entry.name, pos);
+          new CommunityChestTile(nextTileId('C'), entry.name, pos);
       attachDeckIfSupported(*communityChestTile, &communityChestDeck);
       tiles.push_back(communityChestTile);
       continue;
     }
     if (type == "festival") {
       tiles.push_back(
-          new FestivalTile(TileInitTracker::nextId('F'), entry.name, pos));
+          new FestivalTile(nextTileId('F'), entry.name, pos));
       continue;
     }
     if (type == "pph_tax" || type == "pph") {
-      tiles.push_back(new PPHTaxTile(TileInitTracker::nextId('T'), entry.name,
+      tiles.push_back(new PPHTaxTile(nextTileId('T'), entry.name,
                                      pos, tax.pphFlat, tax.pphPercentage));
       continue;
     }
     if (type == "pbm_tax" || type == "pbm") {
-      tiles.push_back(new PBMTaxTile(TileInitTracker::nextId('T'), entry.name,
+      tiles.push_back(new PBMTaxTile(nextTileId('T'), entry.name,
                                      pos, tax.pbmFlat));
       continue;
     }
@@ -426,23 +189,13 @@ void Board::initialize(Configuration &config) {
       const std::string refCode =
           entry.propertyCode.empty() ? entry.code : entry.propertyCode;
       PropertyConfig *propConfig = config.getPropertyConfig(refCode);
-      Property *property = nullptr;
-
-      if (propConfig != nullptr) {
-        property = buildPropertyFromConfig(*propConfig, config, entry.name);
-      } else {
-        BoardInitializedProperty *fallbackProperty =
-            new BoardInitializedProperty(refCode, entry.name, 0, 0, 0,
-                                         "property");
-        property = fallbackProperty;
+      if (propConfig == nullptr) {
+        throw std::runtime_error("Missing property config for code: " + refCode);
       }
 
-      const std::string tileName =
-          (propConfig != nullptr)
-              ? getPropertyNameFromConfig(*propConfig, entry.name)
-              : entry.name;
-      tiles.push_back(new PropertyTile(TileInitTracker::nextId('P'), tileName,
-                                       pos, property));
+      Property *property = buildPropertyFromConfig(*propConfig, config, entry.name);
+      const std::string tileName = getPropertyNameFromConfig(*propConfig, entry.name);
+      tiles.push_back(new PropertyTile(nextTileId('P'), tileName, pos, property));
       continue;
     }
 
@@ -487,64 +240,57 @@ int Board::getTileCount() const { return tileCount; }
 
 int Board::findGoPosition() const {
   for (int i = 0; i < tileCount; ++i) {
-    if (tiles[i] == nullptr)
-      continue;
+    if (tiles[i] == nullptr) continue;
+    if (toLower(tiles[i]->getType()) != "action") continue;
 
-    const auto *actionTile = dynamic_cast<const ActionTile *>(tiles[i]);
-    if (actionTile != nullptr && toLower(actionTile->getActionType()) == "go") {
+    const ActionTile *actionTile = static_cast<const ActionTile *>(tiles[i]);
+    if (toLower(actionTile->getActionType()) == "go") {
       return i;
     }
   }
-  return 0;
+  throw std::runtime_error("GO tile not found in board layout.");
 }
 
 int Board::findNearestStation(int currentPos) const {
   int bestPos = -1;
   int firstStation = -1;
+
   for (int i = 0; i < tileCount; ++i) {
-    if (tiles[i] == nullptr)
-      continue;
+    if (tiles[i] == nullptr) continue;
+    if (toLower(tiles[i]->getType()) != "property") continue;
 
-    const PropertyTile *propertyTile = dynamic_cast<const PropertyTile *>(tiles[i]);
-    if (propertyTile == nullptr) {
-      continue;
-    }
-
+    const PropertyTile *propertyTile = static_cast<const PropertyTile *>(tiles[i]);
     if (toUpper(propertyTile->getProperty().getType()) == "RAILROAD") {
-      if (firstStation < 0)
-        firstStation = i;
-      if (i > currentPos && bestPos < 0) {
-        bestPos = i;
-      }
+      if (first_station < 0) first_station = i;
+      if (i > current_pos && best_pos < 0) best_pos = i;
     }
   }
-  // If no station ahead, wrap around to first station
-  if (bestPos < 0)
-    bestPos = firstStation;
-  // If no stations at all, stay in place
-  if (bestPos < 0)
-    bestPos = currentPos;
-  return bestPos;
+
+  if (best_pos < 0) best_pos = first_station;
+  if (best_pos < 0) {
+    throw std::runtime_error("No station tile found in board layout.");
+  }
+  return best_pos;
 }
 
 int Board::findJailPosition() const {
   for (int i = 0; i < tileCount; ++i) {
-    if (tiles[i] == nullptr)
-      continue;
+    if (tiles[i] == nullptr) continue;
+
     const std::string tileType = toLower(tiles[i]->getType());
     const std::string tileCode = toLower(tiles[i]->getCode());
     const std::string tileName = toLower(tiles[i]->getName());
 
-    if (tileType == "jail" || tileType == "penjara" || tileCode == "pen" ||
-        tileName == "penjara") {
+    if (tileType == "jail" || tileType == "penjara" || tileCode == "pen" || tileName == "penjara") {
       return i;
     }
 
-    const auto *actionTile = dynamic_cast<const ActionTile *>(tiles[i]);
-    if (actionTile != nullptr &&
-        toLower(actionTile->getActionType()) == "jail") {
-      return i;
+    if (tileType == "action") {
+      const ActionTile *actionTile = static_cast<const ActionTile *>(tiles[i]);
+      if (toLower(actionTile->getActionType()) == "jail") {
+        return i;
+      }
     }
   }
-  return 10; // Fallback default
+  throw std::runtime_error("Jail tile not found in board layout.");
 }
