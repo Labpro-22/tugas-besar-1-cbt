@@ -1,6 +1,7 @@
 #include "models/Card/CommunityCard.hpp"
 #include "models/GameManager/GameManager.hpp"
 #include "models/GameManager/Player.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 
 // ctor
 CommunityCard::CommunityCard(int cardId, CommunityCardType type)
@@ -27,7 +28,7 @@ std::string CommunityCard::getType() const { return "CommunityCard"; }
 
 void CommunityCard::execute(Player *p, GameManager *gm) {
   if (p == nullptr || gm == nullptr) {
-    return;
+    throw InternalGameException("CommunityCard::execute menerima konteks yang tidak valid.");
   }
 
   if (communityType != CommunityCardType::BIRTHDAY && p->hasShieldActive()) {
@@ -44,10 +45,13 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
         continue;
       }
 
-      if (other.canPay(giftAmount)) {
+      try {
+        if (!other.canPay(giftAmount)) {
+          throw InsufficientFundsException(other.getUsername(), giftAmount, other.getCash());
+        }
         other.reduceCash(giftAmount);
         p->addCash(giftAmount);
-      } else {
+      } catch (const InsufficientFundsException &) {
         gm->executeBankruptcy(other, p, giftAmount);
       }
     }
@@ -57,11 +61,15 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
 
   if (communityType == CommunityCardType::DOCTOR_FEE) {
     const int doctorFee = 700;
-    if (p->canPay(doctorFee)) {
+    try {
+      if (!p->canPay(doctorFee)) {
+        throw InsufficientFundsException(p->getUsername(), doctorFee, p->getCash());
+      }
+      
       p->reduceCash(doctorFee);
       std::cout << "Kamu membayar M" << doctorFee << " ke Bank." << " Sisa Uang = M" << p->getCash() << ".\n";
       gm->addLogEntry(p->getUsername() + " membayar biaya dokter M" + std::to_string(doctorFee));
-    } else {
+    } catch (const InsufficientFundsException &) {
       std::cout << "Kamu tidak mampu membayar biaya dokter! (M" << doctorFee << ")\n";
       std::cout << "Uang kamu saat ini: M" << p->getCash() << "\n";
       gm->executeBankruptcy(*p, nullptr, doctorFee);
@@ -77,14 +85,20 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
         continue;
       }
 
-      if (p->canPay(campaignFee)) {
+      try {
+        if (!p->canPay(campaignFee)) {
+          throw InsufficientFundsException(p->getUsername(), campaignFee, p->getCash());
+        }
         p->reduceCash(campaignFee);
         other.addCash(campaignFee);
-      } else {
+      } catch (const InsufficientFundsException &) {
         gm->executeBankruptcy(*p, &other, campaignFee);
         break;
       }
     }
     gm->addLogEntry(p->getUsername() + " membayar campaign fee ke pemain lain");
+    return;
   }
+
+  throw InvalidCardException("CommunityCard");
 }

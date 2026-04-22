@@ -27,12 +27,11 @@ int MoveCard::getValue() const { return steps; }
 
 void MoveCard::use(Player *p, GameManager *gm) {
   if (p == nullptr || gm == nullptr) {
-    return;
+    throw InternalGameException("MoveCard::use menerima konteks yang tidak valid.");
   }
 
   if (!p->canUseAbility()) {
-    gm->addLogEntry(p->getUsername() + " gagal menggunakan MoveCard (ability sudah dipakai)");
-    return;
+    throw AbilityAlreadyUsedException();
   }
 
   int boardSize = gm->getBoardSize();

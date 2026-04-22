@@ -2,6 +2,7 @@
 #include "core/Board-Tiles/Board.hpp"
 #include "models/GameManager/GameManager.hpp"
 #include "models/GameManager/Player.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 
 // ctor
 ChanceCard::ChanceCard(int cardId, ChanceCardType type)
@@ -28,13 +29,12 @@ std::string ChanceCard::getType() const { return "ChanceCard"; }
 
 void ChanceCard::execute(Player *p, GameManager *gm) {
   if (p == nullptr || gm == nullptr) {
-    return;
+    throw InternalGameException("ChanceCard::execute menerima konteks yang tidak valid.");
   }
 
   int boardSize = gm->getBoardSize();
   if (boardSize <= 0) {
-    gm->addLogEntry("ChanceCard gagal: ukuran board tidak valid");
-    return;
+    throw InternalGameException("ChanceCard digunakan saat ukuran board tidak valid.");
   }
 
   switch (chanceType) {
@@ -61,5 +61,7 @@ void ChanceCard::execute(Player *p, GameManager *gm) {
     gm->goToJail(*p);
     break;
   }
+  default:
+    throw InvalidCardException("ChanceCard");
   }
 }

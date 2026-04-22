@@ -21,12 +21,11 @@ std::string DemolitionCard::getType() const {
 
 void DemolitionCard::use(Player* p, GameManager* gm) {
     if (p == nullptr || gm == nullptr) {
-        return;
+        throw InternalGameException("DemolitionCard::use menerima konteks yang tidak valid.");
     }
 
     if (!p->canUseAbility()) {
-        gm->addLogEntry(p->getUsername() + " gagal menggunakan DemolitionCard (ability sudah dipakai)");
-        return;
+        throw AbilityAlreadyUsedException();
     }
 
     std::vector<Property*> targets;
@@ -44,8 +43,7 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
     }
 
     if (targets.empty()) {
-        std::cout << "Tidak ada properti lawan untuk dihancurkan.\n";
-        return;
+        throw AbilityTargetException("Tidak ada properti lawan untuk dihancurkan.");
     }
 
     std::cout << "Pilih properti untuk DemolitionCard:\n";

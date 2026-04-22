@@ -1,9 +1,9 @@
 #pragma once
 #include "Card.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 #include <vector>
 #include <algorithm>
 #include <random>
-#include <stdexcept>
 
 template <class T>
 class CardDeck {
@@ -42,7 +42,7 @@ T CardDeck<T>::draw() {
     }
 
     if (deck.empty()) {
-        throw std::runtime_error("Cannot draw from an empty deck!");
+        throw EmptyDeckException();
     }
 
     T card = deck.back();

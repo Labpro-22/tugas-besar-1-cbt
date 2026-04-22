@@ -482,8 +482,14 @@ void GuiWindow::drawGameOverPopup(const GameSnapshot& currentSnapshot) const {
     drawRectangleRoundedLinesCompat(badgeRect, 0.16F, 10, 2.0F,
                                     Color{118, 99, 22, 255});
 
-    const int badgeNumber = winnerIndex >= 0 ? winnerIndex + 1 : 1;
-    drawTextCentered(font, std::to_string(badgeNumber), badgeRect, 48.0F, 1.0F,
+    std::string winners;                                
+    for (std::size_t i = 0; i < currentSnapshot.winnerNames.size(); ++i) {
+        if (i > 0) {
+            winners += ", ";
+        }
+        winners += currentSnapshot.winnerNames[i];
+    }                 
+    drawTextCentered(font, winners, badgeRect, 48.0F, 1.0F,
                      Color{58, 48, 18, 255});
 
     drawTextCentered(font, "Victory Claimed",

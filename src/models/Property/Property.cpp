@@ -99,8 +99,7 @@ int Property::getRedeemPrice() const {
 /// @return The redeem price charged for this property
 int Property::redeem() {
     if (status != PropertyStatus::MORTGAGED) {
-        throw PropertyRedeemException(code,
-            "Properti harus dalam status MORTGAGED sebelum ditebus.");
+        throw PropertyRedeemException(code, "Properti harus dalam status MORTGAGED sebelum ditebus.");
     }
 
     const int redeemPrice = getRedeemPrice();

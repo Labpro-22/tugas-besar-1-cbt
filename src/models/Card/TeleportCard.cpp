@@ -22,13 +22,11 @@ std::string TeleportCard::getType() const { return "TeleportCard"; }
 
 void TeleportCard::use(Player *p, GameManager *gm) {
   if (p == nullptr || gm == nullptr) {
-    return;
+    throw InternalGameException("TeleportCard::use menerima konteks yang tidak valid.");
   }
 
   if (!p->canUseAbility()) {
-    gm->addLogEntry(p->getUsername() +
-                    " gagal menggunakan TeleportCard (ability sudah dipakai)");
-    return;
+    throw AbilityAlreadyUsedException();
   }
 
   int boardSize = gm->getBoardSize();

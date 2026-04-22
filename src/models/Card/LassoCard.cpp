@@ -21,13 +21,11 @@ std::string LassoCard::getType() const { return "LassoCard"; }
 
 void LassoCard::use(Player *p, GameManager *gm) {
     if (p == nullptr || gm == nullptr) {
-        return;
+        throw InternalGameException("LassoCard::use menerima konteks yang tidak valid.");
     }
 
     if (!p->canUseAbility()) {
-        gm->addLogEntry(p->getUsername() +
-            " gagal menggunakan LassoCard (ability sudah dipakai)");
-        return;
+        throw AbilityAlreadyUsedException();
     }
 
     const int boardSize = gm->getBoardSize();
@@ -39,16 +37,14 @@ void LassoCard::use(Player *p, GameManager *gm) {
         if (player.getStatus() == BANKRUPT) {
             continue;
         }
-        const int distance =
-            (player.getPosition() - p->getPosition() + boardSize) % boardSize;
+        const int distance = (player.getPosition() - p->getPosition() + boardSize) % boardSize;
         if (distance > 0) {
             candidates.push_back(&player);
         }
     }
 
     if (candidates.empty()) {
-        std::cout << "Tidak ada pemain lawan yang berada di depanmu.\n";
-        return;
+        throw AbilityTargetException("Tidak ada pemain lawan yang berada di depanmu.");
     }
 
     std::cout << "Pilih target LassoCard:\n";

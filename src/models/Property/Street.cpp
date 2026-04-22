@@ -47,11 +47,7 @@ int Street::getPropertyDetail() const {
 
     if (!rentLevels.empty() &&
         static_cast<int>(level) < static_cast<int>(rentLevels.size())) {
-        int rent = rentLevels[static_cast<int>(level)];
-        if (level == BuildingLevel::EMPTY && isMonopolized()) {
-            rent *= 2;
-        }
-        return rent;
+        return rentLevels[static_cast<int>(level)];
     }
 
     throw PropertyBuildException(getCode(), "Level bangunan di luar daftar sewa.");
@@ -167,8 +163,11 @@ bool Street::isNextBuildHotel() const {
 }
 
 void Street::buildNext() {
-    if (!canBuildNext()) {
-        return;
+    if (getStatus() != PropertyStatus::OWNED) {
+        throw PropertyBuildException(getCode(), "Properti harus dimiliki pemain sebelum dibangun.");
+    }
+    if (level >= BuildingLevel::HOTEL) {
+        throw PropertyBuildException(getCode(), "Properti sudah mencapai level bangunan maksimal (Hotel).");
     }
 
     level = static_cast<BuildingLevel>(static_cast<int>(level) + 1);
