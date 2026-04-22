@@ -1,6 +1,7 @@
-#include "gui/GuiWindowInternal.hpp"
+#include "gui/GuiWindowLayout.hpp"
 
-using namespace gui_internal;
+#include <algorithm>
+#include <cmath>
 
 GuiWindow::Layout GuiWindow::computeLayout(const int screenWidth,
                                            const int screenHeight,
@@ -12,7 +13,7 @@ GuiWindow::Layout GuiWindow::computeLayout(const int screenWidth,
     const float commandHeight = 154.0F;
     const float availableWidth = screenWidth - outerPadding * 2.0F - gap * 2.0F;
 
-    float sideWidth = clampFloat(availableWidth / 5.5F, 200.0F, 290.0F);
+    float sideWidth = GuiWindowInternal::clampFloat(availableWidth / 5.5F, 200.0F, 290.0F);
     if (availableWidth - sideWidth * 2.0F < 520.0F) {
         sideWidth = std::max(185.0F, (availableWidth - 520.0F) / 2.0F);
     }
@@ -50,7 +51,7 @@ GuiWindow::Layout GuiWindow::computeLayout(const int screenWidth,
         layout.leftPanelRect.height - panelHeaderSpace - panelPadding,
     };
 
-    const float rosterHeight = clampFloat(layout.rightPanelRect.height * 0.40F,
+    const float rosterHeight = GuiWindowInternal::clampFloat(layout.rightPanelRect.height * 0.40F,
                                           220.0F, 336.0F);
     layout.rosterRect =
         Rectangle{layout.rightPanelRect.x + panelPadding,
@@ -97,9 +98,9 @@ GuiWindow::Layout GuiWindow::computeLayout(const int screenWidth,
     };
 
     if (currentSnapshot.gameStarted) {
-        const Rectangle boardSurface = insetRect(layout.boardRect, 10.0F, 10.0F);
+        const Rectangle boardSurface = GuiWindowInternal::insetRect(layout.boardRect, 10.0F, 10.0F);
         const int borderThickness =
-            clampInt(static_cast<int>(std::min(boardSurface.width, boardSurface.height) /
+            GuiWindowInternal::clampInt(static_cast<int>(std::min(boardSurface.width, boardSurface.height) /
                                       7.0F),
                      56, 96);
         const Rectangle centerField{
@@ -110,7 +111,7 @@ GuiWindow::Layout GuiWindow::computeLayout(const int screenWidth,
         };
 
         const float buttonWidth2 =
-            clampFloat(centerField.width / 3.0F, 190.0F, 310.0F);
+            GuiWindowInternal::clampFloat(centerField.width / 3.0F, 190.0F, 310.0F);
         layout.rollButtonRect = Rectangle{
             centerField.x + (centerField.width - buttonWidth2) / 2.0F,
             centerField.y + centerField.height - 112.0F, buttonWidth2, 66.0F};
@@ -142,14 +143,14 @@ void GuiWindow::updateFrame(const Layout& layout,
         }
 
         if (!popupDismissed) {
-            if (isButtonPressed(gameOverPopupExitButtonRect(), true)) {
+            if (GuiWindowInternal::isButtonPressed(gameOverPopupExitButtonRect(), true)) {
                 submitInputLine("EXIT");
                 std::lock_guard<std::mutex> lock(snapshotMutex);
                 gameOverPopupDismissed = true;
                 return;
             }
 
-            if (isButtonPressed(gameOverPopupNewGameButtonRect(), true)) {
+            if (GuiWindowInternal::isButtonPressed(gameOverPopupNewGameButtonRect(), true)) {
                 submitInputLine("NEW_GAME");
                 std::lock_guard<std::mutex> lock(snapshotMutex);
                 gameOverPopupDismissed = true;
@@ -158,7 +159,7 @@ void GuiWindow::updateFrame(const Layout& layout,
         }
 
         if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_ESCAPE) ||
-            isButtonPressed(gameOverPopupCloseButtonRect(), true)) {
+            GuiWindowInternal::isButtonPressed(gameOverPopupCloseButtonRect(), true)) {
             std::lock_guard<std::mutex> lock(snapshotMutex);
             gameOverPopupDismissed = true;
             return;
@@ -213,7 +214,7 @@ void GuiWindow::updateFrame(const Layout& layout,
             currentModal.request.kind == InputPromptKind::Choice &&
             !currentSnapshot.gameStarted) {
             for (std::size_t i = 0; i < layout.quickButtonRects.size(); ++i) {
-                if (!isButtonPressed(layout.quickButtonRects[i],
+                if (!GuiWindowInternal::isButtonPressed(layout.quickButtonRects[i],
                                      quickButtonEnabled[i])) {
                     continue;
                 }
@@ -248,18 +249,18 @@ void GuiWindow::updateFrame(const Layout& layout,
 
         if (currentModal.localType == LocalDialogType::ErrorMessage) {
             if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_ESCAPE) ||
-                isButtonPressed(errorOkRect, true)) {
+                GuiWindowInternal::isButtonPressed(errorOkRect, true)) {
                 confirmLocalDialog();
             }
         } else if (currentModal.backendOwned && currentModal.yesNo) {
-            if (isButtonPressed(okRect, true)) {
+            if (GuiWindowInternal::isButtonPressed(okRect, true)) {
                 std::lock_guard<std::mutex> lock(modalMutex);
                 modal.response.accepted = true;
                 modal.response.value = "y";
                 modal.backendResolved = true;
                 modal.active = false;
                 modalCondition.notify_all();
-            } else if (isButtonPressed(cancelRect, true)) {
+            } else if (GuiWindowInternal::isButtonPressed(cancelRect, true)) {
                 std::lock_guard<std::mutex> lock(modalMutex);
                 modal.response.accepted = true;
                 modal.response.value = "n";
@@ -268,9 +269,9 @@ void GuiWindow::updateFrame(const Layout& layout,
                 modalCondition.notify_all();
             }
         } else {
-            if (IsKeyPressed(KEY_ENTER) || isButtonPressed(okRect, true)) {
+            if (IsKeyPressed(KEY_ENTER) || GuiWindowInternal::isButtonPressed(okRect, true)) {
                 confirmLocalDialog();
-            } else if (IsKeyPressed(KEY_ESCAPE) || isButtonPressed(cancelRect, true)) {
+            } else if (IsKeyPressed(KEY_ESCAPE) || GuiWindowInternal::isButtonPressed(cancelRect, true)) {
                 cancelLocalDialog();
             }
         }
@@ -287,9 +288,9 @@ void GuiWindow::updateFrame(const Layout& layout,
             std::max(20.0F, layout.logRect.width - logScrollbarWidth - 10.0F),
             layout.logRect.height};
 
-        const std::string logText = buildTransactionLogText(currentSnapshot);
+        const std::string logText = GuiWindowInternal::buildTransactionLogText(currentSnapshot);
         const auto lines =
-            wrapText(georgiaFont, logText, 15.0F, 1.0F, textRect.width, 100000);
+            GuiWindowInternal::wrapText(georgiaFont, logText, 15.0F, 1.0F, textRect.width, 100000);
         const int visibleLines =
             std::max(1, static_cast<int>(layout.logRect.height / logLineHeight));
         const int maxStartLine =
@@ -300,13 +301,13 @@ void GuiWindow::updateFrame(const Layout& layout,
             logScrollbarWidth,
             layout.logRect.height};
         const Rectangle scrollbarThumb =
-            computeScrollbarThumb(scrollbarTrack, visibleLines,
+            GuiWindowInternal::computeScrollbarThumb(scrollbarTrack, visibleLines,
                                   static_cast<int>(lines.size()), logScrollLine);
 
-        if (pointInsideRect(layout.logRect, mouse)) {
+        if (GuiWindowInternal::pointInsideRect(layout.logRect, mouse)) {
             const float wheelMove = GetMouseWheelMove();
             if (wheelMove != 0.0F) {
-                logScrollLine = clampInt(
+                logScrollLine = GuiWindowInternal::clampInt(
                     logScrollLine - static_cast<int>(wheelMove) * 3, 0, maxStartLine);
                 logAutoScroll = logScrollLine >= maxStartLine;
             }
@@ -314,7 +315,7 @@ void GuiWindow::updateFrame(const Layout& layout,
 
         if (!logScrollbarDragging && maxStartLine > 0 &&
             IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
-            pointInsideRect(scrollbarThumb, mouse)) {
+            GuiWindowInternal::pointInsideRect(scrollbarThumb, mouse)) {
             logScrollbarDragging = true;
             logScrollbarGrabOffset = mouse.y - scrollbarThumb.y;
         }
@@ -323,29 +324,29 @@ void GuiWindow::updateFrame(const Layout& layout,
             if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
                 const float thumbTravel =
                     std::max(1.0F, scrollbarTrack.height - scrollbarThumb.height);
-                const float newThumbY = clampFloat(
+                const float newThumbY = GuiWindowInternal::clampFloat(
                     mouse.y - logScrollbarGrabOffset, scrollbarTrack.y,
                     scrollbarTrack.y + scrollbarTrack.height - scrollbarThumb.height);
                 const float ratio = (newThumbY - scrollbarTrack.y) / thumbTravel;
-                logScrollLine = clampInt(static_cast<int>(std::round(ratio * maxStartLine)),
+                logScrollLine = GuiWindowInternal::clampInt(static_cast<int>(std::round(ratio * maxStartLine)),
                                          0, maxStartLine);
                 logAutoScroll = logScrollLine >= maxStartLine;
             } else {
                 logScrollbarDragging = false;
             }
         } else if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) &&
-                   !pointInsideRect(scrollbarThumb, mouse)) {
+                   !GuiWindowInternal::pointInsideRect(scrollbarThumb, mouse)) {
             logScrollbarDragging = false;
         }
     }
 
-    if (pointInsideRect(layout.rosterRect, mouse) &&
+    if (GuiWindowInternal::pointInsideRect(layout.rosterRect, mouse) &&
         IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
         for (std::size_t i = 0; i < currentSnapshot.players.size(); ++i) {
             const Rectangle cardRect =
-                calculateRosterCardRect(layout.rosterRect, currentSnapshot,
+                GuiWindowInternal::calculateRosterCardRect(layout.rosterRect, currentSnapshot,
                                         static_cast<int>(i));
-            if (pointInsideRect(cardRect, mouse)) {
+            if (GuiWindowInternal::pointInsideRect(cardRect, mouse)) {
                 inspectedPlayerIndex = static_cast<int>(i);
                 return;
             }
@@ -353,29 +354,29 @@ void GuiWindow::updateFrame(const Layout& layout,
     }
 
     if (currentSnapshot.gameStarted && !currentSnapshot.gameOver) {
-        if (isButtonPressed(layout.rollButtonRect, true)) {
+        if (GuiWindowInternal::isButtonPressed(layout.rollButtonRect, true)) {
             submitInputLine("LEMPAR_DADU");
             return;
         }
 
-        if (isButtonPressed(layout.scrollLeftRect, commandScrollColumn > 0)) {
+        if (GuiWindowInternal::isButtonPressed(layout.scrollLeftRect, commandScrollColumn > 0)) {
             commandScrollColumn--;
             return;
         }
-        if (isButtonPressed(layout.scrollRightRect,
+        if (GuiWindowInternal::isButtonPressed(layout.scrollRightRect,
                             commandScrollColumn < commandScrollMaxColumn)) {
             commandScrollColumn++;
             return;
         }
 
         for (std::size_t i = 0; i < layout.quickButtonRects.size(); ++i) {
-            if (isButtonPressed(layout.quickButtonRects[i], quickButtonEnabled[i])) {
+            if (GuiWindowInternal::isButtonPressed(layout.quickButtonRects[i], quickButtonEnabled[i])) {
                 executeStartedCommand(visibleCommandIndices[i]);
                 return;
             }
         }
 
-        if (isButtonPressed(layout.manualButtonRect, manualEnabled)) {
+        if (GuiWindowInternal::isButtonPressed(layout.manualButtonRect, manualEnabled)) {
             openLocalDialog(LocalDialogType::ManualCommand, "Perintah Manual",
                             "Ketik command lengkap.\nContoh: ATUR_DADU 2 5");
             return;
@@ -384,7 +385,7 @@ void GuiWindow::updateFrame(const Layout& layout,
     }
 
     for (std::size_t i = 0; i < layout.quickButtonRects.size(); ++i) {
-        if (!isButtonPressed(layout.quickButtonRects[i], quickButtonEnabled[i])) {
+        if (!GuiWindowInternal::isButtonPressed(layout.quickButtonRects[i], quickButtonEnabled[i])) {
             continue;
         }
 
@@ -430,7 +431,7 @@ void GuiWindow::updateModalInput() {
     const Vector2 mouse = GetMousePosition();
 
     if (!modalDragging && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
-        pointInsideRect(dragRect, mouse)) {
+        GuiWindowInternal::pointInsideRect(dragRect, mouse)) {
         modalDragging = true;
         modalDragOffset = Vector2{mouse.x - dialogRect.x, mouse.y - dialogRect.y};
     }
@@ -439,9 +440,9 @@ void GuiWindow::updateModalInput() {
         if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
             modalPosition = Vector2{mouse.x - modalDragOffset.x,
                                     mouse.y - modalDragOffset.y};
-            modalPosition.x = clampFloat(
+            modalPosition.x = GuiWindowInternal::clampFloat(
                 modalPosition.x, 10.0F, GetScreenWidth() - dialogRect.width - 10.0F);
-            modalPosition.y = clampFloat(
+            modalPosition.y = GuiWindowInternal::clampFloat(
                 modalPosition.y, 10.0F, GetScreenHeight() - dialogRect.height - 10.0F);
         } else {
             modalDragging = false;

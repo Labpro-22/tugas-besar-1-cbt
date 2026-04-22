@@ -1,10 +1,10 @@
-#include "gui/GuiWindowInternal.hpp"
+#include "gui/GuiWindowCommands.hpp"
 
-using namespace gui_internal;
+#include <algorithm>
+#include <cctype>
+#include <sstream>
 
-namespace {
-
-std::string lowercaseText(std::string text) {
+std::string GuiWindow::lowercaseText(std::string text) {
     std::transform(text.begin(), text.end(), text.begin(),
                    [](unsigned char ch) {
                        return static_cast<char>(std::tolower(ch));
@@ -12,7 +12,7 @@ std::string lowercaseText(std::string text) {
     return text;
 }
 
-bool promptExplicitlyAllowsCancel(const InputPromptRequest& request) {
+bool GuiWindow::promptExplicitlyAllowsCancel(const InputPromptRequest& request) {
     if (request.kind != InputPromptKind::Choice || request.minValue > 0 ||
         request.maxValue < 0) {
         return false;
@@ -22,9 +22,9 @@ bool promptExplicitlyAllowsCancel(const InputPromptRequest& request) {
     return prompt.find("batal") != std::string::npos;
 }
 
-bool isStartupExitChoice(const InputPromptRequest& request,
-                         const InputPromptResponse& response) {
-    if (!response.accepted || trimWhitespace(response.value) != "0") {
+bool GuiWindow::isStartupExitChoice(const InputPromptRequest& request,
+                                    const InputPromptResponse& response) {
+    if (!response.accepted || GuiWindowInternal::trimWhitespace(response.value) != "0") {
         return false;
     }
 
@@ -33,7 +33,7 @@ bool isStartupExitChoice(const InputPromptRequest& request,
            prompt.find("pilih menu") != std::string::npos;
 }
 
-bool shouldUseInlineStartupMenu(const InputPromptRequest& request) {
+bool GuiWindow::shouldUseInlineStartupMenu(const InputPromptRequest& request) {
     if (request.kind != InputPromptKind::Choice) {
         return false;
     }
@@ -41,8 +41,6 @@ bool shouldUseInlineStartupMenu(const InputPromptRequest& request) {
     const std::string prompt = lowercaseText(request.prompt);
     return prompt.find("pilih menu") != std::string::npos;
 }
-
-}  // namespace
 
 void GuiWindow::updateQuickButtons(const GameSnapshot& currentSnapshot) {
     visibleCommandIndices.fill(-1);
@@ -81,12 +79,12 @@ void GuiWindow::updateQuickButtons(const GameSnapshot& currentSnapshot) {
 
     const int postGameCommandCount = 3;
     const int totalCommands =
-        static_cast<int>(kStartedQuickActions.size()) -
+        static_cast<int>(GuiWindowInternal::kStartedQuickActions.size()) -
         (currentSnapshot.gameOver ? 0 : postGameCommandCount);
     const int totalColumns = (totalCommands + 1) / 2;
     const int visibleColumns = 3;
     commandScrollMaxColumn = std::max(0, totalColumns - visibleColumns);
-    commandScrollColumn = clampInt(commandScrollColumn, 0, commandScrollMaxColumn);
+    commandScrollColumn = GuiWindowInternal::clampInt(commandScrollColumn, 0, commandScrollMaxColumn);
 
     for (int column = 0; column < visibleColumns; ++column) {
         const int topSlot = column;
@@ -96,13 +94,13 @@ void GuiWindow::updateQuickButtons(const GameSnapshot& currentSnapshot) {
 
         if (topIndex < totalCommands) {
             quickButtonLabels[static_cast<std::size_t>(topSlot)] =
-                kStartedQuickActions[static_cast<std::size_t>(topIndex)].label;
+                GuiWindowInternal::kStartedQuickActions[static_cast<std::size_t>(topIndex)].label;
             quickButtonEnabled[static_cast<std::size_t>(topSlot)] = true;
             visibleCommandIndices[static_cast<std::size_t>(topSlot)] = topIndex;
         }
         if (bottomIndex < totalCommands) {
             quickButtonLabels[static_cast<std::size_t>(bottomSlot)] =
-                kStartedQuickActions[static_cast<std::size_t>(bottomIndex)].label;
+                GuiWindowInternal::kStartedQuickActions[static_cast<std::size_t>(bottomIndex)].label;
             quickButtonEnabled[static_cast<std::size_t>(bottomSlot)] = true;
             visibleCommandIndices[static_cast<std::size_t>(bottomSlot)] = bottomIndex;
         }
@@ -110,12 +108,12 @@ void GuiWindow::updateQuickButtons(const GameSnapshot& currentSnapshot) {
 }
 
 void GuiWindow::executeStartedCommand(const int specIndex) {
-    if (specIndex < 0 || specIndex >= static_cast<int>(kStartedQuickActions.size())) {
+    if (specIndex < 0 || specIndex >= static_cast<int>(GuiWindowInternal::kStartedQuickActions.size())) {
         return;
     }
 
     const StartedQuickAction action =
-        kStartedQuickActions[static_cast<std::size_t>(specIndex)].action;
+        GuiWindowInternal::kStartedQuickActions[static_cast<std::size_t>(specIndex)].action;
     switch (action) {
         case StartedQuickAction::PrintBoard:
             submitInputLine("CETAK_PAPAN");
@@ -208,7 +206,7 @@ void GuiWindow::confirmLocalDialog() {
         return;
     }
 
-    const std::string value = trimWhitespace(current.inputText);
+    const std::string value = GuiWindowInternal::trimWhitespace(current.inputText);
 
     switch (current.localType) {
         case LocalDialogType::ManualCommand:
@@ -301,7 +299,7 @@ InputPromptResponse GuiWindow::requestBackendPrompt(
         if (!inputBuffer.readLine(line)) {
             return {};
         }
-        if (trimWhitespace(line) == "0") {
+        if (GuiWindowInternal::trimWhitespace(line) == "0") {
             exitRequested.store(true);
         }
         return InputPromptResponse{true, line};

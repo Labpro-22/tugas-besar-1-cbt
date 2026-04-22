@@ -108,6 +108,13 @@ private:
     bool modalDragging;
     bool modalPositionInitialized;
 
+    static bool shouldShowErrorPopup(const std::string& text);
+    static std::string lowercaseText(std::string text);
+    static bool promptExplicitlyAllowsCancel(const InputPromptRequest& request);
+    static bool isStartupExitChoice(const InputPromptRequest& request,
+                                    const InputPromptResponse& response);
+    static bool shouldUseInlineStartupMenu(const InputPromptRequest& request);
+
     void startSession();
     void stopSession();
     void submitInputLine(const std::string& line);

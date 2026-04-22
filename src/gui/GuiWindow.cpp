@@ -1,5 +1,4 @@
-#include "gui/GuiWindow.hpp"
-#include "gui/GuiWindowInternal.hpp"
+#include "gui/GuiWindowCore.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -10,18 +9,12 @@
 #include <utility>
 #include <vector>
 
-
-
-using namespace gui_internal;
-
-namespace {
-bool shouldShowErrorPopup(const std::string& text) {
+bool GuiWindow::shouldShowErrorPopup(const std::string& text) {
     return text.find("[ERROR]") != std::string::npos ||
            text.find("[FATAL]") != std::string::npos ||
            text.rfind("Error:", 0) == 0 ||
            text.find("\nError:") != std::string::npos;
 }
-} // namespace
 
 GuiWindow::GuiWindow()
     : inputBuffer(),
@@ -67,7 +60,7 @@ GuiWindow::~GuiWindow() { stopSession(); }
 
 int GuiWindow::run() {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
-    InitWindow(kWindowWidth, kWindowHeight, "NIMONSPOLI GUI");
+    InitWindow(GuiWindowInternal::kWindowWidth, GuiWindowInternal::kWindowHeight, "NIMONSPOLI GUI");
     SetTargetFPS(60);
     SetTextLineSpacing(-8);
 
@@ -90,7 +83,7 @@ int GuiWindow::run() {
     const int baseFontSize = 48;
     for (int fontIdx = 0; fontIdx < 10 && !fontLoaded; fontIdx++) {
         georgiaFont =
-            loadSystemFontFromMemory(fontPaths[fontIdx], baseFontSize, nullptr, 0);
+            GuiWindowInternal::loadSystemFontFromMemory(fontPaths[fontIdx], baseFontSize, nullptr, 0);
         if (georgiaFont.texture.id != 0 && georgiaFont.glyphCount > 0) {
             fontLoaded = true;
             SetTextureFilter(georgiaFont.texture, TEXTURE_FILTER_BILINEAR);
@@ -133,7 +126,7 @@ int GuiWindow::run() {
         updateFrame(layout, currentSnapshot);
 
         BeginDrawing();
-        ClearBackground(kPaper);
+        ClearBackground(GuiWindowInternal::kPaper);
         drawFrame(layout, currentSnapshot);
         drawTurnChangePopup(currentSnapshot);
         drawGameOverPopup(currentSnapshot);
@@ -212,7 +205,7 @@ void GuiWindow::queueErrorPopupIfNeeded(const std::string& text) {
         return;
     }
 
-    std::string message = trimWhitespace(text);
+    std::string message = GuiWindowInternal::trimWhitespace(text);
     if (message.empty()) {
         return;
     }
