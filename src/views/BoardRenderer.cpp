@@ -11,9 +11,8 @@
 #include "core/Board-Tiles/Tile.hpp"
 #include "models/GameManager/Player.hpp"
 
-namespace {
-
-std::string truncateText(const std::string& text, std::size_t maxWidth) {
+std::string BoardRenderer::truncateText(const std::string& text,
+                                        std::size_t maxWidth) {
     if (text.size() <= maxWidth) {
         return text;
     }
@@ -25,7 +24,8 @@ std::string truncateText(const std::string& text, std::size_t maxWidth) {
     return text.substr(0, maxWidth - 3) + "...";
 }
 
-std::string joinPlayerNames(const std::vector<Player*>& players, std::size_t maxWidth) {
+std::string BoardRenderer::joinPlayerNames(const std::vector<Player*>& players,
+                                           std::size_t maxWidth) {
     if (players.empty()) {
         return "-";
     }
@@ -50,8 +50,6 @@ std::string joinPlayerNames(const std::vector<Player*>& players, std::size_t max
 
     return truncateText(joined, maxWidth);
 }
-
-}  // namespace
 
 BoardRenderer::BoardRenderer(int cellWidth, const std::string& borderStyle)
     : cellWidth(cellWidth), borderStyle(borderStyle) {

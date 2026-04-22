@@ -39,6 +39,8 @@ private:
 
     static std::mutex providerMutex;
     static std::function<InputPromptResponse(const InputPromptRequest&)> promptProvider;
+    static std::string trim(const std::string& text);
+    static std::string toLower(std::string text);
 
     bool tryPrompt(const InputPromptRequest& request,
                    InputPromptResponse& response) const;

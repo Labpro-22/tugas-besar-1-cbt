@@ -5,9 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace {
-
-std::string trim(const std::string& text) {
+std::string InputHandler::trim(const std::string& text) {
     const std::string whitespace = " \t\r\n";
     const std::size_t start = text.find_first_not_of(whitespace);
     if (start == std::string::npos) {
@@ -18,13 +16,11 @@ std::string trim(const std::string& text) {
     return text.substr(start, end - start + 1);
 }
 
-std::string toLower(std::string text) {
+std::string InputHandler::toLower(std::string text) {
     std::transform(text.begin(), text.end(), text.begin(),
                    [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
     return text;
 }
-
-}  // namespace
 
 std::mutex InputHandler::providerMutex;
 std::function<InputPromptResponse(const InputPromptRequest&)>

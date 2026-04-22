@@ -4,7 +4,6 @@
 #include <cctype>
 #include <iostream>
 #include <map>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -15,15 +14,13 @@
 #include "models/Property/Street.hpp"
 #include "models/Property/Utility.hpp"
 
-namespace {
-
-std::string normalizeAnswer(std::string answer) {
+std::string PropertyView::normalizeAnswer(std::string answer) {
     std::transform(answer.begin(), answer.end(), answer.begin(),
                    [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
     return answer;
 }
 
-int resolveCardWidth(const Property* property, int preferredWidth) {
+int PropertyView::resolveCardWidth(const Property* property, int preferredWidth) {
     if (property == nullptr) {
         return preferredWidth;
     }
@@ -32,7 +29,7 @@ int resolveCardWidth(const Property* property, int preferredWidth) {
     return std::max(preferredWidth, minimumWidth);
 }
 
-std::string colorGroupLabel(ColorGroup color) {
+std::string PropertyView::colorGroupLabel(ColorGroup color) {
     switch (color) {
         case ColorGroup::COKLAT:
             return "COKLAT";
@@ -56,26 +53,6 @@ std::string colorGroupLabel(ColorGroup color) {
 
     return "TIDAK DIKETAHUI";
 }
-
-std::string buildingLabel(const Property* property) {
-    if (property == nullptr || property->getType() != "Street") {
-        return "-";
-    }
-
-    const int buildingCount = property->getBuildingCount();
-    if (buildingCount <= 0) {
-        return "Tanpa bangunan";
-    }
-    if (buildingCount >= static_cast<int>(BuildingLevel::HOTEL)) {
-        return "Hotel";
-    }
-
-    std::ostringstream oss;
-    oss << buildingCount << " rumah";
-    return oss.str();
-}
-
-}  // namespace
 
 PropertyView::PropertyView(int cardWidth) : cardWidth(cardWidth) {}
 
@@ -172,7 +149,7 @@ void PropertyView::showPlayerProperties(Player* player) const {
         if (property != nullptr) {
             std::cout << "- " << property->getName()
                       << " (" << property->getCode() << ")"
-                      << " | " << buildingLabel(property)
+                      << " | " << property->getBuildingLabel()
                       << " | M" << property->getBuyPrice()
                       << " | " << property->getStatusString();
 

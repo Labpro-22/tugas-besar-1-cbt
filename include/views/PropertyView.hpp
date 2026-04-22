@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "../models/Property/ColorGroup.hpp"
+
 class Player;
 class Property;
 class InputHandler;
@@ -12,6 +14,10 @@ class InputHandler;
 class PropertyView {
 private:
     int cardWidth;
+
+    static std::string normalizeAnswer(std::string answer);
+    static int resolveCardWidth(const Property* property, int preferredWidth);
+    static std::string colorGroupLabel(ColorGroup color);
 
 public:
     PropertyView(int cardWidth = 32);

@@ -23,11 +23,7 @@
 #include "models/Property/Street.hpp"
 #include "models/Property/Utility.hpp"
 
-using namespace app;
-
-namespace {
-
-bool parseInteger(const std::string& token, int& value) {
+bool GameSessionPersistence::parseInteger(const std::string& token, int& value) {
     try {
         std::size_t parsed = 0;
         value = std::stoi(token, &parsed);
@@ -35,8 +31,6 @@ bool parseInteger(const std::string& token, int& value) {
     } catch (...) {
         return false;
     }
-}
-
 }
 
 bool GameSessionPersistence::save(const GameSession& session,
@@ -67,7 +61,8 @@ bool GameSessionPersistence::save(const GameSession& session,
                 ? layout[static_cast<std::size_t>(playerPosition)].code
                 : std::to_string(playerPosition);
         file << player.getUsername() << " " << player.getCash() << " "
-             << positionToken << " " << playerStatusLabel(player) << "\n";
+             << positionToken << " "
+             << GameSessionUtil::playerStatusLabel(player) << "\n";
         file << player.getCardCount() << "\n";
 
         for (Card* card : player.getHand()) {
@@ -93,7 +88,8 @@ bool GameSessionPersistence::save(const GameSession& session,
     std::vector<Property*> properties = queries.getAllProperties();
     file << properties.size() << "\n";
     for (Property* property : properties) {
-        file << property->getCode() << " " << lowercase(property->getType()) << " ";
+        file << property->getCode() << " "
+             << GameSessionUtil::lowercase(property->getType()) << " ";
         if (property->getOwner() != nullptr) {
             file << property->getOwner()->getUsername();
         } else {
@@ -206,7 +202,7 @@ bool GameSessionPersistence::load(GameSession& session,
         }
 
         PlayerStatus playerStatus = ACTIVE;
-        const std::string normalizedStatus = uppercase(status);
+        const std::string normalizedStatus = GameSessionUtil::uppercase(status);
         if (normalizedStatus == "BANKRUPT") {
             playerStatus = BANKRUPT;
         } else if (normalizedStatus == "JAILED") {
@@ -267,7 +263,8 @@ bool GameSessionPersistence::load(GameSession& session,
             continue;
         }
 
-        const std::string normalizedPropertyStatus = uppercase(status);
+        const std::string normalizedPropertyStatus =
+            GameSessionUtil::uppercase(status);
         if (normalizedPropertyStatus != "BANK" &&
             normalizedPropertyStatus != "OWNED" &&
             normalizedPropertyStatus != "MORTGAGED") {
@@ -285,7 +282,7 @@ bool GameSessionPersistence::load(GameSession& session,
             property->setBuildingCount(buildingCount);
         }
 
-        if (uppercase(ownerName) == "BANK") {
+        if (GameSessionUtil::uppercase(ownerName) == "BANK") {
             property->setOwner(nullptr);
             continue;
         }
@@ -309,7 +306,7 @@ bool GameSessionPersistence::load(GameSession& session,
     std::getline(file, discardLine);
     for (int i = 0; i < deckCount; ++i) {
         std::getline(file, discardLine);
-        discardLine = trim(discardLine);
+        discardLine = GameSessionUtil::trim(discardLine);
         if (!discardLine.empty()) {
             skillDeck.addCard(discardLine);
         }
@@ -325,12 +322,12 @@ bool GameSessionPersistence::load(GameSession& session,
     for (int i = 0; i < logCount; ++i) {
         std::string line;
         std::getline(file, line);
-        line = trim(line);
+        line = GameSessionUtil::trim(line);
         if (line.empty()) {
             continue;
         }
 
-        std::vector<std::string> tokens = tokenize(line);
+        std::vector<std::string> tokens = GameSessionUtil::tokenize(line);
         if (tokens.size() < 3) {
             continue;
         }
@@ -345,7 +342,7 @@ bool GameSessionPersistence::load(GameSession& session,
         if (tokens.size() > 3) {
             const std::size_t detailPos = line.find(action);
             if (detailPos != std::string::npos) {
-                detail = trim(line.substr(detailPos + action.size()));
+                detail = GameSessionUtil::trim(line.substr(detailPos + action.size()));
             }
         }
         game.getLogger().log(turn, username, action, detail);

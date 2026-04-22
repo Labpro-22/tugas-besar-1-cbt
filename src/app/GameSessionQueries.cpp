@@ -13,8 +13,6 @@
 
 #include <algorithm>
 
-using namespace app;
-
 GameSessionQueries::GameSessionQueries(Board& boardRef,
                                        const Configuration& configurationRef,
                                        const GameManager& gameRef)
@@ -33,10 +31,10 @@ std::vector<Property*> GameSessionQueries::getAllProperties() const {
 }
 
 Property* GameSessionQueries::findPropertyByCode(const std::string& code) const {
-    const std::string normalizedCode = uppercase(code);
+    const std::string normalizedCode = GameSessionUtil::uppercase(code);
     for (Property* property : getAllProperties()) {
         if (property != nullptr &&
-            uppercase(property->getCode()) == normalizedCode) {
+            GameSessionUtil::uppercase(property->getCode()) == normalizedCode) {
             return property;
         }
     }
@@ -44,14 +42,14 @@ Property* GameSessionQueries::findPropertyByCode(const std::string& code) const 
 }
 
 int GameSessionQueries::findTilePositionByCode(const std::string& code) const {
-    const std::string normalized = uppercase(code);
+    const std::string normalized = GameSessionUtil::uppercase(code);
     const std::vector<BoardTileConfig>& layout = configuration.getBoardLayout();
     for (int i = 0; i < board.getTileCount(); ++i) {
         const std::string tileCode =
             i < static_cast<int>(layout.size())
                 ? layout[static_cast<std::size_t>(i)].code
                 : board.getTile(i).getCode();
-        if (uppercase(tileCode) == normalized) {
+        if (GameSessionUtil::uppercase(tileCode) == normalized) {
             return i;
         }
     }

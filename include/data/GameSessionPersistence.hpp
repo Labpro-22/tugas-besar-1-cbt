@@ -6,6 +6,9 @@
 class GameSession;
 
 class GameSessionPersistence {
+private:
+    static bool parseInteger(const std::string& token, int& value);
+
 public:
     bool save(const GameSession& session, const std::string& filename) const;
     bool load(GameSession& session, const std::string& filename) const;

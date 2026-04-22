@@ -21,8 +21,6 @@
 #include "models/Property/Street.hpp"
 #include "models/Property/Utility.hpp"
 
-using namespace app;
-
 void GameSession::initializeSkillDeck() {
     skillDeck.clear();
 
@@ -82,7 +80,7 @@ void GameSession::awardSkillCardAtTurnStart() {
     }
     std::cout << ".\n";
     game.getLogger().log(game.getCurrentTurn(), player.getUsername(), "KARTU",
-                         "Mendapat " + skillCardDisplayLabel(drawnCard));
+                         "Mendapat " + drawnCard->getDisplayLabel());
 
     if (player.getCardCount() <= 3) {
         return;

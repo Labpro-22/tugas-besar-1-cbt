@@ -21,8 +21,6 @@
 #include "models/Property/Street.hpp"
 #include "models/Property/Utility.hpp"
 
-using namespace app;
-
 void GameSession::handlePrintBoard() {
     std::vector<Player*> playerPointers;
     playerPointers.reserve(game.getPlayers().size());
@@ -203,7 +201,8 @@ int GameSession::getJailAttemptCount(const Player& player) const {
 
 void GameSession::handlePrintDeed() {
     std::string code =
-        uppercase(cli.getInputHandler().readToken("Masukkan kode petak: "));
+        GameSessionUtil::uppercase(
+            cli.getInputHandler().readToken("Masukkan kode petak: "));
 
     Property* property = queries.findPropertyByCode(code);
     if (property == nullptr) {
@@ -252,7 +251,8 @@ void GameSession::handleMortgage() {
             std::cout << property->getName()
                       << " tidak dapat digadaikan langsung karena masih ada "
                          "bangunan di color group ["
-                      << colorGroupLabel(street->getColorGroup()) << "].\n";
+                      << GameSessionUtil::colorGroupLabel(street->getColorGroup())
+                      << "].\n";
             const bool sellBuildings = cli.getInputHandler().readYesNo(
                 "Jual semua bangunan color group ini? (y/n): ");
             if (!sellBuildings) {
@@ -262,7 +262,7 @@ void GameSession::handleMortgage() {
             const int soldValue =
                 game.sellBuildingsInColorGroup(currentPlayer, street->getColorGroup());
             std::cout << "Bangunan di color group ["
-                      << colorGroupLabel(street->getColorGroup())
+                      << GameSessionUtil::colorGroupLabel(street->getColorGroup())
                       << "] terjual. Kamu menerima M" << soldValue << ".\n";
 
             const bool continueMortgage = cli.getInputHandler().readYesNo(
@@ -338,7 +338,8 @@ void GameSession::handleBuild() {
             continue;
         }
 
-        const std::string label = colorGroupLabel(street->getColorGroup());
+        const std::string label =
+            GameSessionUtil::colorGroupLabel(street->getColorGroup());
         buildableGroups[label].push_back(street);
         groupedStreets[label].push_back(street);
     }
@@ -370,7 +371,7 @@ void GameSession::handleBuild() {
             std::find(eligible.begin(), eligible.end(), street) != eligible.end();
 
         std::cout << "- " << street->getName() << " (" << street->getCode()
-                  << ") : " << buildingLabel(street);
+                  << ") : " << street->getBuildingLabel();
         if (canBuild) {
             std::cout << " <- dapat dibangun";
         }

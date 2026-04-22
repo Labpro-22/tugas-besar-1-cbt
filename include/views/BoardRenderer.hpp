@@ -1,6 +1,7 @@
 #ifndef BOARD_RENDERER_HPP
 #define BOARD_RENDERER_HPP
 
+#include <cstddef>
 #include <map>
 #include <string>
 #include <vector>
@@ -14,6 +15,11 @@ private:
     int cellWidth;
     std::map<std::string, std::string> colorCodeMap;
     std::string borderStyle;
+
+    static std::string truncateText(const std::string& text,
+                                    std::size_t maxWidth);
+    static std::string joinPlayerNames(const std::vector<Player*>& players,
+                                       std::size_t maxWidth);
 
 public:
     BoardRenderer(int cellWidth = 10, const std::string& borderStyle = "-");

@@ -5,9 +5,7 @@
 #include <sstream>
 #include <vector>
 
-namespace {
-
-std::string trim(const std::string& text) {
+std::string CommandParser::trim(const std::string& text) {
     const std::string whitespace = " \t\r\n";
     const std::size_t start = text.find_first_not_of(whitespace);
     if (start == std::string::npos) {
@@ -18,11 +16,11 @@ std::string trim(const std::string& text) {
     return text.substr(start, end - start + 1);
 }
 
-bool hasBalancedQuotes(const std::string& text) {
+bool CommandParser::hasBalancedQuotes(const std::string& text) {
     return std::count(text.begin(), text.end(), '"') % 2 == 0;
 }
 
-std::vector<std::string> tokenizeCommand(const std::string& input) {
+std::vector<std::string> CommandParser::tokenizeCommand(const std::string& input) {
     std::vector<std::string> tokens;
     std::string current;
     bool inQuotes = false;
@@ -51,13 +49,11 @@ std::vector<std::string> tokenizeCommand(const std::string& input) {
     return tokens;
 }
 
-std::string uppercase(std::string text) {
+std::string CommandParser::uppercase(std::string text) {
     std::transform(text.begin(), text.end(), text.begin(),
                    [](unsigned char ch) { return static_cast<char>(std::toupper(ch)); });
     return text;
 }
-
-}  // namespace
 
 CommandParser::CommandParser() {
     expectedArgCount["CETAK_PAPAN"] = 0;

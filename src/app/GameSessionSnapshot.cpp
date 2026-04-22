@@ -21,8 +21,6 @@
 #include "models/Property/Street.hpp"
 #include "models/Property/Utility.hpp"
 
-using namespace app;
-
 void GameSession::notifySnapshot() {
     if (!snapshotCallback) {
         return;
@@ -82,7 +80,7 @@ GameSnapshot GameSession::buildSnapshot() const {
                                                 : tile.getCode();
         tileSnapshot.name = tile.getName();
         tileSnapshot.type = tile.getType();
-        tileSnapshot.colorKey = resolveTileColorKey(tile);
+        tileSnapshot.colorKey = GameSessionUtil::resolveTileColorKey(tile);
 
         if (tile.getType() == "property") {
             const PropertyTile& propTile = static_cast<const PropertyTile&>(tile);
@@ -177,7 +175,7 @@ std::string GameSession::buildPlayerDetailText(const Player& player) const {
             : currentTile.getCode();
 
     oss << "Estate Holder : " << player.getUsername() << "\n";
-    oss << "Status        : " << playerStatusLabel(player) << "\n";
+    oss << "Status        : " << GameSessionUtil::playerStatusLabel(player) << "\n";
     oss << "Turn          : " << game.getCurrentTurn() << " / "
         << game.getMaxTurn() << "\n";
     oss << "Cash          : M" << player.getCash() << "\n";
@@ -208,7 +206,7 @@ std::string GameSession::buildPlayerDetailText(const Player& player) const {
                 oss << " [M]";
             }
 
-            oss << " | " << buildingLabel(property);
+            oss << " | " << property->getBuildingLabel();
             if (property->getFMult() > 1) {
                 oss << " | Festival x" << property->getFMult() << " ("
                     << property->getFDur() << "t)";
@@ -236,7 +234,7 @@ std::string GameSession::buildPlayerDetailText(const Player& player) const {
             if (card == nullptr) {
                 continue;
             }
-            oss << "- " << skillCardDisplayLabel(card) << " | "
+            oss << "- " << card->getDisplayLabel() << " | "
                 << card->getDescription() << "\n";
         }
     }

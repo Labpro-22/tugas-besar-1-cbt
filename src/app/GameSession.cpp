@@ -24,8 +24,6 @@
 #include "models/Property/Utility.hpp"
 
 
-using namespace app;
-
 GameSession::GameSession()
     : cli(),
       game(),
@@ -176,9 +174,9 @@ bool GameSession::initializeNewGame() {
                                    " dari " + std::to_string(playerCount) + ".",
                                playerCount, i);
             notifySnapshot();
-            username = app::trim(cli.getInputHandler().readPromptLine(
+            username = cli.getInputHandler().readPromptLine(
                 "Masukkan username pemain " + std::to_string(i + 1) + ": ",
-                "Username Pemain"));
+                "Username Pemain");
         } while (username.empty());
 
         usernames.push_back(username);
@@ -421,7 +419,7 @@ void GameSession::announceWinner() {
     std::cout << "\nRekap pemain:\n";
     for (Player& player : game.getPlayers()) {
         std::cout << "- " << player.getUsername()
-                  << " | Status: " << app::playerStatusLabel(player)
+                  << " | Status: " << GameSessionUtil::playerStatusLabel(player)
                   << " | Uang: M" << player.getCash()
                   << " | Properti: " << player.getPropertyCount()
                   << " | Kartu: " << player.getCardCount() << "\n";
