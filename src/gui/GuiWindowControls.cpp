@@ -4,15 +4,29 @@ using namespace gui_internal;
 
 namespace {
 
+template <typename RectangleT, typename ColorT>
+auto drawRectangleRoundedLinesCompatImpl(RectangleT rec, float roundness,
+                                         int segments, float lineThick,
+                                         ColorT color, int)
+    -> decltype(DrawRectangleRoundedLines(rec, roundness, segments, lineThick,
+                                          color),
+                void()) {
+    DrawRectangleRoundedLines(rec, roundness, segments, lineThick, color);
+}
+
+template <typename RectangleT, typename ColorT>
+auto drawRectangleRoundedLinesCompatImpl(RectangleT rec, float roundness,
+                                         int segments, float, ColorT color,
+                                         long)
+    -> decltype(DrawRectangleRoundedLines(rec, roundness, segments, color),
+                void()) {
+    DrawRectangleRoundedLines(rec, roundness, segments, color);
+}
+
 void drawRectangleRoundedLinesCompat(Rectangle rec, float roundness, int segments,
                                      float lineThick, Color color) {
-#if defined(RAYLIB_VERSION_MAJOR) && \
-    defined(RAYLIB_VERSION_MINOR) && \
-    RAYLIB_VERSION_MAJOR == 5 && RAYLIB_VERSION_MINOR == 5
-    DrawRectangleRoundedLinesEx(rec, roundness, segments, lineThick, color);
-#else
-    DrawRectangleRoundedLines(rec, roundness, segments, color);
-#endif
+    drawRectangleRoundedLinesCompatImpl(rec, roundness, segments, lineThick,
+                                        color, 0);
 }
 
 }  // namespace

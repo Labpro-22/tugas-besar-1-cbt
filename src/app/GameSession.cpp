@@ -13,10 +13,18 @@
 #include <stdexcept>
 #include <utility>
 
+<<<<<<< Updated upstream
 #include "core/Board-Tiles/PropertyTile.hpp"
 #include "core/Board-Tiles/Tile.hpp"
 #include "models/Card/SkillCard.hpp"
 #include "models/GameManager/LogEntry.hpp"
+=======
+#include "core/Board-Tiles/PropertyTile.hpp"
+#include "core/Board-Tiles/Tile.hpp"
+#include "exception/NimonspoliExceptions.hpp"
+#include "models/Card/SkillCard.hpp"
+#include "models/GameManager/LogEntry.hpp"
+>>>>>>> Stashed changes
 #include "models/GameManager/Player.hpp"
 #include "models/Property/Railroad.hpp"
 #include "models/Property/Street.hpp"
@@ -64,11 +72,20 @@ void GameSession::run() {
         running = true;
         resetSessionState();
 
-        if (!configuration.loadAllConfigs()) {
-            const std::string detail = configuration.getLastError().empty()
+        try {
+            configuration.loadAllConfigs();
+        } catch (const NimonspoliException& error) {
+            const std::string detail = std::string(error.what()).empty()
                                            ? "Gagal membaca file konfigurasi."
-                                           : configuration.getLastError();
+                                           : error.what();
             std::cerr << "Error: " << detail << "\n";
+            std::cout << "Gagal membaca file konfigurasi pada folder config/.\n";
+            std::cout << "Pastikan property.txt, railroad.txt, utility.txt, tax.txt, "
+                         "special.txt, misc.txt, dan board.txt tersedia dan valid.\n";
+            notifySnapshot();
+            return;
+        } catch (const std::exception& error) {
+            std::cerr << "Error: " << error.what() << "\n";
             std::cout << "Gagal membaca file konfigurasi pada folder config/.\n";
             std::cout << "Pastikan property.txt, railroad.txt, utility.txt, tax.txt, "
                          "special.txt, misc.txt, dan board.txt tersedia dan valid.\n";

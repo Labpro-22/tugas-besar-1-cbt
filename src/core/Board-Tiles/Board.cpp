@@ -101,12 +101,12 @@ static std::string nextTileId(char category) {
 Property *buildPropertyFromConfig(const PropertyConfig &cfg,
                                   const Configuration &configuration,
                                   const std::string &fallbackName) {
-  const std::string propertyType = toUpper(cfg.propertyType);
+  const std::string propertyType = toUpper(cfg.type);
 
   if (propertyType == "STREET") {
     Street *street = new Street(
-        cfg.buyPrice, parseColorGroup(cfg.colorGroup), cfg.rentLevels,
-        cfg.houseUpgradeCost, cfg.hotelUpgradeCost, BuildingLevel::EMPTY, 1);
+        cfg.price, parseColorGroup(cfg.colorGroup), cfg.rentLevels,
+        cfg.housePrice, cfg.hotelPrice, BuildingLevel::EMPTY, 1);
     street->setCode(cfg.code);
     street->setName(cfg.name.empty() ? fallbackName : cfg.name);
     street->setMortgageValue(cfg.mortgageValue);
@@ -115,7 +115,7 @@ Property *buildPropertyFromConfig(const PropertyConfig &cfg,
   }
 
   if (propertyType == "RAILROAD") {
-    Railroad *railroad = new Railroad(cfg.buyPrice,
+    Railroad *railroad = new Railroad(cfg.price,
                                       configuration.getRailroadRentTable());
     railroad->setCode(cfg.code);
     railroad->setName(cfg.name.empty() ? fallbackName : cfg.name);
@@ -126,7 +126,7 @@ Property *buildPropertyFromConfig(const PropertyConfig &cfg,
 
   if (propertyType == "UTILITY") {
     Utility *utility =
-        new Utility(cfg.buyPrice, configuration.getUtilityMultiplierTable());
+        new Utility(cfg.price, configuration.getUtilityMultiplierTable());
     utility->setCode(cfg.code);
     utility->setName(cfg.name.empty() ? fallbackName : cfg.name);
     utility->setMortgageValue(cfg.mortgageValue);
@@ -134,7 +134,7 @@ Property *buildPropertyFromConfig(const PropertyConfig &cfg,
     return utility;
   }
 
-  throw UnsupportedTileTypeException(cfg.propertyType);
+  throw UnsupportedTileTypeException(cfg.type);
 }
 
 Board::Board() : tileCount(0) {}
@@ -304,12 +304,21 @@ int Board::findNearestStation(int currentPos) const {
     }
   }
 
+<<<<<<< Updated upstream
   if (bestPos < 0) bestPos = firstStation;
   if (bestPos < 0) {
     throw TileNotFoundException("RAILROAD");
   }
   return bestPos;
 }
+=======
+  if (bestPos < 0) bestPos = firstStation;
+  if (bestPos < 0) {
+    throw TileNotFoundException("RAILROAD");
+  }
+  return bestPos;
+}
+>>>>>>> Stashed changes
 
 int Board::findJailPosition() const {
   for (int i = 0; i < tileCount; ++i) {
