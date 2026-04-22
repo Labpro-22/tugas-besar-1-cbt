@@ -14,13 +14,7 @@
 
 #include "core/Board-Tiles/PropertyTile.hpp"
 #include "core/Board-Tiles/Tile.hpp"
-#include "models/Card/DemolitionCard.hpp"
-#include "models/Card/DiscountCard.hpp"
-#include "models/Card/LassoCard.hpp"
-#include "models/Card/MoveCard.hpp"
-#include "models/Card/ShieldCard.hpp"
 #include "models/Card/SkillCard.hpp"
-#include "models/Card/TeleportCard.hpp"
 #include "models/GameManager/LogEntry.hpp"
 #include "models/GameManager/Player.hpp"
 #include "models/Property/Railroad.hpp"
@@ -146,12 +140,14 @@ void GameSession::handleRollDice(bool manual, int d1, int d2) {
     if (dice.hasThreeConsecutiveDoubles()) {
         std::cout << "Double 3 kali berturut-turut! "
                   << currentPlayer.getUsername()
-                  << " langsung dikirim ke Penjara.\n";
+                  << " terkena sanksi masuk Penjara.\n";
         game.getLogger().log(game.getCurrentTurn(), currentPlayer.getUsername(),
                              "DOUBLE",
                              "Double ke-3 berturut-turut -> masuk penjara");
         game.goToJail(currentPlayer);
-        markPlayerJailed(currentPlayer);
+        if (currentPlayer.getStatus() == JAILED) {
+            markPlayerJailed(currentPlayer);
+        }
         notifySnapshotImmediate();
         turnActionTaken = true;
         finishTurn();
@@ -250,15 +246,43 @@ void GameSession::handleMortgage() {
     }
 
     Property* property = mortgageable[static_cast<std::size_t>(choice - 1)];
-    const int received = property->mortgage();
-    currentPlayer.addCash(received);
+    if (property->getType() == "Street") {
+        Street* street = static_cast<Street*>(property);
+        if (game.hasBuildingsInColorGroup(currentPlayer, street->getColorGroup())) {
+            std::cout << property->getName()
+                      << " tidak dapat digadaikan langsung karena masih ada "
+                         "bangunan di color group ["
+                      << colorGroupLabel(street->getColorGroup()) << "].\n";
+            const bool sellBuildings = cli.getInputHandler().readYesNo(
+                "Jual semua bangunan color group ini? (y/n): ");
+            if (!sellBuildings) {
+                return;
+            }
+
+            const int soldValue =
+                game.sellBuildingsInColorGroup(currentPlayer, street->getColorGroup());
+            std::cout << "Bangunan di color group ["
+                      << colorGroupLabel(street->getColorGroup())
+                      << "] terjual. Kamu menerima M" << soldValue << ".\n";
+
+            const bool continueMortgage = cli.getInputHandler().readYesNo(
+                "Lanjut menggadaikan properti ini? (y/n): ");
+            if (!continueMortgage) {
+                return;
+            }
+        }
+    }
+
+    const int received = game.executeMortgage(currentPlayer, *property);
+    if (received <= 0) {
+        std::cout << property->getName()
+                  << " belum memenuhi syarat untuk digadaikan.\n";
+        return;
+    }
 
     std::cout << property->getName() << " berhasil digadaikan.\n";
     std::cout << "Kamu menerima M" << received << " dari Bank.\n";
     std::cout << "Uang kamu sekarang: M" << currentPlayer.getCash() << "\n";
-
-    game.getLogger().log(game.getCurrentTurn(), currentPlayer.getUsername(),
-                         "GADAI", property->getCode() + " digadaikan");
     turnActionTaken = true;
 }
 
@@ -278,8 +302,8 @@ void GameSession::handleRedeem() {
     }
 
     Property* property = redeemable[static_cast<std::size_t>(choice - 1)];
-    const int baseRedeemPrice = property->getBuyPrice();
-    const int redeemPrice = applyDiscountToAmount(currentPlayer, baseRedeemPrice);
+    const int baseRedeemPrice = property->getRedeemPrice();
+    const int redeemPrice = game.applyDiscount(currentPlayer, baseRedeemPrice);
     if (!currentPlayer.canPay(redeemPrice)) {
         std::cout << "Uang kamu tidak cukup untuk menebus "
                   << property->getName() << ".\n";
@@ -288,8 +312,11 @@ void GameSession::handleRedeem() {
         return;
     }
 
-    currentPlayer.reduceCash(redeemPrice);
-    property->redeem();
+    const int paid = game.executeRedeem(currentPlayer, *property);
+    if (paid <= 0) {
+        std::cout << "Properti gagal ditebus.\n";
+        return;
+    }
 
     std::cout << property->getName() << " berhasil ditebus!\n";
     std::cout << "Kamu membayar M" << baseRedeemPrice;
@@ -298,9 +325,6 @@ void GameSession::handleRedeem() {
     }
     std::cout << " ke Bank.\n";
     std::cout << "Uang kamu sekarang: M" << currentPlayer.getCash() << "\n";
-
-    game.getLogger().log(game.getCurrentTurn(), currentPlayer.getUsername(),
-                         "TEBUS", property->getCode() + " ditebus");
     turnActionTaken = true;
 }
 
@@ -338,34 +362,17 @@ void GameSession::handleBuild() {
 
     std::vector<Street*>& streets =
         groupedStreets[orderedGroups[static_cast<std::size_t>(groupChoice - 1)]];
-
-    int minimumBuilding = streets.front()->getBuildingCount();
-    bool allReadyForHotel = true;
-    for (Street* street : streets) {
-        minimumBuilding = std::min(minimumBuilding, street->getBuildingCount());
-        if (street->getBuildingCount() <
-            static_cast<int>(BuildingLevel::FOUR_HOUSE)) {
-            allReadyForHotel = false;
-        }
-    }
-
-    std::vector<Street*> eligible;
+    std::vector<Street*> eligible = game.getEligibleBuildTargets(streets);
     std::cout << "Color group ["
               << orderedGroups[static_cast<std::size_t>(groupChoice - 1)] << "]:\n";
     for (Street* street : streets) {
         const bool canBuild =
-            allReadyForHotel
-                ? street->getBuildingCount() ==
-                      static_cast<int>(BuildingLevel::FOUR_HOUSE)
-                : street->getBuildingCount() == minimumBuilding &&
-                      street->getBuildingCount() <
-                          static_cast<int>(BuildingLevel::FOUR_HOUSE);
+            std::find(eligible.begin(), eligible.end(), street) != eligible.end();
 
         std::cout << "- " << street->getName() << " (" << street->getCode()
                   << ") : " << buildingLabel(street);
         if (canBuild) {
             std::cout << " <- dapat dibangun";
-            eligible.push_back(street);
         }
         std::cout << "\n";
     }
@@ -382,11 +389,9 @@ void GameSession::handleBuild() {
     }
 
     Street* target = eligible[static_cast<std::size_t>(propertyChoice - 1)];
-    const bool hotelUpgrade =
-        target->getBuildingCount() == static_cast<int>(BuildingLevel::FOUR_HOUSE);
-    const int baseCost =
-        hotelUpgrade ? target->getHotelCost() : target->getHouseCost();
-    const int cost = applyDiscountToAmount(currentPlayer, baseCost);
+    const bool hotelUpgrade = target->isNextBuildHotel();
+    const int baseCost = target->getNextBuildCost();
+    const int cost = game.applyDiscount(currentPlayer, baseCost);
 
     if (!currentPlayer.canPay(cost)) {
         std::cout << "Uang kamu tidak cukup. Biaya: M" << cost
@@ -394,8 +399,11 @@ void GameSession::handleBuild() {
         return;
     }
 
-    currentPlayer.reduceCash(cost);
-    target->setBuildingCount(target->getBuildingCount() + 1);
+    const int paid = game.executeBuild(currentPlayer, *target);
+    if (paid <= 0) {
+        std::cout << "Pembangunan gagal dijalankan.\n";
+        return;
+    }
 
     if (hotelUpgrade) {
         std::cout << target->getName() << " di-upgrade ke Hotel! Biaya: M"
@@ -413,10 +421,6 @@ void GameSession::handleBuild() {
         std::cout << "\n";
     }
     std::cout << "Uang tersisa: M" << currentPlayer.getCash() << "\n";
-
-    game.getLogger().log(game.getCurrentTurn(), currentPlayer.getUsername(),
-                         "BANGUN",
-                         target->getCode() + " -> " + buildingLabel(target));
     turnActionTaken = true;
 }
 
@@ -467,9 +471,6 @@ void GameSession::handleUseAbility() {
         return;
     }
 
-    selected->markAsUsed();
-    currentPlayer.setUsedAbility();
-    discardSkillCard(currentPlayer, selected);
     turnActionTaken = true;
 
     if (currentPlayer.getStatus() == JAILED || currentPlayer.getStatus() == BANKRUPT) {

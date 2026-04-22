@@ -113,3 +113,19 @@ Player* Auction::getWinner() {
 int Auction::getWinningBid() {
     return currentBid;
 }
+
+bool Auction::isOpen() const {
+    return isActive;
+}
+
+Player* Auction::getCurrentParticipant() const {
+    if (!isActive || participants.empty()) {
+        return nullptr;
+    }
+
+    return participants[currentParticipantIndex];
+}
+
+int Auction::getCurrentBid() const {
+    return currentBid;
+}

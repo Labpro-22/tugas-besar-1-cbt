@@ -220,7 +220,7 @@ bool PropertyView::showBuyPrompt(Property* property, int playerCash, InputHandle
 }
 
 void PropertyView::showMortgageOptions(const std::vector<Property*>& properties) const {
-    std::cout << "=== Properti yang Dapat Digadaikan ===\n";
+    std::cout << "=== Properti yang Dapat Diproses Gadai ===\n";
 
     if (properties.empty()) {
         std::cout << "Tidak ada properti yang dapat digadaikan saat ini.\n";

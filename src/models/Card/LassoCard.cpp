@@ -1,4 +1,6 @@
 #include "models/Card/LassoCard.hpp"
+#include "core/Board-Tiles/Board.hpp"
+#include "core/Board-Tiles/Tile.hpp"
 #include "views/InputHandler.hpp"
 
 // ctor
@@ -28,6 +30,7 @@ void LassoCard::use(Player *p, GameManager *gm) {
         return;
     }
 
+    const int boardSize = gm->getBoardSize();
     std::vector<Player *> candidates;
     for (Player &player : gm->getPlayers()) {
         if (&player == p) {
@@ -36,18 +39,25 @@ void LassoCard::use(Player *p, GameManager *gm) {
         if (player.getStatus() == BANKRUPT) {
             continue;
         }
-        candidates.push_back(&player);
+        const int distance =
+            (player.getPosition() - p->getPosition() + boardSize) % boardSize;
+        if (distance > 0) {
+            candidates.push_back(&player);
+        }
     }
 
     if (candidates.empty()) {
-        std::cout << "Tidak ada target valid untuk LassoCard.\n";
+        std::cout << "Tidak ada pemain lawan yang berada di depanmu.\n";
         return;
     }
 
     std::cout << "Pilih target LassoCard:\n";
     for (size_t i = 0; i < candidates.size(); ++i) {
-        std::cout << (i + 1) << ". " << candidates[i]->getUsername() << " (tile "
-            << candidates[i]->getPosition() << ")\n";
+        const Player *target = candidates[i];
+        const Tile &targetTile = gm->getBoard().getTile(target->getPosition());
+        std::cout << (i + 1) << ". " << target->getUsername() << " ("
+                  << targetTile.getCode() << " - " << targetTile.getName()
+                  << ")\n";
     }
 
     InputHandler input;
@@ -55,8 +65,14 @@ void LassoCard::use(Player *p, GameManager *gm) {
 
     Player *target = candidates[static_cast<std::size_t>(choice - 1)];
     target->setPosition(p->getPosition());
-    gm->addLogEntry(p->getUsername() + " menarik " + target->getUsername() + " dengan LassoCard");
+    Tile &landingTile = gm->getBoard().getTile(target->getPosition());
+    std::cout << target->getUsername() << " ditarik ke petak "
+              << landingTile.getName() << ".\n";
+
     markAsUsed();
     p->setUsedAbility();
     p->removeCard(this);
+
+    gm->addLogEntry(p->getUsername() + " menarik " + target->getUsername() + " dengan LassoCard");
+    landingTile.onLanded(*target, *gm);
 }

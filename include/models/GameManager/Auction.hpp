@@ -27,4 +27,7 @@ class Auction{
         void pass(Player* player);
         Player* getWinner();
         int getWinningBid();
+        bool isOpen() const;
+        Player* getCurrentParticipant() const;
+        int getCurrentBid() const;
 };

@@ -15,13 +15,7 @@
 
 #include "core/Board-Tiles/PropertyTile.hpp"
 #include "core/Board-Tiles/Tile.hpp"
-#include "models/Card/DemolitionCard.hpp"
-#include "models/Card/DiscountCard.hpp"
-#include "models/Card/LassoCard.hpp"
-#include "models/Card/MoveCard.hpp"
-#include "models/Card/ShieldCard.hpp"
 #include "models/Card/SkillCard.hpp"
-#include "models/Card/TeleportCard.hpp"
 #include "models/GameManager/LogEntry.hpp"
 #include "models/GameManager/Player.hpp"
 #include "models/Property/Railroad.hpp"

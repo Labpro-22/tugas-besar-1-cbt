@@ -1,10 +1,4 @@
 #include "models/GameManager/GameState.hpp"
-#include "models/Card/DemolitionCard.hpp"
-#include "models/Card/DiscountCard.hpp"
-#include "models/Card/LassoCard.hpp"
-#include "models/Card/MoveCard.hpp"
-#include "models//Card/ShieldCard.hpp"
-#include "models/Card/TeleportCard.hpp"
 #include "models/Property/Railroad.hpp"
 #include "models/Property/Street.hpp"
 #include "models/Property/Utility.hpp"
@@ -51,8 +45,7 @@ string GameState::serialize() const {
                 if (jenis == "MoveCard") {
                     ss << " " << card->getValue();
                 } else if (jenis == "DiscountCard") {
-                    const DiscountCard *dc = static_cast<const DiscountCard *>(card);
-                    ss << " " << dc->getValue() << " " << dc->getRemainingDuration();
+                    ss << " " << card->getValue() << " " << card->getDuration();
                 }
 
                 ss << " ";
@@ -90,27 +83,12 @@ string GameState::serialize() const {
 void GameState::deserialize(const string &data) {
     stringstream ss(data);
 
-    auto createSkillCardByType = [](const string &typeName) -> SkillCard * {
-        if (typeName == "MoveCard")
-            return new MoveCard();
-        if (typeName == "DiscountCard")
-            return new DiscountCard();
-        if (typeName == "ShieldCard")
-            return new ShieldCard();
-        if (typeName == "TeleportCard")
-            return new TeleportCard();
-        if (typeName == "LassoCard")
-            return new LassoCard();
-        if (typeName == "DemolitionCard")
-            return new DemolitionCard();
-        return nullptr;
-    };
-
     players.clear();
     turnOrder.clear();
     properties.clear();
     skillDeckCards.clear();
     log.clear();
+    skillCardFactory.clear();
 
     ss >> currentTurn >> maxTurn >> activePlayerIndex;
 
@@ -131,19 +109,17 @@ void GameState::deserialize(const string &data) {
             for (int c = 0; c < cardCount; c++) {
                 string jenisKartu;
                 ss >> jenisKartu;
+                int nilaiKartu = 0;
+                int durasiKartu = 0;
                 if (jenisKartu == "MoveCard") {
-                    int nilaiKartu;
                     ss >> nilaiKartu;
-                    hand.push_back(new MoveCard(0, nilaiKartu));
                 } else if (jenisKartu == "DiscountCard") {
-                    int nilaiKartu, durasiKartu;
                     ss >> nilaiKartu >> durasiKartu;
-                    hand.push_back(new DiscountCard(0, nilaiKartu, durasiKartu));
-                } else {
-                    SkillCard *parsed = createSkillCardByType(jenisKartu);
-                    if (parsed != nullptr) {
-                        hand.push_back(parsed);
-                    }
+                }
+                SkillCard *parsed =
+                    skillCardFactory.create(jenisKartu, nilaiKartu, durasiKartu);
+                if (parsed != nullptr) {
+                    hand.push_back(parsed);
                 }
             }
             vector<Property *> emptyProperties;
@@ -204,7 +180,7 @@ void GameState::deserialize(const string &data) {
             string jenisKartu;
             ss >> jenisKartu;
 
-            SkillCard *parsed = createSkillCardByType(jenisKartu);
+            SkillCard *parsed = skillCardFactory.create(jenisKartu);
             if (parsed != nullptr) {
                 skillDeckCards.push_back(parsed);
             }

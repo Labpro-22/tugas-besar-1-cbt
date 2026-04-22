@@ -1,4 +1,6 @@
 #include "models/Card/TeleportCard.hpp"
+#include "core/Board-Tiles/Board.hpp"
+#include "core/Board-Tiles/Tile.hpp"
 #include "views/InputHandler.hpp"
 
 // ctor
@@ -38,8 +40,14 @@ void TeleportCard::use(Player *p, GameManager *gm) {
   const int targetTile = input.readChoice(0, boardSize - 1, "Pilih tile tujuan teleport (0-" + std::to_string(boardSize - 1) + "): ");
 
   gm->movePlayerTo(*p, targetTile, true);
-  gm->addLogEntry(p->getUsername() + " berteleportasi ke tile " + std::to_string(targetTile));
+  Tile &tile = gm->getBoard().getTile(p->getPosition());
+  std::cout << "TeleportCard diaktifkan! Bidak dipindahkan ke "
+            << tile.getName() << ".\n";
+
   markAsUsed();
   p->setUsedAbility();
   p->removeCard(this);
+
+  gm->addLogEntry(p->getUsername() + " berteleportasi ke tile " + std::to_string(targetTile));
+  tile.onLanded(*p, *gm);
 }

@@ -24,15 +24,7 @@ int BankruptcyHandler::calculateMaxLiquidation() {
         }
 
         int sellValue = sellList[i]->getBuyPrice();
-        if (sellList[i]->getType() == "Street") {
-            const Street *street = static_cast<const Street *>(sellList[i]);
-            const int buildingCount = street->getBuildingCount();
-            if (buildingCount >= static_cast<int>(BuildingLevel::HOTEL)) {
-                sellValue += street->getHotelCost() / 2;
-            } else if (buildingCount > 0) {
-                sellValue += (buildingCount * street->getHouseCost()) / 2;
-            }
-        }
+        sellValue += sellList[i]->getBuildingSellValue();
         total += sellValue;
     }
     return total;

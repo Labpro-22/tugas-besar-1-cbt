@@ -1,4 +1,8 @@
 #include "models/Card/MoveCard.hpp"
+#include "core/Board-Tiles/Board.hpp"
+#include "core/Board-Tiles/Tile.hpp"
+
+#include <iostream>
 
 // ctor
 MoveCard::MoveCard() : SkillCard(), steps(0) {}
@@ -37,6 +41,8 @@ void MoveCard::use(Player *p, GameManager *gm) {
     return;
   }
 
+  std::cout << "MoveCard diaktifkan! Bergerak maju " << steps << " petak.\n";
+
   if (p == &gm->getCurrentPlayer()) {
     gm->moveCurrentPlayer(steps);
   } else {
@@ -47,9 +53,13 @@ void MoveCard::use(Player *p, GameManager *gm) {
     gm->movePlayerTo(*p, newPos, true);
   }
 
+  Tile &tile = gm->getBoard().getTile(p->getPosition());
+  std::cout << "Bidak mendarat di: " << tile.getName() << ".\n";
+
   markAsUsed();
   p->setUsedAbility();
   p->removeCard(this);
 
   gm->addLogEntry("MoveCard digunakan sebanyak " + std::to_string(steps) + " langkah");
+  tile.onLanded(*p, *gm);
 }

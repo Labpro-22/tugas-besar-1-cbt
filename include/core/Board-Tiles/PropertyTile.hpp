@@ -11,8 +11,6 @@ class PropertyTile : public Tile {
     private:
         // Atribut
         Property *property;
-        int festivalMultiplier;
-        int festivalDuration;
 
     public:
         // Konstruktor dan destruktor
@@ -21,7 +19,6 @@ class PropertyTile : public Tile {
 
         // Method untuk menambah status effect festival
         void applyFestivalEffect(int mult, int dur);
-        void checkFestivalEffect();
         Property &getProperty();
         const Property &getProperty() const;
 

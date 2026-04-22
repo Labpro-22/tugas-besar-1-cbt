@@ -68,9 +68,6 @@ std::vector<Property*> GameSessionQueries::getMortgageableProperties() const {
         if (property->getStatus() != PropertyStatus::OWNED) {
             continue;
         }
-        if (property->getBuildingCount() > 0) {
-            continue;
-        }
         result.push_back(property);
     }
     return result;
@@ -99,7 +96,7 @@ std::vector<Street*> GameSessionQueries::getBuildableStreets() const {
         if (street->getStatus() != PropertyStatus::OWNED) {
             continue;
         }
-        if (!street->isMonopolized()) {
+        if (!game.ownsFullColorGroup(currentPlayer, street->getColorGroup())) {
             continue;
         }
         result.push_back(street);

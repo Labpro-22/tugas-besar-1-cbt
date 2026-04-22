@@ -26,4 +26,5 @@ class Card {
         virtual std::string getDescription() const = 0;
         virtual std::string getType() const = 0;
         virtual int getValue() const = 0;
+        virtual int getDuration() const { return 0; }
 };

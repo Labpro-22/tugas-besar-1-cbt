@@ -16,13 +16,7 @@
 
 #include "core/Board-Tiles/PropertyTile.hpp"
 #include "core/Board-Tiles/Tile.hpp"
-#include "models/Card/DemolitionCard.hpp"
-#include "models/Card/DiscountCard.hpp"
-#include "models/Card/LassoCard.hpp"
-#include "models/Card/MoveCard.hpp"
-#include "models/Card/ShieldCard.hpp"
 #include "models/Card/SkillCard.hpp"
-#include "models/Card/TeleportCard.hpp"
 #include "models/GameManager/LogEntry.hpp"
 #include "models/GameManager/Player.hpp"
 #include "models/Property/Railroad.hpp"
@@ -30,6 +24,20 @@
 #include "models/Property/Utility.hpp"
 
 using namespace app;
+
+namespace {
+
+bool parseInteger(const std::string& token, int& value) {
+    try {
+        std::size_t parsed = 0;
+        value = std::stoi(token, &parsed);
+        return parsed == token.size();
+    } catch (...) {
+        return false;
+    }
+}
+
+}
 
 bool GameSessionPersistence::save(const GameSession& session,
                                   const std::string& rawFilename) const {
@@ -65,12 +73,7 @@ bool GameSessionPersistence::save(const GameSession& session,
 
         for (Card* card : player.getHand()) {
             file << card->getType() << " " << card->getValue();
-            if (card->getType() == "DiscountCard") {
-                const DiscountCard* dc = static_cast<const DiscountCard*>(card);
-                file << " " << dc->getRemainingDuration();
-            } else {
-                file << " 0";
-            }
+            file << " " << card->getDuration();
             file << "\n";
         }
     }
@@ -183,7 +186,7 @@ bool GameSessionPersistence::load(GameSession& session,
         }
 
         int handCount = 0;
-        if (!(file >> handCount)) {
+        if (!(file >> handCount) || handCount < 0 || handCount > 4) {
             return false;
         }
 
@@ -198,9 +201,10 @@ bool GameSessionPersistence::load(GameSession& session,
 
             SkillCard* card =
                 session.createSkillCardInstance(type, value, duration);
-            if (card != nullptr) {
-                hand.push_back(card);
+            if (card == nullptr) {
+                return false;
             }
+            hand.push_back(card);
         }
 
         PlayerStatus playerStatus = ACTIVE;
@@ -209,6 +213,8 @@ bool GameSessionPersistence::load(GameSession& session,
             playerStatus = BANKRUPT;
         } else if (normalizedStatus == "JAILED") {
             playerStatus = JAILED;
+        } else if (normalizedStatus != "ACTIVE") {
+            return false;
         }
 
         players.emplace_back(username, cash, playerStatus, position, hand);
@@ -263,12 +269,22 @@ bool GameSessionPersistence::load(GameSession& session,
             continue;
         }
 
-        property->setStatusStr(status);
+        const std::string normalizedPropertyStatus = uppercase(status);
+        if (normalizedPropertyStatus != "BANK" &&
+            normalizedPropertyStatus != "OWNED" &&
+            normalizedPropertyStatus != "MORTGAGED") {
+            return false;
+        }
+        property->setStatusStr(normalizedPropertyStatus);
         property->setFestival(festivalMultiplier, festivalDuration);
         if (buildingState == "H") {
             property->setBuildingCount(static_cast<int>(BuildingLevel::HOTEL));
         } else {
-            property->setBuildingCount(std::stoi(buildingState));
+            int buildingCount = 0;
+            if (!parseInteger(buildingState, buildingCount)) {
+                return false;
+            }
+            property->setBuildingCount(buildingCount);
         }
 
         if (uppercase(ownerName) == "BANK") {
@@ -322,7 +338,10 @@ bool GameSessionPersistence::load(GameSession& session,
             continue;
         }
 
-        const int turn = std::stoi(tokens[0]);
+        int turn = 0;
+        if (!parseInteger(tokens[0], turn)) {
+            return false;
+        }
         const std::string username = tokens[1];
         const std::string action = tokens[2];
         std::string detail;

@@ -4,6 +4,7 @@
 #include "../Card/ChanceCard.hpp"
 #include "../Card/CommunityCard.hpp"
 #include "../Card/SkillCard.hpp"
+#include "../Property/ColorGroup.hpp"
 #include "Dice.hpp"
 #include "FestivalEffect.hpp"
 #include "Player.hpp"
@@ -15,6 +16,7 @@ using namespace std;
 
 // Forward declarations
 class Board;
+class Street;
 
 class GameManager {
 private:
@@ -56,6 +58,7 @@ public:
   void moveCurrentPlayer(int steps);
   void movePlayerTo(Player &player, int targetPosition, bool grantGoSalary);
   bool crossesOrLandsOnGo(int oldPosition, int newPosition) const;
+  int applyDiscount(const Player &player, int amount) const;
   void executePurchase(Player &player, Property &prop);
   void executeRentPayer(Player &, Player &owner, Property &prop, int amount);
   void executeAuction(Property &prop);
@@ -63,6 +66,15 @@ public:
   void executeFestival(Player &player, string propCode);
   void executeTaxPayment(Player &player, int amount, bool toBank);
   void executeSalary(Player &player, int amount);
+  int executeMortgage(Player &player, Property &prop);
+  int executeRedeem(Player &player, Property &prop);
+  int executeBuild(Player &player, Street &street);
+  std::vector<Street *> getEligibleBuildTargets(const std::vector<Street *> &streets) const;
+  bool ownsFullColorGroup(const Player &player, ColorGroup color) const;
+  int sellBuildingsInColorGroup(Player &player, ColorGroup color);
+  bool hasBuildingsInColorGroup(const Player &player, ColorGroup color) const;
+  void destroyProperty(Player &actor, Property &prop);
+  void tickFestivalEffects(Player &owner);
   void visitJail(Player &player);
   void goToJail(Player &player);
   void addLogEntry(string action);

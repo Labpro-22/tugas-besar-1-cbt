@@ -6,7 +6,7 @@
 // ctor
 Street::Street()
     : Property(), buyPrice(0), color(ColorGroup::COKLAT), houseCost(0),
-        hotelCost(0), level(BuildingLevel::EMPTY), festivalMultiplier(1) {
+        hotelCost(0), level(BuildingLevel::EMPTY) {
     rentLevels.resize(6, 0);
 }
 
@@ -22,8 +22,9 @@ Street::Street(int buyPrice, ColorGroup color, std::vector<int> rentLevels,
     int houseCost, int hotelCost, BuildingLevel level,
     int festivalMultiplier)
     : Property(), buyPrice(buyPrice), color(color), rentLevels(rentLevels),
-        houseCost(houseCost), hotelCost(hotelCost), level(level),
-        festivalMultiplier(festivalMultiplier) {}
+        houseCost(houseCost), hotelCost(hotelCost), level(level) {
+    setFestival(festivalMultiplier, 0);
+}
 
 // dtor
 Street::~Street() {}
@@ -41,7 +42,11 @@ int Street::getPropertyDetail() const {
 
     if (!rentLevels.empty() &&
         static_cast<int>(level) < static_cast<int>(rentLevels.size())) {
-        return rentLevels[static_cast<int>(level)];
+        int rent = rentLevels[static_cast<int>(level)];
+        if (level == BuildingLevel::EMPTY && isMonopolized()) {
+            rent *= 2;
+        }
+        return rent;
     }
 
     return 0;
@@ -109,12 +114,52 @@ bool Street::isMonopolized() const {
 /// @param multiplier The factor to apply to rent or other calculations.
 void Street::activateEffect(int multiplier) {
     if (multiplier > 0) {
-        festivalMultiplier = multiplier;
+        setFestival(multiplier, getFDur());
     }
 }
 
 // Demolish all buildings on this street
 void Street::demolish() {
     level = BuildingLevel::EMPTY;
-    festivalMultiplier = 1;
+}
+
+int Street::getBuildingInvestmentValue() const {
+    const int buildingCount = getBuildingCount();
+    if (buildingCount <= 0) {
+        return 0;
+    }
+
+    if (buildingCount >= static_cast<int>(BuildingLevel::HOTEL)) {
+        return (4 * houseCost) + hotelCost;
+    }
+
+    return buildingCount * houseCost;
+}
+
+int Street::getNextBuildCost() const {
+    if (level == BuildingLevel::HOTEL) {
+        return 0;
+    }
+
+    if (level == BuildingLevel::FOUR_HOUSE) {
+        return hotelCost;
+    }
+
+    return houseCost;
+}
+
+bool Street::canBuildNext() const {
+    return getStatus() == PropertyStatus::OWNED && level < BuildingLevel::HOTEL;
+}
+
+bool Street::isNextBuildHotel() const {
+    return level == BuildingLevel::FOUR_HOUSE;
+}
+
+void Street::buildNext() {
+    if (!canBuildNext()) {
+        return;
+    }
+
+    level = static_cast<BuildingLevel>(static_cast<int>(level) + 1);
 }

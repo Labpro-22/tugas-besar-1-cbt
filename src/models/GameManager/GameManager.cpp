@@ -1,12 +1,19 @@
 #include "models/GameManager/GameManager.hpp"
 #include "core/Board-Tiles/Board.hpp"
+#include "core/Board-Tiles/PropertyTile.hpp"
+#include "core/Board-Tiles/Tile.hpp"
 #include "views/InputHandler.hpp"
+#include "models/Command.hpp"
+#include "models/GameManager/Auction.hpp"
 #include "models/GameManager/BankruptcyHandler.hpp"
 #include "models/Property/Property.hpp"
+#include "models/Property/Street.hpp"
 #include <algorithm>
 #include <cctype>
 #include <exception>
 #include <iostream>
+#include <limits>
+#include <sstream>
 #include <string>
 
 using namespace std;
@@ -23,6 +30,7 @@ void GameManager::startNewGame() {
 void GameManager::processTurn() {
   Player &currentPlayer = getCurrentPlayer();
   currentPlayer.resetTurn();
+  tickFestivalEffects(currentPlayer);
 
   if (currentPlayer.isJailed()) {
     return;
@@ -148,7 +156,11 @@ void GameManager::movePlayerTo(Player &player, int targetPosition,
   }
 
   player.setPosition(normalizedTarget);
+  const bool targetIsGoToJail =
+      board != nullptr &&
+      board->getTile(normalizedTarget).getType() == "go_to_jail";
   if (grantGoSalary &&
+      !targetIsGoToJail &&
       crossesOrLandsOnGo(oldPosition, normalizedTarget)) {
     executeSalary(player, getGoSalary());
   }
@@ -172,13 +184,18 @@ bool GameManager::crossesOrLandsOnGo(int oldPosition, int newPosition) const {
   return goPosition > oldPosition || goPosition <= newPosition;
 }
 
+int GameManager::applyDiscount(const Player &player, int amount) const {
+  if (amount <= 0 || !player.hasDiscount()) {
+    return amount;
+  }
+
+  const int discount = std::clamp(player.getDiscountPercentage(), 0, 100);
+  return amount - (amount * discount / 100);
+}
+
 void GameManager::executePurchase(Player &player, Property &prop) {
   const int basePrice = prop.getBuyPrice();
-  int price = basePrice;
-  if (player.hasDiscount()) {
-    const int discount = std::clamp(player.getDiscountPercentage(), 0, 100);
-    price -= (price * discount / 100);
-  }
+  const int price = applyDiscount(player, basePrice);
 
   cout << "Kamu mendarat di " << prop.getName() << " (" << prop.getCode()
        << ")!\n";
@@ -251,10 +268,7 @@ void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop,
   }
 
   int effectiveAmount = amount;
-  if (payer.hasDiscount()) {
-    const int discount = std::clamp(payer.getDiscountPercentage(), 0, 100);
-    effectiveAmount -= (effectiveAmount * discount / 100);
-  }
+  effectiveAmount = applyDiscount(payer, effectiveAmount);
 
   try {
     payer.ensureCanPay(effectiveAmount);
@@ -293,6 +307,88 @@ void GameManager::executeAuction(Property &prop) {
        << ") akan dilelang!\n";
   logger.log(currentTurn, getCurrentPlayer().getUsername(), "LELANG",
              prop.getCode() + " masuk lelang");
+
+  if (players.empty() || prop.getOwner() != nullptr ||
+      prop.getStatus() != PropertyStatus::BANK) {
+    cout << "Lelang tidak dapat dimulai untuk properti ini.\n";
+    return;
+  }
+
+  vector<Player *> participants;
+  participants.reserve(players.size());
+  for (size_t offset = 1; offset <= players.size(); ++offset) {
+    Player &candidate =
+        players[(activePlayerIndex + offset) % players.size()];
+    if (candidate.getStatus() != BANKRUPT) {
+      participants.push_back(&candidate);
+    }
+  }
+
+  Auction auction(&prop, participants);
+  auction.start();
+  InputHandler input;
+
+  while (auction.isOpen()) {
+    Player *bidder = auction.getCurrentParticipant();
+    if (bidder == nullptr) {
+      break;
+    }
+
+    cout << "Penawaran tertinggi saat ini: M" << auction.getCurrentBid()
+         << "\n";
+    const string line =
+        input.readPromptLine("Aksi lelang (PASS / BID <jumlah>): ",
+                             "Aksi Lelang");
+    string command;
+    stringstream ss(line);
+    ss >> command;
+    std::transform(command.begin(), command.end(), command.begin(),
+                   [](unsigned char ch) {
+                     return static_cast<char>(std::toupper(ch));
+                   });
+
+    if (command == "PASS") {
+      auction.pass(bidder);
+      continue;
+    }
+
+    if (command == "BID") {
+      int amount = 0;
+      if (ss >> amount) {
+        auction.submitBid(bidder, amount);
+      } else {
+        cout << "Format BID tidak valid. Gunakan BID <jumlah>.\n";
+      }
+      continue;
+    }
+
+    cout << "Input lelang tidak valid. Gunakan PASS atau BID <jumlah>.\n";
+  }
+
+  Player *winner = auction.getWinner();
+  const int winningBid = auction.getWinningBid();
+  if (winner == nullptr || winningBid <= 0) {
+    logger.log(currentTurn, getCurrentPlayer().getUsername(), "LELANG",
+               prop.getCode() + " tidak terjual");
+    return;
+  }
+
+  if (!winner->canPay(winningBid)) {
+    cout << "Pemenang tidak mampu membayar hasil lelang.\n";
+    logger.log(currentTurn, winner->getUsername(), "LELANG",
+               "Gagal membayar " + prop.getCode());
+    return;
+  }
+
+  winner->reduceCash(winningBid);
+  winner->addProperty(&prop);
+  prop.setOwner(winner);
+  prop.setStatusStr("OWNED");
+  cout << prop.getName() << " kini menjadi milik " << winner->getUsername()
+       << ".\n";
+  logger.log(currentTurn, winner->getUsername(), "LELANG",
+             "Menang " + prop.getCode() + " seharga M" +
+                 to_string(winningBid));
 }
 
 void GameManager::executeBankruptcy(Player &debtor, Player *creditor,
@@ -329,10 +425,7 @@ void GameManager::executeTaxPayment(Player &player, int amount, bool toBank) {
   }
 
   int effectiveAmount = amount;
-  if (player.hasDiscount()) {
-    const int discount = std::clamp(player.getDiscountPercentage(), 0, 100);
-    effectiveAmount -= (effectiveAmount * discount / 100);
-  }
+  effectiveAmount = applyDiscount(player, effectiveAmount);
 
   try {
     player.ensureCanPay(effectiveAmount);
@@ -366,11 +459,212 @@ void GameManager::executeSalary(Player &player, int amount) {
              "Menerima gaji M" + to_string(amount));
 }
 
+int GameManager::executeMortgage(Player &player, Property &prop) {
+  if (prop.getOwner() != &player || !prop.canBeMortgaged()) {
+    return 0;
+  }
+
+  const int received = prop.mortgage();
+  if (received > 0) {
+    player.addCash(received);
+    logger.log(currentTurn, player.getUsername(), "GADAI",
+               prop.getCode() + " digadaikan");
+  }
+  return received;
+}
+
+int GameManager::executeRedeem(Player &player, Property &prop) {
+  if (prop.getOwner() != &player ||
+      prop.getStatus() != PropertyStatus::MORTGAGED) {
+    return 0;
+  }
+
+  const int price = applyDiscount(player, prop.getRedeemPrice());
+  if (!player.canPay(price)) {
+    return 0;
+  }
+
+  player.reduceCash(price);
+  prop.redeem();
+  logger.log(currentTurn, player.getUsername(), "TEBUS",
+             prop.getCode() + " ditebus");
+  return price;
+}
+
+int GameManager::executeBuild(Player &player, Street &street) {
+  if (street.getOwner() != &player || !street.canBuildNext()) {
+    return 0;
+  }
+
+  const int cost = applyDiscount(player, street.getNextBuildCost());
+  if (!player.canPay(cost)) {
+    return 0;
+  }
+
+  player.reduceCash(cost);
+  street.buildNext();
+  logger.log(currentTurn, player.getUsername(), "BANGUN",
+             street.getCode() + " dibangun");
+  return cost;
+}
+
+std::vector<Street *> GameManager::getEligibleBuildTargets(
+    const std::vector<Street *> &streets) const {
+  std::vector<Street *> eligible;
+  if (streets.empty()) {
+    return eligible;
+  }
+
+  int minimumBuilding = std::numeric_limits<int>::max();
+  bool allReadyForHotel = true;
+  for (Street *street : streets) {
+    if (street == nullptr || !street->canBuildNext()) {
+      continue;
+    }
+
+    minimumBuilding = std::min(minimumBuilding, street->getBuildingCount());
+    if (street->getBuildingCount() <
+        static_cast<int>(BuildingLevel::FOUR_HOUSE)) {
+      allReadyForHotel = false;
+    }
+  }
+
+  if (minimumBuilding == std::numeric_limits<int>::max()) {
+    return eligible;
+  }
+
+  for (Street *street : streets) {
+    if (street == nullptr || !street->canBuildNext()) {
+      continue;
+    }
+
+    const bool canBuild =
+        allReadyForHotel
+            ? street->getBuildingCount() ==
+                  static_cast<int>(BuildingLevel::FOUR_HOUSE)
+            : street->getBuildingCount() == minimumBuilding &&
+                  street->getBuildingCount() <
+                      static_cast<int>(BuildingLevel::FOUR_HOUSE);
+    if (canBuild) {
+      eligible.push_back(street);
+    }
+  }
+  return eligible;
+}
+
+bool GameManager::ownsFullColorGroup(const Player &player,
+                                     ColorGroup color) const {
+  if (board == nullptr) {
+    return false;
+  }
+
+  bool groupExists = false;
+  for (int i = 0; i < board->getTileCount(); ++i) {
+    Tile &tile = board->getTile(i);
+    if (tile.getType() != "property") {
+      continue;
+    }
+
+    PropertyTile &propertyTile = static_cast<PropertyTile &>(tile);
+    Property &prop = propertyTile.getProperty();
+    if (prop.getType() != "Street") {
+      continue;
+    }
+
+    Street &street = static_cast<Street &>(prop);
+    if (street.getColorGroup() != color) {
+      continue;
+    }
+
+    groupExists = true;
+    if (street.getOwner() != &player) {
+      return false;
+    }
+  }
+  return groupExists;
+}
+
+int GameManager::sellBuildingsInColorGroup(Player &player, ColorGroup color) {
+  int totalReceived = 0;
+  for (Property *prop : player.getProperties()) {
+    if (prop == nullptr || prop->getType() != "Street") {
+      continue;
+    }
+
+    Street *street = static_cast<Street *>(prop);
+    if (street->getColorGroup() != color || street->getBuildingCount() <= 0) {
+      continue;
+    }
+
+    const int received = street->getBuildingSellValue();
+    street->demolish();
+    player.addCash(received);
+    totalReceived += received;
+    logger.log(currentTurn, player.getUsername(), "JUAL_BANGUNAN",
+               street->getCode() + " bangunan dijual M" + to_string(received));
+  }
+  return totalReceived;
+}
+
+bool GameManager::hasBuildingsInColorGroup(const Player &player,
+                                           ColorGroup color) const {
+  for (Property *prop : player.getProperties()) {
+    if (prop == nullptr || prop->getType() != "Street") {
+      continue;
+    }
+
+    const Street *street = static_cast<const Street *>(prop);
+    if (street->getColorGroup() == color && street->getBuildingCount() > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void GameManager::destroyProperty(Player &actor, Property &prop) {
+  Player *owner = prop.getOwner();
+  if (owner == nullptr || owner == &actor) {
+    return;
+  }
+
+  owner->removeProperty(&prop);
+  prop.resetToBank();
+  logger.log(currentTurn, actor.getUsername(), "KARTU",
+             "DemolitionCard menghancurkan " + prop.getCode());
+}
+
+void GameManager::tickFestivalEffects(Player &owner) {
+  if (board == nullptr) {
+    return;
+  }
+
+  for (int i = 0; i < board->getTileCount(); ++i) {
+    Tile &tile = board->getTile(i);
+    if (tile.getType() != "property") {
+      continue;
+    }
+
+    PropertyTile &propertyTile = static_cast<PropertyTile &>(tile);
+    Property &prop = propertyTile.getProperty();
+    if (prop.getOwner() == &owner) {
+      prop.tickFestival();
+    }
+  }
+}
+
 void GameManager::visitJail(Player &player) {
   cout << player.getUsername() << " sedang mampir di Penjara.\n";
 }
 
 void GameManager::goToJail(Player &player) {
+  if (player.hasShieldActive()) {
+    cout << "[SHIELD ACTIVE]: Efek ShieldCard melindungi Anda!\n";
+    cout << "Sanksi masuk penjara dibatalkan.\n";
+    logger.log(currentTurn, player.getUsername(), "SHIELD",
+               "ShieldCard membatalkan sanksi penjara");
+    return;
+  }
+
   player.setPosition(getJailPosition());
   player.setStatus(JAILED);
   cout << player.getUsername() << " dikirim ke Penjara.\n";

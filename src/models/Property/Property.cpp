@@ -4,7 +4,7 @@
 // default ctor (status = "BANK")
 Property::Property()
     : code(""), name(""), status(PropertyStatus::BANK), mortgageValue(0),
-        owner(nullptr) {}
+        owner(nullptr), festivalMultiplier(1), festivalDuration(0) {}
 
 // custom ctor
 /// @param code The property code
@@ -15,7 +15,7 @@ Property::Property()
 Property::Property(std::string code, std::string name, PropertyStatus status,
     int mortgageValue, Player *owner)
     : code(code), name(name), status(status), mortgageValue(mortgageValue),
-        owner(owner) {}
+        owner(owner), festivalMultiplier(1), festivalDuration(0) {}
 
 // dtor
 Property::~Property() {}
@@ -41,10 +41,46 @@ int Property::getMortgageValue() const { return mortgageValue; }
 /// @param p Pointer to the player who is taking ownership
 void Property::setOwner(Player *p) { owner = p; }
 
+int Property::getFMult() const { return festivalMultiplier; }
+
+int Property::getFDur() const { return festivalDuration; }
+
+void Property::setFestival(int multiplier, int duration) {
+    festivalMultiplier = multiplier > 1 ? multiplier : 1;
+    festivalDuration = duration > 0 && festivalMultiplier > 1 ? duration : 0;
+    if (festivalDuration == 0) {
+        festivalMultiplier = 1;
+    }
+}
+
+void Property::tickFestival() {
+    if (festivalDuration <= 0) {
+        festivalMultiplier = 1;
+        festivalDuration = 0;
+        return;
+    }
+
+    festivalDuration--;
+    if (festivalDuration == 0) {
+        festivalMultiplier = 1;
+    }
+}
+
+bool Property::canBeMortgaged() const {
+    return status == PropertyStatus::OWNED && getBuildingCount() == 0;
+}
+
+void Property::resetToBank() {
+    owner = nullptr;
+    status = PropertyStatus::BANK;
+    setFestival(1, 0);
+    setBuildingCount(0);
+}
+
 // Mortgage the property, transition status from OWNED to MORTGAGED
 /// @return The mortgage amount given to the player
 int Property::mortgage() {
-    if (status == PropertyStatus::OWNED) {
+    if (canBeMortgaged()) {
         status = PropertyStatus::MORTGAGED;
         return mortgageValue;
     }

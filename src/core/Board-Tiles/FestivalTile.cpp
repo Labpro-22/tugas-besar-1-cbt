@@ -8,7 +8,6 @@
 #include "views/InputHandler.hpp"
 
 #include <iostream>
-#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -16,8 +15,6 @@ FestivalTile::FestivalTile(const std::string &code, const std::string &name, int
     : Tile(code, name, pos, "festival") {}
 
 void FestivalTile::onLanded(Player &player, GameManager &game) {
-    static std::unordered_map<PropertyTile *, int> festivalMultiplierByTile;
-
     Board &board = game.getBoard();
     std::vector<PropertyTile *> ownedTiles;
     ownedTiles.reserve(static_cast<std::size_t>(board.getTileCount()));
@@ -70,10 +67,9 @@ void FestivalTile::onLanded(Player &player, GameManager &game) {
         }
     }
 
-    int currentMultiplier = 1;
-    const auto multiplierIt = festivalMultiplierByTile.find(selectedTile);
-    if (multiplierIt != festivalMultiplierByTile.end()) {
-        currentMultiplier = multiplierIt->second;
+    int currentMultiplier = selectedTile->getProperty().getFMult();
+    if (currentMultiplier < 1) {
+        currentMultiplier = 1;
     }
 
     int nextMultiplier = currentMultiplier;
@@ -90,8 +86,8 @@ void FestivalTile::onLanded(Player &player, GameManager &game) {
     }
 
     const int baseRent = selectedTile->getProperty().getPropertyDetail();
-    festivalMultiplierByTile[selectedTile] = nextMultiplier;
     selectedTile->applyFestivalEffect(nextMultiplier, 3);
+    game.executeFestival(player, selectedTile->getProperty().getCode());
 
     if (currentMultiplier > 1) {
         std::cout << "Sewa sebelumnya: M" << (baseRent * currentMultiplier) << "\n";

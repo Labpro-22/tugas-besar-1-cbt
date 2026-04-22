@@ -31,7 +31,11 @@ std::string DiscountCard::getType() const {
 }
 
 int DiscountCard::getValue() const {
-    return discountPercent; 
+    return discountPercent;
+}
+
+int DiscountCard::getDuration() const {
+    return remainingDuration;
 }
 
 // apply discount
@@ -55,6 +59,8 @@ void DiscountCard::use(Player* p, GameManager* gm) {
     }
 
     p->applyDiscount(discountPercent, remainingDuration);
+    std::cout << "DiscountCard diaktifkan! Diskon " << discountPercent
+              << "% aktif untuk giliran ini.\n";
 
     markAsUsed();
     p->setUsedAbility();

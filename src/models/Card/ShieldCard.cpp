@@ -29,6 +29,8 @@ void ShieldCard::use(Player* p, GameManager* gm) {
     }
 
     p->activateShield();
+    std::cout << "ShieldCard diaktifkan! Kamu kebal terhadap tagihan atau sanksi"
+                 " selama giliran ini.\n";
 
     markAsUsed();
     p->setUsedAbility();

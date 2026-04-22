@@ -11,6 +11,8 @@ private:
     PropertyStatus status;
     int mortgageValue;
     Player *owner;
+    int festivalMultiplier;
+    int festivalDuration;
 
 public:
     // default ctor (status = "BANK")
@@ -43,18 +45,23 @@ public:
 
     virtual std::string getType() const = 0;
     std::string getStatusString() const;
-    virtual int getFMult() const { return 1; }
+    virtual int getFMult() const;
 
-    virtual int getFDur() const { return 0; }
+    virtual int getFDur() const;
 
     virtual int getBuildingCount() const { return 0; }
+    virtual int getBuildingInvestmentValue() const { return 0; }
+    virtual int getBuildingSellValue() const { return getBuildingInvestmentValue() / 2; }
 
     void setCode(std::string newCode);
     void setName(std::string newName);
     void setMortgageValue(int value);
     void setStatusStr(std::string statusStr);
-    virtual void setFestival(int, int) {}
+    virtual void setFestival(int multiplier, int duration);
+    virtual void tickFestival();
     virtual void setBuildingCount(int) {}
+    virtual bool canBeMortgaged() const;
+    virtual void resetToBank();
 
     // Mortgage the property, returns the mortgage amount given to the player
     virtual int mortgage();

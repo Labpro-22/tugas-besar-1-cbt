@@ -55,7 +55,11 @@ void Player::ensureCanPay(int amount) const {
 int Player::getTotalWealth() const {
     int totalWealth = cash;
     for (Property *prop : properties) {
+        if (prop == nullptr) {
+            continue;
+        }
         totalWealth += prop->getBuyPrice();
+        totalWealth += prop->getBuildingInvestmentValue();
     }
     return totalWealth;
 }

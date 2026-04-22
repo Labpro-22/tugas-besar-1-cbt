@@ -31,11 +31,12 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
 
     std::vector<Property*> targets;
     for (Player& player : gm->getPlayers()) {
+        if (&player == p || player.getStatus() == BANKRUPT) {
+            continue;
+        }
+
         for (Property* prop : player.getProperties()) {
             if (prop == nullptr) {
-                continue;
-            }
-            if (prop->getBuildingCount() <= 0) {
                 continue;
             }
             targets.push_back(prop);
@@ -43,22 +44,30 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
     }
 
     if (targets.empty()) {
-        std::cout << "Tidak ada properti dengan bangunan untuk dihancurkan.\n";
+        std::cout << "Tidak ada properti lawan untuk dihancurkan.\n";
         return;
     }
 
     std::cout << "Pilih properti untuk DemolitionCard:\n";
     for (size_t i = 0; i < targets.size(); ++i) {
+        Player* owner = targets[i]->getOwner();
         std::cout << (i + 1) << ". " << targets[i]->getCode()
-            << " (bangunan: " << targets[i]->getBuildingCount() << ")\n";
+            << " - " << targets[i]->getName()
+            << " (pemilik: " << (owner != nullptr ? owner->getUsername() : "-")
+            << ")\n";
     }
 
     InputHandler input;
     const int choice = input.readChoice(1, static_cast<int>(targets.size()), "Pilih properti untuk DemolitionCard: ");
 
     Property* target = targets[static_cast<std::size_t>(choice - 1)];
-    target->demolish();
-    gm->addLogEntry(p->getUsername() + " menghancurkan bangunan di " + target->getCode());
+    const std::string targetName = target->getName();
+    const std::string targetCode = target->getCode();
+    gm->destroyProperty(*p, *target);
+    std::cout << "Properti " << targetName
+              << " dihancurkan oleh DemolitionCard dan kembali ke Bank.\n";
+
+    gm->addLogEntry(p->getUsername() + " menghancurkan properti " + targetCode);
     markAsUsed();
     p->setUsedAbility();
     p->removeCard(this);

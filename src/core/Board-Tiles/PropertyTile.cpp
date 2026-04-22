@@ -5,8 +5,7 @@
 
 PropertyTile::PropertyTile(const std::string &code, const std::string &name,
                                                                                                             int pos, Property *prop)
-                : Tile(code, name, pos, "property"), property(prop), festivalMultiplier(1),
-                        festivalDuration(0) {}
+                : Tile(code, name, pos, "property"), property(prop) {}
 
 PropertyTile::~PropertyTile() {
         delete property;
@@ -14,22 +13,8 @@ PropertyTile::~PropertyTile() {
 }
 
 void PropertyTile::applyFestivalEffect(int mult, int dur) {
-        festivalMultiplier = mult;
-        festivalDuration = dur;
         if (property != nullptr) {
                 property->setFestival(mult, dur);
-        }
-}
-
-void PropertyTile::checkFestivalEffect() {
-        if (festivalDuration > 0) {
-                festivalDuration--;
-                if (festivalDuration == 0) {
-                        festivalMultiplier = 1;
-                }
-                if (property != nullptr) {
-                        property->setFestival(festivalMultiplier, festivalDuration);
-                }
         }
 }
 
@@ -41,8 +26,6 @@ void PropertyTile::onLanded(Player &player, GameManager &game) {
         if (property == nullptr) {
                 return;
         }
-
-        checkFestivalEffect();
 
         Property &prop = getProperty();
         Player *owner = prop.getOwner();
@@ -61,8 +44,8 @@ void PropertyTile::onLanded(Player &player, GameManager &game) {
         }
 
         int rentDue = prop.getPropertyDetail();
-        if (festivalMultiplier > 1) {
-                rentDue *= festivalMultiplier;
+        if (prop.getFMult() > 1) {
+                rentDue *= prop.getFMult();
         }
 
         game.executeRentPayer(player, *owner, prop, rentDue);

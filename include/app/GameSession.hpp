@@ -150,14 +150,6 @@ private:
     void awardSkillCardAtTurnStart();
     void discardSkillCard(Player& player, SkillCard* card);
     bool executeSkillCard(Player& player, SkillCard* card);
-    bool executeMoveCard(Player& player, SkillCard& card);
-    bool executeDiscountCard(Player& player, SkillCard& card);
-    bool executeShieldCard(Player& player, SkillCard& card);
-    bool executeTeleportCard(Player& player, SkillCard& card);
-    bool executeLassoCard(Player& player, SkillCard& card);
-    bool executeDemolitionCard(Player& player, SkillCard& card);
-    void resolveLandingAfterAbility(Player& player, bool grantGoSalary = false);
-    int applyDiscountToAmount(const Player& player, int amount) const;
     void updateStartupState(const std::string& mode, const std::string& prompt,
                             int expectedPlayers = 0, int collectedPlayers = 0);
     void notifySnapshot();

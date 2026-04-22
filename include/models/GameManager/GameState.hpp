@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../Property/Property.hpp"
+#include "../Card/SkillCardFactory.hpp"
 #include "Player.hpp"
 #include "TransactionLogger.hpp"
 using namespace std;
@@ -19,6 +20,7 @@ private:
     vector<Property *> properties;
     vector<SkillCard *> skillDeckCards;
     vector<LogEntry> log;
+    SkillCardFactory skillCardFactory;
 
 public:
     GameState(int currentTurn = 0, int maxTurn = 0, int activePlayerIndex = 0,

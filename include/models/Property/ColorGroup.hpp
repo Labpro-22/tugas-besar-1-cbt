@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef ORANGE
+#undef ORANGE
+#endif
+
 enum class ColorGroup {
     COKLAT,
     BIRU_MUDA,
