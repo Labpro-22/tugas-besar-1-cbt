@@ -9,7 +9,7 @@
 
 #include "../core/Board-Tiles/Board.hpp"
 #include "GameSessionQueries.hpp"
-#include "SkillCardFactory.hpp"
+#include "models/Card/SkillCardFactory.hpp"
 #include "../models/Card/SkillCard.hpp"
 #include "../models/GameManager/Dice.hpp"
 #include "../models/GameManager/GameManager.hpp"
