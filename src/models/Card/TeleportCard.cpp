@@ -1,4 +1,5 @@
 #include "models/Card/TeleportCard.hpp"
+#include "models/GameManager/GameManager.hpp"
 #include "core/Board-Tiles/Board.hpp"
 #include "core/Board-Tiles/Tile.hpp"
 #include "views/InputHandler.hpp"
@@ -34,6 +35,10 @@ void TeleportCard::use(Player *p, GameManager *gm) {
     throw InternalGameException("TeleportCard digunakan saat ukuran board tidak valid.");
   }
 
+  gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
+                      "TeleportCard - pilih nomor petak tujuan (0-" +
+                          std::to_string(boardSize - 1) + ").");
+  gm->pushSnapshot();
   InputHandler input;
   const int targetTile = input.readChoice(0, boardSize - 1, "Pilih tile tujuan teleport (0-" + std::to_string(boardSize - 1) + "): ");
 
@@ -46,6 +51,7 @@ void TeleportCard::use(Player *p, GameManager *gm) {
   p->setUsedAbility();
   p->removeCard(this);
 
-  gm->addLogEntry(p->getUsername() + " berteleportasi ke tile " + std::to_string(targetTile));
+  gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
+                      "TeleportCard: Berteleportasi ke " + tile.getName());
   tile.onLanded(*p, *gm);
 }

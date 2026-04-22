@@ -1,4 +1,5 @@
 #include "models/Card/DemolitionCard.hpp"
+#include "models/GameManager/GameManager.hpp"
 #include "views/InputHandler.hpp"
 
 // ctor
@@ -46,15 +47,19 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
         throw AbilityTargetException("Tidak ada properti lawan untuk dihancurkan.");
     }
 
+    std::string targetListLog = "DemolitionCard - pilih properti lawan:";
     std::cout << "Pilih properti untuk DemolitionCard:\n";
     for (size_t i = 0; i < targets.size(); ++i) {
         Player* owner = targets[i]->getOwner();
+        const std::string ownerName = owner != nullptr ? owner->getUsername() : "-";
+        targetListLog += " " + std::to_string(i + 1) + ". " + targets[i]->getCode() +
+                         "(" + ownerName + ");";
         std::cout << (i + 1) << ". " << targets[i]->getCode()
             << " - " << targets[i]->getName()
-            << " (pemilik: " << (owner != nullptr ? owner->getUsername() : "-")
-            << ")\n";
+            << " (pemilik: " << ownerName << ")\n";
     }
-
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", targetListLog);
+    gm->pushSnapshot();
     InputHandler input;
     const int choice = input.readChoice(1, static_cast<int>(targets.size()), "Pilih properti untuk DemolitionCard: ");
 
@@ -64,7 +69,8 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
     gm->destroyProperty(*p, *target);
     std::cout << "Properti " << targetName << " dihancurkan oleh DemolitionCard dan kembali ke Bank.\n";
 
-    gm->addLogEntry(p->getUsername() + " menghancurkan properti " + targetCode);
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
+                        "DemolitionCard: Menghancurkan properti " + targetCode);
     markAsUsed();
     p->setUsedAbility();
     p->removeCard(this);

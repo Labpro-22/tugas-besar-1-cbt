@@ -60,6 +60,7 @@ void FestivalTile::onLanded(Player &player, GameManager &game) {
             firstProperty = false;
         }
         logTileEvent(game, player, "FESTIVAL", propertyList.str());
+        game.pushSnapshot();
 
         PropertyTile *selectedTile = nullptr;
         InputHandler input;

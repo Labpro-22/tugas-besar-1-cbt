@@ -56,22 +56,46 @@ void PropertyTile::onLanded(Player &player, GameManager &game) {
         Player *owner = prop.getOwner();
 
         if (owner == nullptr) {
-                game.executePurchase(player, prop);
-                return;
+            const int basePrice = prop.getBuyPrice();
+            const int price = game.applyDiscount(player, basePrice);
+            std::string detail = "Mendarat di " + prop.getName() + " (" + prop.getCode() +
+                                 "). Tersedia untuk dibeli seharga M" + std::to_string(basePrice);
+            if (price != basePrice) {
+                detail += " (diskon -> M" + std::to_string(price) + ")";
+            }
+            detail += ". Uang kamu: M" + std::to_string(player.getCash()) +
+                      ", tersisa M" + std::to_string(player.getCash() - price) + " jika dibeli.";
+            logTileEvent(game, player, "PROPERTI", detail);
+            game.executePurchase(player, prop);
+            return;
         }
 
         if (owner == &player) {
-                return;
+            logTileEvent(game, player, "PROPERTI",
+                         "Mendarat di " + prop.getName() + " (" + prop.getCode() +
+                             ") - properti milik sendiri.");
+            return;
         }
 
         if (prop.getStatus() == PropertyStatus::MORTGAGED) {
-                return;
+            logTileEvent(game, player, "PROPERTI",
+                         "Mendarat di " + prop.getName() + " (" + prop.getCode() +
+                             ") - properti tergadai, tidak ada sewa.");
+            return;
         }
 
         int rentDue = prop.getPropertyDetail();
         if (prop.getFMult() > 1) {
                 rentDue *= prop.getFMult();
         }
+
+        std::string rentDetail = "Mendarat di " + prop.getName() + " (" + prop.getCode() +
+                                 "), milik " + owner->getUsername() +
+                                 ". Sewa: M" + std::to_string(rentDue);
+        if (prop.getFMult() > 1) {
+            rentDetail += " (festival x" + std::to_string(prop.getFMult()) + ")";
+        }
+        logTileEvent(game, player, "PROPERTI", rentDetail);
 
         game.executeRentPayer(player, *owner, prop, rentDue);
     } catch (const NimonspoliException &) {

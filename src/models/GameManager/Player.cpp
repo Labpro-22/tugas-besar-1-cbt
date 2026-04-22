@@ -1,5 +1,4 @@
 #include "models/GameManager/Player.hpp"
-#include "models/GameManager/JailManager.hpp"
 
 #include <stdexcept>
 
@@ -117,14 +116,6 @@ void Player::resetTurn() {
 void Player::setBankrupt() { status = BANKRUPT; }
 
 bool Player::isJailed() const { return status == JAILED; }
-
-void Player::payJailFine(JailManager &jm) {
-    if (jm.payFine(*this)) {
-        status = ACTIVE;
-    } else {
-        cout << "Kamu belum bisa bayar Fine\n";
-    }
-}
 
 // Manajemen Shield (Anti-Serangan)
 void Player::activateShield() { hasShield = true; }

@@ -117,16 +117,13 @@ void Street::activateEffect(int multiplier) {
     if (multiplier <= 0) {
         throw PropertyBuildException(getCode(), "Multiplier festival harus positif.");
     }
-
-    if (multiplier > 0) {
-        setFestival(multiplier, getFDur());
-    }
+    setFestival(multiplier, getFDur());
 }
 
 // Demolish all buildings on this street
 void Street::demolish() {
     level = BuildingLevel::EMPTY;
-    festivalMultiplier = 1;
+    setFestival(1, 0);
 }
 
 int Street::getBuildingInvestmentValue() const {

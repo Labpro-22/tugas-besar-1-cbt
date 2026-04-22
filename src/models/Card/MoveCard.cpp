@@ -1,4 +1,5 @@
 #include "models/Card/MoveCard.hpp"
+#include "models/GameManager/GameManager.hpp"
 #include "core/Board-Tiles/Board.hpp"
 #include "core/Board-Tiles/Tile.hpp"
 #include <iostream>
@@ -56,6 +57,7 @@ void MoveCard::use(Player *p, GameManager *gm) {
   p->setUsedAbility();
   p->removeCard(this);
 
-  gm->addLogEntry("MoveCard digunakan sebanyak " + std::to_string(steps) + " langkah");
+  gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
+                      "MoveCard: Bergerak " + std::to_string(steps) + " langkah ke " + tile.getName());
   tile.onLanded(*p, *gm);
 }

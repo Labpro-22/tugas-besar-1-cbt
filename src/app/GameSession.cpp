@@ -186,6 +186,7 @@ bool GameSession::initializeNewGame() {
 
     initializePlayers(usernames);
     initializeSkillDeck();
+    game.setSnapshotRefreshCallback([this]() { notifySnapshotImmediate(); });
     game.startNewGame();
     gameStarted = true;
     startTurn(true);
@@ -197,6 +198,7 @@ bool GameSession::initializeNewGame() {
 bool GameSession::initializeLoadedGame(const std::string& filename) {
     resetSessionState();
     prepareFreshBoard();
+    game.setSnapshotRefreshCallback([this]() { notifySnapshotImmediate(); });
     gameStarted = loadFromFile(filename);
     turnActionTaken = false;
     if (gameStarted) {

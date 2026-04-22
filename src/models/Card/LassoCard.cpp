@@ -1,4 +1,5 @@
 #include "models/Card/LassoCard.hpp"
+#include "models/GameManager/GameManager.hpp"
 #include "core/Board-Tiles/Board.hpp"
 #include "core/Board-Tiles/Tile.hpp"
 #include "views/InputHandler.hpp"
@@ -47,15 +48,19 @@ void LassoCard::use(Player *p, GameManager *gm) {
         throw AbilityTargetException("Tidak ada pemain lawan yang berada di depanmu.");
     }
 
+    std::string targetListLog = "LassoCard - pilih target:";
     std::cout << "Pilih target LassoCard:\n";
     for (size_t i = 0; i < candidates.size(); ++i) {
         const Player *target = candidates[i];
         const Tile &targetTile = gm->getBoard().getTile(target->getPosition());
+        targetListLog += " " + std::to_string(i + 1) + ". " + target->getUsername() +
+                         "(" + targetTile.getCode() + ");";
         std::cout << (i + 1) << ". " << target->getUsername() << " ("
                   << targetTile.getCode() << " - " << targetTile.getName()
                   << ")\n";
     }
-
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", targetListLog);
+    gm->pushSnapshot();
     InputHandler input;
     const int choice = input.readChoice(1, static_cast<int>(candidates.size()), "Pilih target LassoCard: ");
 
@@ -69,6 +74,7 @@ void LassoCard::use(Player *p, GameManager *gm) {
     p->setUsedAbility();
     p->removeCard(this);
 
-    gm->addLogEntry(p->getUsername() + " menarik " + target->getUsername() + " dengan LassoCard");
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
+                        "LassoCard: Menarik " + target->getUsername() + " ke petak " + landingTile.getName());
     landingTile.onLanded(*target, *gm);
 }

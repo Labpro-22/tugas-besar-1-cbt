@@ -6,5 +6,6 @@ JailTile::JailTile(const std::string &code, const std::string &name, int pos)
     : ActionTile(code, name, pos, "jail") {}
 
 void JailTile::onLanded(Player &player, GameManager &game) {
-  game.visitJail(player);
+  logTileEvent(game, player, "PETAK",
+               player.getUsername() + " mampir di Penjara (hanya berkunjung).");
 }

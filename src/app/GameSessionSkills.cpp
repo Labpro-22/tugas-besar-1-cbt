@@ -88,6 +88,18 @@ void GameSession::awardSkillCardAtTurnStart() {
         return;
     }
 
+    std::string cardListLog = "Tangan penuh! Wajib buang 1 kartu:";
+    for (std::size_t i = 0; i < player.getHand().size(); ++i) {
+        Card* card = player.getHand()[i];
+        cardListLog += " " + std::to_string(i + 1) + ". " + card->getType();
+        if (card->getValue() != 0) {
+            cardListLog += "(" + std::to_string(card->getValue()) + ")";
+        }
+        cardListLog += ";";
+    }
+    game.getLogger().log(game.getCurrentTurn(), player.getUsername(), "KARTU", cardListLog);
+    notifySnapshotImmediate();
+
     std::cout << "PERINGATAN: Kamu sudah memiliki 3 kartu di tangan (maksimal 3).\n";
     std::cout << "Kamu diwajibkan membuang 1 kartu.\n";
     std::cout << "Daftar Kartu Kemampuan Anda:\n";
@@ -103,6 +115,8 @@ void GameSession::awardSkillCardAtTurnStart() {
     SkillCard* discardCard =
         static_cast<SkillCard*>(player.getHand()[static_cast<std::size_t>(discardChoice - 1)]);
     if (discardCard != nullptr) {
+        game.getLogger().log(game.getCurrentTurn(), player.getUsername(), "KARTU",
+                             "Membuang kartu " + std::to_string(discardChoice) + ": " + discardCard->getType());
         std::cout << discardCard->getType() << " telah dibuang.\n";
         discardSkillCard(player, discardCard);
     }

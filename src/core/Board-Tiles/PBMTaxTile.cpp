@@ -15,6 +15,9 @@ int PBMTaxTile::getFlatTax() const { return pbm_flat; }
 void PBMTaxTile::onLanded(Player &player, GameManager &game) {
     try {
         const int finalTax = calculateTax(player, getFlatTax());
+        logTileEvent(game, player, "PAJAK",
+                     "Mendarat di " + getName() + ". Pajak PBB sebesar M" +
+                         std::to_string(finalTax) + " langsung dipotong.");
         game.executeTaxPayment(player, finalTax, true);
     } catch (const NimonspoliException &) {
         throw;

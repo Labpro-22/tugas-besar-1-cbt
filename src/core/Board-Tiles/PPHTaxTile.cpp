@@ -42,7 +42,9 @@ void PPHTaxTile::onLanded(Player &player, GameManager &game) {
                      "Mendarat di Pajak Penghasilan. Opsi: flat M" +
                          std::to_string(flatTax) + " atau " +
                          std::to_string(getPercentage()) +
-                         "% dari total kekayaan.");
+                         "% dari total kekayaan (M" + std::to_string(perTax) +
+                         "). Uang kamu: M" + std::to_string(player.getCash()) + ".");
+        game.pushSnapshot();
         InputHandler input;
         const int choice = input.readChoice(1, 2, "Pilihan (1/2): ");
 

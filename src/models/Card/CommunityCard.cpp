@@ -32,12 +32,12 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
   }
 
   if (communityType != CommunityCardType::BIRTHDAY && p->hasShieldActive()) {
-    gm->addLogEntry(p->getUsername() + " terlindungi shield dari efek kartu community chest");
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "SHIELD",
+                        "ShieldCard melindungi dari efek Dana Umum");
     return;
   }
 
   if (communityType == CommunityCardType::BIRTHDAY) {
-    // Get M100 dari setiap pemain
     const int giftAmount = 100;
 
     for (Player &other : gm->getPlayers()) {
@@ -55,7 +55,8 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
         gm->executeBankruptcy(other, p, giftAmount);
       }
     }
-    gm->addLogEntry(p->getUsername() + " menerima hadiah ulang tahun");
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
+                        "Dana Umum: Menerima hadiah ulang tahun M100 dari setiap pemain");
     return;
   }
 
@@ -65,10 +66,11 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
       if (!p->canPay(doctorFee)) {
         throw InsufficientFundsException(p->getUsername(), doctorFee, p->getCash());
       }
-      
       p->reduceCash(doctorFee);
-      std::cout << "Kamu membayar M" << doctorFee << " ke Bank." << " Sisa Uang = M" << p->getCash() << ".\n";
-      gm->addLogEntry(p->getUsername() + " membayar biaya dokter M" + std::to_string(doctorFee));
+      std::cout << "Kamu membayar M" << doctorFee << " ke Bank."
+                << " Sisa Uang = M" << p->getCash() << ".\n";
+      gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "PAJAK",
+                          "Dana Umum: Membayar biaya dokter M" + std::to_string(doctorFee));
     } catch (const InsufficientFundsException &) {
       std::cout << "Kamu tidak mampu membayar biaya dokter! (M" << doctorFee << ")\n";
       std::cout << "Uang kamu saat ini: M" << p->getCash() << "\n";
@@ -78,7 +80,6 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
   }
 
   if (communityType == CommunityCardType::CAMPAIGN_FEE) {
-    // Pay M200 kepada setiap pemain
     const int campaignFee = 200;
     for (Player &other : gm->getPlayers()) {
       if (&other == p || other.getStatus() == BANKRUPT) {
@@ -96,7 +97,8 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
         break;
       }
     }
-    gm->addLogEntry(p->getUsername() + " membayar campaign fee ke pemain lain");
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "PAJAK",
+                        "Dana Umum: Membayar campaign fee M200 ke setiap pemain");
     return;
   }
 

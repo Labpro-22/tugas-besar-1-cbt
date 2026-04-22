@@ -1,4 +1,5 @@
 #include "models/Card/ShieldCard.hpp"
+#include "models/GameManager/GameManager.hpp"
 
 // ctor
 ShieldCard::ShieldCard() : SkillCard() {}
@@ -24,7 +25,8 @@ void ShieldCard::use(Player* p, GameManager* gm) {
     }
 
     if (!p->canUseAbility()) {
-        gm->addLogEntry(p->getUsername() + " gagal menggunakan ShieldCard (ability sudah dipakai)");
+        gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
+                            "Gagal menggunakan ShieldCard (ability sudah dipakai)");
         return;
     }
 
@@ -35,5 +37,6 @@ void ShieldCard::use(Player* p, GameManager* gm) {
     markAsUsed();
     p->setUsedAbility();
     p->removeCard(this);
-    gm->addLogEntry(p->getUsername() + " mengaktifkan shield");
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "SHIELD",
+                        "ShieldCard aktif - kebal tagihan giliran ini");
 }

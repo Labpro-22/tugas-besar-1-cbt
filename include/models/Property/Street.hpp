@@ -15,8 +15,6 @@ private:
     int houseCost;
     int hotelCost;
     BuildingLevel level;
-    int festivalMultiplier;
-    int festivalDuration;
 
 public:
     // ctor (default color COKLAT)
@@ -72,16 +70,12 @@ public:
     // Get the current building level
     BuildingLevel getBuildingLevel() const { return level; }
 
-    // Get the festival multiplier value
-    int getFestivalMultiplier() const { return festivalMultiplier; }
+    // Get the festival multiplier value (delegates to base class)
+    int getFestivalMultiplier() const { return getFMult(); }
 
     // Get the rent levels vector
     const std::vector<int> &getRentLevels() const { return rentLevels; }
     std::string getType() const override { return "Street"; }
-
-    int getFMult() const override { return festivalMultiplier; }
-
-    int getFDur() const override { return festivalDuration; }
 
     int getBuildingCount() const override { return static_cast<int>(level); }
     std::string getBuildingLabel() const override {
@@ -89,11 +83,6 @@ public:
         if (count <= 0) return "0 rumah";
         if (count >= 5) return "Hotel"; // BuildingLevel::HOTEL is 5
         return std::to_string(count) + " rumah";
-    }
-
-    void setFestival(int fmult, int fdur) override {
-        festivalMultiplier = fmult;
-        festivalDuration = fdur;
     }
 
     void setBuildingCount(int count) override {

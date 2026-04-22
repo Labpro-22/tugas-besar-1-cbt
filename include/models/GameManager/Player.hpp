@@ -8,8 +8,6 @@
 #include <vector>
 using namespace std;
 
-class JailManager;
-
 enum PlayerStatus {
     ACTIVE,
     BANKRUPT,
@@ -62,7 +60,6 @@ public:
     bool canUseAbility() const;
     void setUsedAbility();
     void resetTurn();
-    void payJailFine(JailManager &jm);
     bool isJailed() const;
     bool canGetCard() const;
     void setBankrupt();
@@ -79,3 +76,4 @@ public:
     int getRailroadCount() const;
     int getUtilityCount() const;
 };
+

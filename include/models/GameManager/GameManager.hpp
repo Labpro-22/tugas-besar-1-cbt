@@ -6,9 +6,9 @@
 #include "../Card/SkillCard.hpp"
 #include "../Property/ColorGroup.hpp"
 #include "Dice.hpp"
-#include "FestivalEffect.hpp"
 #include "Player.hpp"
 #include "TransactionLogger.hpp"
+#include <functional>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -32,7 +32,7 @@ private:
   CardDeck<SkillCard> skillDeck;
   Configuration config;
   TransactionLogger logger;
-  FestivalEffect festivalEffect;
+  std::function<void()> snapshotRefreshFn;
 
 public:
   GameManager();
@@ -75,9 +75,9 @@ public:
   bool hasBuildingsInColorGroup(const Player &player, ColorGroup color) const;
   void destroyProperty(Player &actor, Property &prop);
   void tickFestivalEffects(Player &owner);
-  void visitJail(Player &player);
   void goToJail(Player &player);
-  void addLogEntry(string action);
+  void setSnapshotRefreshCallback(std::function<void()> fn) { snapshotRefreshFn = std::move(fn); }
+  void pushSnapshot() { if (snapshotRefreshFn) snapshotRefreshFn(); }
   Board &getBoard();
   TransactionLogger &getLogger();
   const TransactionLogger &getLogger() const;

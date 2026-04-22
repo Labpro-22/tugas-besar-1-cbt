@@ -1,4 +1,5 @@
 #include "models/Card/DiscountCard.hpp"
+#include "models/GameManager/GameManager.hpp"
 #include <algorithm>
 #include "exception/NimonspoliExceptions.hpp"
 
@@ -55,7 +56,8 @@ void DiscountCard::use(Player* p, GameManager* gm) {
     }
 
     if (!p->canUseAbility()) {
-        gm->addLogEntry(p->getUsername() + " gagal menggunakan DiscountCard (ability sudah dipakai)");
+        gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
+                            "Gagal menggunakan DiscountCard (ability sudah dipakai)");
         return;
     }
 
@@ -66,5 +68,6 @@ void DiscountCard::use(Player* p, GameManager* gm) {
     markAsUsed();
     p->setUsedAbility();
     p->removeCard(this);
-    gm->addLogEntry("Diskon " + std::to_string(discountPercent) + "% aktif");
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
+                        "DiscountCard: Diskon " + std::to_string(discountPercent) + "% aktif");
 }

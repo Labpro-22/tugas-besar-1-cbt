@@ -25,7 +25,7 @@ GameManager::GameManager()
 void GameManager::startNewGame() {
   currentTurn = 1;
   activePlayerIndex = 0;
-  addLogEntry("Game Dimulai");
+  logger.log(currentTurn, "-", "MULAI", "Game Dimulai");
 }
 
 void GameManager::processTurn() {
@@ -65,6 +65,11 @@ const Player &GameManager::getCurrentPlayer() const {
 }
 
 const vector<Player> &GameManager::getPlayers() const { return players; }
+
+vector<Player> &GameManager::getPlayers() {
+  return const_cast<vector<Player> &>(
+      static_cast<const GameManager *>(this)->getPlayers());
+}
 
 int GameManager::getCurrentTurn() const { return currentTurn; }
 
@@ -128,8 +133,6 @@ Player &GameManager::getWinner() {
   return players[winnerIndex];
 }
 
-vector<Player> &GameManager::getPlayers() { return players; }
-
 void GameManager::moveCurrentPlayer(int steps) {
   Player &player = getCurrentPlayer();
   int oldPos = player.getPosition();
@@ -145,7 +148,6 @@ void GameManager::moveCurrentPlayer(int steps) {
   }
 
   movePlayerTo(player, newPos, true);
-  addLogEntry("Bergerak ke petak " + to_string(newPos));
 }
 
 void GameManager::movePlayerTo(Player &player, int targetPosition,
@@ -226,7 +228,8 @@ void GameManager::executePurchase(Player &player, Property &prop) {
     }
     cout << "Uang kamu saat ini: M" << player.getCash() << "\n";
     cout << "Properti ini akan masuk ke sistem lelang...\n";
-    addLogEntry("Gagal membeli " + prop.getCode());
+    logger.log(currentTurn, player.getUsername(), "BELI",
+               "Tidak mampu membeli " + prop.getCode() + ", masuk lelang");
     executeAuction(prop);
     return;
   }
@@ -237,13 +240,16 @@ void GameManager::executePurchase(Player &player, Property &prop) {
       cout << "Harga setelah diskon : M" << price << "\n";
     }
     cout << "Uang kamu  : M" << player.getCash() << "\n";
+    cout << "Uang tersisa jika dibeli: M" << (player.getCash() - price) << "\n";
+    pushSnapshot();
     InputHandler input;
     const bool shouldBuy = input.readYesNo(
         "Apakah kamu ingin membeli properti ini? (y/n): ");
 
     if (!shouldBuy) {
       cout << "Properti ini akan masuk ke sistem lelang...\n";
-      addLogEntry("Menolak membeli " + prop.getCode());
+      logger.log(currentTurn, player.getUsername(), "BELI",
+                 "Menolak beli " + prop.getCode() + ", masuk lelang");
       executeAuction(prop);
       return;
     }
@@ -260,7 +266,8 @@ void GameManager::executePurchase(Player &player, Property &prop) {
   cout << prop.getName() << " kini menjadi milikmu!\n";
   cout << "Uang tersisa: M" << player.getCash() << "\n";
   logger.log(currentTurn, player.getUsername(), "BELI",
-             "Beli " + prop.getCode() + " seharga M" + to_string(price));
+             "Beli " + prop.getName() + " (" + prop.getCode() + ") seharga M" +
+                 to_string(price) + ". Uang tersisa: M" + to_string(player.getCash()));
 }
 
 void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop,
@@ -305,7 +312,10 @@ void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop,
     if (bh.initiateLiquidation()) {
       payer.reduceCash(effectiveAmount);
       owner.addCash(effectiveAmount);
-      addLogEntry("Sewa dibayar setelah likuidasi");
+      logger.log(currentTurn, payer.getUsername(), "SEWA",
+                 "Bayar M" + to_string(effectiveAmount) + " ke " +
+                     owner.getUsername() + " (" + prop.getCode() +
+                     ") setelah likuidasi");
     } else {
       executeBankruptcy(payer, &owner, effectiveAmount);
     }
@@ -344,6 +354,7 @@ void GameManager::executeAuction(Property &prop) {
 
     cout << "Penawaran tertinggi saat ini: M" << auction.getCurrentBid()
          << "\n";
+    pushSnapshot();
     const string line =
         input.readPromptLine("Aksi lelang (PASS / BID <jumlah>): ",
                              "Aksi Lelang");
@@ -373,7 +384,7 @@ void GameManager::executeAuction(Property &prop) {
     cout << "Input lelang tidak valid. Gunakan PASS atau BID <jumlah>.\n";
   }
 
-    Player *winner = auction.getWinner();
+  Player *winner = auction.getWinner();
   const int winningBid = auction.getWinningBid();
 
   if (winner != nullptr && winningBid > 0) {
@@ -395,12 +406,11 @@ void GameManager::executeAuction(Property &prop) {
                    to_string(winningBid));
     return;
   }
-  
+
   if (winner != nullptr && winningBid == 0) {
-    
-    cout << "Semua pemain memilih pass. " << winner->getUsername() 
+    cout << "Semua pemain memilih pass. " << winner->getUsername()
          << " harus membeli properti dengan harga minimum M" << auction.getCurrentBid() << ".\n";
-    
+
     if (!winner->canPay(auction.getCurrentBid())) {
       cout << winner->getUsername() << " tidak mampu membayar harga minimum.\n";
       logger.log(currentTurn, winner->getUsername(), "LELANG",
@@ -415,7 +425,7 @@ void GameManager::executeAuction(Property &prop) {
     cout << prop.getName() << " kini menjadi milik " << winner->getUsername()
          << " dengan harga M" << auction.getCurrentBid() << ".\n";
     logger.log(currentTurn, winner->getUsername(), "LELANG",
-               "Membeli " + prop.getCode() + " seharga M" + 
+               "Membeli " + prop.getCode() + " seharga M" +
                    to_string(auction.getCurrentBid()) + " (semua pass)");
     return;
   }
@@ -432,16 +442,19 @@ void GameManager::executeBankruptcy(Player &debtor, Player *creditor,
   if (creditor) {
     cout << debtor.getUsername() << " dinyatakan BANGKRUT!\n";
     cout << "Kreditor: " << creditor->getUsername() << "\n";
-    addLogEntry("Bangkrut dan aset disita oleh " + creditor->getUsername());
+    logger.log(currentTurn, debtor.getUsername(), "BANGKRUT",
+               "Aset disita oleh " + creditor->getUsername());
   } else {
     cout << debtor.getUsername() << " dinyatakan BANGKRUT!\n";
     cout << "Kreditor: Bank\n";
-    addLogEntry("Bangkrut ke Bank");
+    logger.log(currentTurn, debtor.getUsername(), "BANGKRUT", "Bangkrut ke Bank");
   }
 }
 
-void GameManager::executeFestival(Player &, string propCode) {
-  addLogEntry("Mengadakan festival di " + propCode);
+void GameManager::executeFestival(Player &player, string propCode) {
+  // Logging for festival is handled entirely by FestivalTile before and after this call
+  (void)player;
+  (void)propCode;
 }
 
 void GameManager::executeTaxPayment(Player &player, int amount, bool toBank) {
@@ -475,10 +488,13 @@ void GameManager::executeTaxPayment(Player &player, int amount, bool toBank) {
     BankruptcyHandler bh(player, nullptr, effectiveAmount);
     if (bh.initiateLiquidation()) {
       player.reduceCash(effectiveAmount);
-      addLogEntry("Pajak dibayar setelah likuidasi");
+      logger.log(currentTurn, player.getUsername(), "PAJAK",
+                 "Pajak M" + to_string(effectiveAmount) + " dibayar setelah likuidasi");
     } else {
       bh.declareBankrupt();
-      addLogEntry("Bangkrut karena pajak");
+      logger.log(currentTurn, player.getUsername(), "BANGKRUT",
+                 "Bangkrut karena tidak mampu membayar pajak M" +
+                     to_string(effectiveAmount));
     }
   }
 }
@@ -684,10 +700,6 @@ void GameManager::tickFestivalEffects(Player &owner) {
   }
 }
 
-void GameManager::visitJail(Player &player) {
-  cout << player.getUsername() << " sedang mampir di Penjara.\n";
-}
-
 void GameManager::goToJail(Player &player) {
   if (player.hasShieldActive()) {
     cout << "[SHIELD ACTIVE]: Efek ShieldCard melindungi Anda!\n";
@@ -704,21 +716,14 @@ void GameManager::goToJail(Player &player) {
              "Masuk penjara");
 }
 
-void GameManager::addLogEntry(string action) {
-  if (players.empty()) {
-    logger.log(currentTurn, "-", action, "");
-    return;
-  }
-
-  string username = getCurrentPlayer().getUsername();
-  logger.log(currentTurn, username, action, "");
-}
-
 Board &GameManager::getBoard() { return *board; }
 
-TransactionLogger &GameManager::getLogger() { return logger; }
-
 const TransactionLogger &GameManager::getLogger() const { return logger; }
+
+TransactionLogger &GameManager::getLogger() {
+  return const_cast<TransactionLogger &>(
+      static_cast<const GameManager *>(this)->getLogger());
+}
 
 int GameManager::getGoSalary() const { return config.getGoSalary(); }
 
@@ -726,12 +731,12 @@ int GameManager::getJailPosition() const {
   if (board != nullptr) {
     return board->findJailPosition();
   }
-  return 10; // Fallback default
+  return 10;
 }
 
 int GameManager::getBoardSize() const {
   if (board != nullptr) {
     return board->getTileCount();
   }
-  return 40; // Fallback default
+  return 40;
 }

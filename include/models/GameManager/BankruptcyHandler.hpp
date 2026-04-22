@@ -1,29 +1,30 @@
 #pragma once
 #include <iostream>
-#include <map>
 #include <string>
 #include <vector>
 using namespace std;
 
 class Player;
 class Property;
-class LiquidationPanel;
 
 class BankruptcyHandler {
 private:
     Player &debtor;
     Player *creditor;
     int debtAmount;
-    LiquidationPanel *panel;
+    vector<Property *> sellableProperties;
+    vector<Property *> mortgageableProperties;
+
+    void buildAssetLists();
+    bool sellToBank(Property *prop);
+    bool mortgageProperty(Property *prop);
+    bool isDebtSatisfied() const;
 
 public:
     BankruptcyHandler(Player &debtor, Player *creditor, int debt);
-    ~BankruptcyHandler();
     int calculateMaxLiquidation();
     bool canCoverDebt();
     bool initiateLiquidation();
-    void sellPropertyToBank(Property &prop);
-    void mortgageProperty(Property &prop);
     void declareBankrupt();
     void transferAssets();
     void repossessProperties();
