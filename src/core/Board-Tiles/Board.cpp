@@ -16,6 +16,7 @@
 #include "models/Property/Street.hpp"
 #include "models/Property/Utility.hpp"
 #include "data/Configuration.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
@@ -86,7 +87,7 @@ static std::string nextTileId(char category) {
     target = &gFestivalCount;
 
   if (target == nullptr) {
-    throw std::runtime_error("Unknown tile category for id generation.");
+    throw InvalidBoardConfigurationException("Kategori ID petak tidak dikenali.");
   }
 
   ++(*target);
@@ -98,8 +99,8 @@ static std::string nextTileId(char category) {
 }  // namespace
 
 Property *buildPropertyFromConfig(const PropertyConfig &cfg,
-                                         const Configuration &configuration,
-                                         const std::string &fallbackName) {
+                                  const Configuration &configuration,
+                                  const std::string &fallbackName) {
   const std::string propertyType = toUpper(cfg.propertyType);
 
   if (propertyType == "STREET") {
@@ -133,8 +134,7 @@ Property *buildPropertyFromConfig(const PropertyConfig &cfg,
     return utility;
   }
 
-  throw std::runtime_error("Unknown property type in configuration: " +
-                           cfg.propertyType);
+  throw UnsupportedTileTypeException(cfg.propertyType);
 }
 
 Board::Board() : tileCount(0) {}
@@ -147,87 +147,99 @@ Board::~Board() {
 }
 
 void Board::initialize(Configuration &config) {
-  for (Tile *tile : tiles) {
-    delete tile;
-  }
-  tiles.clear();
+  try {
+    for (Tile *tile : tiles) {
+      delete tile;
+    }
+    tiles.clear();
 
-  const std::vector<BoardTileConfig> &layout = config.getBoardLayout();
+    const std::vector<BoardTileConfig> &layout = config.getBoardLayout();
 
-  const TaxConfig &tax = config.getTaxConfig();
-  const int goSalary = config.getGoSalary();
-  resetTileCounters();
+    const TaxConfig &tax = config.getTaxConfig();
+    const int goSalary = config.getGoSalary();
+    resetTileCounters();
 
-  tiles.reserve(layout.size());
-  for (std::size_t i = 0; i < layout.size(); ++i) {
-    const BoardTileConfig &entry = layout[i];
-    const std::string type = toLower(entry.type);
-    const int pos = static_cast<int>(i);
+    tiles.reserve(layout.size());
+    for (std::size_t i = 0; i < layout.size(); ++i) {
+      const BoardTileConfig &entry = layout[i];
+      const std::string type = toLower(entry.type);
+      const int pos = static_cast<int>(i);
 
-    if (type == "go") {
-      tiles.push_back(
-          new GoTile(nextTileId('A'), entry.name, pos, goSalary));
-      continue;
-    }
-    if (type == "jail") {
-      tiles.push_back(
-          new JailTile(nextTileId('A'), entry.name, pos));
-      continue;
-    }
-    if (type == "go_to_jail") {
-      tiles.push_back(
-          new GoToJailTile(nextTileId('A'), entry.name, pos));
-      continue;
-    }
-    if (type == "free_parking") {
-      tiles.push_back(
-          new FreeParkingTile(nextTileId('A'), entry.name, pos));
-      continue;
-    }
-    if (type == "chance") {
-      ChanceTile *chanceTile =
-          new ChanceTile(nextTileId('C'), entry.name, pos);
-      tiles.push_back(chanceTile);
-      continue;
-    }
-    if (type == "community_chest") {
-      CommunityChestTile *communityChestTile =
-          new CommunityChestTile(nextTileId('C'), entry.name, pos);
-      tiles.push_back(communityChestTile);
-      continue;
-    }
-    if (type == "festival") {
-      tiles.push_back(
-          new FestivalTile(nextTileId('F'), entry.name, pos));
-      continue;
-    }
-    if (type == "pph_tax" || type == "pph") {
-      tiles.push_back(new PPHTaxTile(nextTileId('T'), entry.name,
+      if (type == "go") {
+        tiles.push_back(
+            new GoTile(nextTileId('A'), entry.name, pos, goSalary));
+        continue;
+      }
+      if (type == "jail") {
+        tiles.push_back(
+            new JailTile(nextTileId('A'), entry.name, pos));
+        continue;
+      }
+      if (type == "go_to_jail") {
+        tiles.push_back(
+            new GoToJailTile(nextTileId('A'), entry.name, pos));
+        continue;
+      }
+      if (type == "free_parking") {
+        tiles.push_back(
+            new FreeParkingTile(nextTileId('A'), entry.name, pos));
+        continue;
+      }
+      if (type == "chance") {
+        ChanceTile *chanceTile =
+            new ChanceTile(nextTileId('C'), entry.name, pos);
+        tiles.push_back(chanceTile);
+        continue;
+      }
+      if (type == "community_chest") {
+        CommunityChestTile *communityChestTile =
+            new CommunityChestTile(nextTileId('C'), entry.name, pos);
+        tiles.push_back(communityChestTile);
+        continue;
+      }
+      if (type == "festival") {
+        tiles.push_back(
+            new FestivalTile(nextTileId('F'), entry.name, pos));
+        continue;
+      }
+      if (type == "pph_tax" || type == "pph") {
+        tiles.push_back(new PPHTaxTile(nextTileId('T'), entry.name,
                                      pos, tax.pphFlat, tax.pphPercentage));
-      continue;
-    }
-    if (type == "pbm_tax" || type == "pbm") {
-      tiles.push_back(new PBMTaxTile(nextTileId('T'), entry.name,
+        continue;
+      }
+      if (type == "pbm_tax" || type == "pbm") {
+        tiles.push_back(new PBMTaxTile(nextTileId('T'), entry.name,
                                      pos, tax.pbmFlat));
-      continue;
-    }
-    if (type == "property") {
-      const std::string refCode =
-          entry.propertyCode.empty() ? entry.code : entry.propertyCode;
-      PropertyConfig *propConfig = config.getPropertyConfig(refCode);
-      if (propConfig == nullptr) {
-        throw std::runtime_error("Missing property config for code: " + refCode);
+        continue;
+      }
+      if (type == "property") {
+        const std::string refCode =
+            entry.propertyCode.empty() ? entry.code : entry.propertyCode;
+        PropertyConfig *propConfig = config.getPropertyConfig(refCode);
+        if (propConfig == nullptr) {
+          throw PropertyNotFoundException(refCode);
+        }
+
+        Property *property = buildPropertyFromConfig(*propConfig, config, entry.name);
+        const std::string tileName = getPropertyNameFromConfig(*propConfig, entry.name);
+        tiles.push_back(new PropertyTile(nextTileId('P'), tileName, pos, property));
+        continue;
       }
 
-      Property *property = buildPropertyFromConfig(*propConfig, config, entry.name);
-      const std::string tileName = getPropertyNameFromConfig(*propConfig, entry.name);
-      tiles.push_back(new PropertyTile(nextTileId('P'), tileName, pos, property));
-      continue;
+      throw UnsupportedTileTypeException(entry.type);
     }
-
-    throw std::runtime_error("Unknown board tile type: " + entry.type);
+    tileCount = static_cast<int>(tiles.size());
+  } catch (const NimonspoliException &) {
+    for (Tile *tile : tiles) delete tile;
+    tiles.clear();
+    tileCount = 0;
+    throw;
+  } catch (const std::exception &e) {
+    for (Tile *tile : tiles) delete tile;
+    tiles.clear();
+    tileCount = 0;
+    throw InvalidBoardConfigurationException(e.what());
   }
-  tileCount = static_cast<int>(tiles.size());
 }
 
 void Board::setTiles(std::vector<Tile *> newTiles) {
@@ -241,14 +253,14 @@ void Board::setTiles(std::vector<Tile *> newTiles) {
 
 Tile &Board::getTile(int pos) {
   if (pos < 0 || pos >= static_cast<int>(tiles.size())) {
-    throw std::out_of_range("Board::getTile position out of range");
+    throw InvalidBoardPositionException(pos, static_cast<int>(tiles.size()));
   }
   return *tiles[static_cast<std::size_t>(pos)];
 }
 
 const Tile &Board::getTile(int pos) const {
   if (pos < 0 || pos >= static_cast<int>(tiles.size())) {
-    throw std::out_of_range("Board::getTile position out of range");
+    throw InvalidBoardPositionException(pos, static_cast<int>(tiles.size()));
   }
   return *tiles[static_cast<std::size_t>(pos)];
 }
@@ -274,7 +286,7 @@ int Board::findGoPosition() const {
       return i;
     }
   }
-  throw std::runtime_error("GO tile not found in board layout.");
+  throw TileNotFoundException("GO");
 }
 
 int Board::findNearestStation(int currentPos) const {
@@ -292,11 +304,11 @@ int Board::findNearestStation(int currentPos) const {
     }
   }
 
-  if (bestPos < 0) bestPos = firstStation;
-  if (bestPos < 0) {
-    throw std::runtime_error("No station tile found in board layout.");
+  if (bestPos < 0) bestPos = first_station;
+  if (best_pos < 0) {
+    throw TileNotFoundException("RAILROAD");
   }
-  return bestPos;
+  return best_pos;
 }
 
 int Board::findJailPosition() const {
@@ -318,5 +330,5 @@ int Board::findJailPosition() const {
       }
     }
   }
-  throw std::runtime_error("Jail tile not found in board layout.");
+  throw TileNotFoundException("JAIL");
 }

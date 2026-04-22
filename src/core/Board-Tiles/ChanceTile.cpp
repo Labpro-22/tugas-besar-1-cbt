@@ -3,6 +3,7 @@
 #include "models/Card/ChanceCardType.hpp"
 #include "models/GameManager/GameManager.hpp"
 #include "models/GameManager/Player.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -22,6 +23,9 @@ static ChanceCardType drawChanceCardType() {
     deck = makeChanceDeck();
     std::shuffle(deck.begin(), deck.end(), rng);
   }
+  if (deck.empty()) {
+    throw EmptyDeckException();
+  }
 
   const ChanceCardType cardType = deck.back();
   deck.pop_back();
@@ -33,13 +37,19 @@ ChanceTile::ChanceTile(const std::string &code, const std::string &name,
     : CardTile(code, name, pos, "chance") {}
 
 void ChanceTile::drawCardandExecute(Player &player, GameManager &game) {
-  ChanceCard card(0, drawChanceCardType());
+  try {
+    ChanceCard card(0, drawChanceCardType());
 
-  std::cout << "Kamu mendarat di Petak Kesempatan!\n";
-  std::cout << "Mengambil kartu...\n";
-  std::cout << "Kartu: \"" << card.getDescription() << "\"\n";
+    std::cout << "Kamu mendarat di Petak Kesempatan!\n";
+    std::cout << "Mengambil kartu...\n";
+    std::cout << "Kartu: \"" << card.getDescription() << "\"\n";
 
-  card.execute(&player, &game);
+    card.execute(&player, &game);
+  } catch (const NimonspoliException &) {
+    throw;
+  } catch (const std::exception &e) {
+    throw InternalGameException(std::string("ChanceTile::drawCardandExecute: ") + e.what());
+  }
 }
 
 void ChanceTile::onLanded(Player &player, GameManager &game) {

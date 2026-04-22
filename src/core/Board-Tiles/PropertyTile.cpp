@@ -2,10 +2,15 @@
 #include "models/GameManager/GameManager.hpp"
 #include "models/GameManager/Player.hpp"
 #include "models/Property/Property.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 
 PropertyTile::PropertyTile(const std::string &code, const std::string &name,
-                                                                                                            int pos, Property *prop)
-                : Tile(code, name, pos, "property"), property(prop) {}
+                           int pos, Property *prop)
+    : Tile(code, name, pos, "property"), property(prop) {
+    if (property == nullptr) {
+        throw PropertyUnavailableException(code);
+    }
+}
 
 PropertyTile::~PropertyTile() {
         delete property;
@@ -13,16 +18,36 @@ PropertyTile::~PropertyTile() {
 }
 
 void PropertyTile::applyFestivalEffect(int mult, int dur) {
-        if (property != nullptr) {
-                property->setFestival(mult, dur);
-        }
+    if (!(mult == 1 || mult == 2 || mult == 4 || mult == 8)) {
+        throw InvalidInputException("Festival multiplier harus 1,2,4,atau 8.",
+                                    "INVALID_FESTIVAL_MULTIPLIER");
+    }
+    if (dur < 0 || dur > 3) {
+        throw InvalidInputException("Durasi festival harus 0..3.",
+                                    "INVALID_FESTIVAL_DURATION");
+    }
+    if (property == nullptr) {
+        throw PropertyUnavailableException(getCode());
+    }
+    property->setFestival(mult, dur);
 }
 
-Property &PropertyTile::getProperty() { return *property; }
+Property &PropertyTile::getProperty() {
+    if (property == nullptr) {
+        throw PropertyUnavailableException(getCode());
+    }
+    return *property;
+}
 
-const Property &PropertyTile::getProperty() const { return *property; }
+const Property &PropertyTile::getProperty() const {
+    if (property == nullptr) {
+        throw PropertyUnavailableException(getCode());
+    }
+    return *property;
+}
 
 void PropertyTile::onLanded(Player &player, GameManager &game) {
+    try {
         if (property == nullptr) {
                 return;
         }
@@ -49,4 +74,9 @@ void PropertyTile::onLanded(Player &player, GameManager &game) {
         }
 
         game.executeRentPayer(player, *owner, prop, rentDue);
+    } catch (const NimonspoliException &) {
+        throw;
+    } catch (const std::exception &e) {
+        throw InternalGameException(std::string("PropertyTile::onLanded: ") + e.what());
+    }
 }

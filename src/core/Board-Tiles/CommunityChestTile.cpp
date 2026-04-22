@@ -3,6 +3,7 @@
 #include "models/Card/CommunityCardType.hpp"
 #include "models/GameManager/GameManager.hpp"
 #include "models/GameManager/Player.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -22,6 +23,9 @@ static CommunityCardType drawCommunityCardType() {
     deck = makeCommunityDeck();
     std::shuffle(deck.begin(), deck.end(), rng);
   }
+  if (deck.empty()) {
+    throw EmptyDeckException();
+  }
 
   const CommunityCardType cardType = deck.back();
   deck.pop_back();
@@ -34,13 +38,19 @@ CommunityChestTile::CommunityChestTile(const std::string &code,
 
 void CommunityChestTile::drawCardandExecute(Player &player,
                                             GameManager &game) {
-  CommunityCard card(0, drawCommunityCardType());
+  try {
+    CommunityCard card(0, drawCommunityCardType());
 
-  std::cout << "Kamu mendarat di Petak Dana Umum!\n";
-  std::cout << "Mengambil kartu...\n";
-  std::cout << "Kartu: \"" << card.getDescription() << "\"\n";
+    std::cout << "Kamu mendarat di Petak Dana Umum!\n";
+    std::cout << "Mengambil kartu...\n";
+    std::cout << "Kartu: \"" << card.getDescription() << "\"\n";
 
-  card.execute(&player, &game);
+    card.execute(&player, &game);
+  } catch (const NimonspoliException &) {
+    throw;
+  } catch (const std::exception &e) {
+    throw InternalGameException(std::string("CommunityChestTile::drawCardandExecute: ") + e.what());
+  }
 }
 
 void CommunityChestTile::onLanded(Player &player, GameManager &game) {
