@@ -201,6 +201,17 @@ public:
                               const std::string& reason);
 };
 
+class PropertyRedeemException final : public PropertyException {
+public:
+    PropertyRedeemException(const std::string& propertyCode,
+                            const std::string& reason);
+};
+
+class InvalidPropertyStatusException final : public PropertyException {
+public:
+    explicit InvalidPropertyStatusException(const std::string& statusStr);
+};
+
 class PropertyBuildException final : public PropertyException {
 public:
     PropertyBuildException(const std::string& propertyCode,

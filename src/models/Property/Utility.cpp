@@ -1,5 +1,6 @@
 #include "models/Property/Utility.hpp"
 #include "models/GameManager/Player.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 #include <iostream>
 
 // ctor
@@ -17,7 +18,7 @@ Utility::~Utility() {}
 // Resolve multiplier by owned utility count
 int Utility::resolveMultiplier(int ownedUtilityCount) const {
     if (multiplierTable.empty()) {
-        return 0;
+        throw PropertyException("Tabel multiplier utility kosong.", "PROPERTY_ERROR");
     }
 
     auto exact = multiplierTable.find(ownedUtilityCount);
@@ -74,5 +75,5 @@ void Utility::printTitle() const {
 
 // Utility cannot be demolished 
 void Utility::demolish() {
-    // nothing
+    throw PropertyBuildException(getCode(), "Utility tidak dapat dihancurkan.");
 }

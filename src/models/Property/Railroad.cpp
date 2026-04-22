@@ -1,5 +1,6 @@
 #include "models/Property/Railroad.hpp"
 #include "models/GameManager/Player.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 #include <iostream>
 #include <iterator>
 
@@ -29,7 +30,7 @@ int Railroad::getPropertyDetail() const {
     }
 
     if (rentTable.empty()) {
-        return 0;
+        throw PropertyException("Tabel sewa railroad kosong.", "PROPERTY_ERROR");
     }
 
     int ownedRailroadCount = getOwner()->getRailroadCount();
@@ -75,5 +76,5 @@ void Railroad::printTitle() const {
 
 // Railroad cannot be demolished
 void Railroad::demolish() {
-    // nothing
+    throw PropertyBuildException(getCode(), "Railroad tidak dapat dihancurkan.");
 }

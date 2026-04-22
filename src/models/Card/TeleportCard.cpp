@@ -2,6 +2,7 @@
 #include "core/Board-Tiles/Board.hpp"
 #include "core/Board-Tiles/Tile.hpp"
 #include "views/InputHandler.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 
 // ctor
 TeleportCard::TeleportCard() : SkillCard() {}
@@ -32,8 +33,7 @@ void TeleportCard::use(Player *p, GameManager *gm) {
 
   int boardSize = gm->getBoardSize();
   if (boardSize <= 0) {
-    gm->addLogEntry("TeleportCard gagal: ukuran board tidak valid");
-    return;
+    throw InternalGameException("TeleportCard digunakan saat ukuran board tidak valid.");
   }
 
   InputHandler input;

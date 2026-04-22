@@ -1,5 +1,6 @@
 #include "models/Property/Street.hpp"
 #include "models/GameManager/Player.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 #include <algorithm>
 #include <iostream>
 
@@ -40,6 +41,10 @@ int Street::getPropertyDetail() const {
         return 0;
     }
 
+    if (rentLevels.empty()) {
+        throw PropertyBuildException(getCode(), "Daftar sewa street kosong.");
+    }
+
     if (!rentLevels.empty() &&
         static_cast<int>(level) < static_cast<int>(rentLevels.size())) {
         int rent = rentLevels[static_cast<int>(level)];
@@ -49,7 +54,7 @@ int Street::getPropertyDetail() const {
         return rent;
     }
 
-    return 0;
+    throw PropertyBuildException(getCode(), "Level bangunan di luar daftar sewa.");
 }
 
 /// Print the title information of this street
@@ -113,6 +118,10 @@ bool Street::isMonopolized() const {
 // Activate special event effects on this street
 /// @param multiplier The factor to apply to rent or other calculations.
 void Street::activateEffect(int multiplier) {
+    if (multiplier <= 0) {
+        throw PropertyBuildException(getCode(), "Multiplier festival harus positif.");
+    }
+
     if (multiplier > 0) {
         setFestival(multiplier, getFDur());
     }
@@ -121,6 +130,7 @@ void Street::activateEffect(int multiplier) {
 // Demolish all buildings on this street
 void Street::demolish() {
     level = BuildingLevel::EMPTY;
+    festivalMultiplier = 1;
 }
 
 int Street::getBuildingInvestmentValue() const {

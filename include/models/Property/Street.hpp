@@ -2,6 +2,7 @@
 #include "BuildingLevel.hpp"
 #include "ColorGroup.hpp"
 #include "Property.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -14,6 +15,8 @@ private:
     int houseCost;
     int hotelCost;
     BuildingLevel level;
+    int festivalMultiplier;
+    int festivalDuration;
 
 public:
     // ctor (default color COKLAT)
@@ -69,13 +72,29 @@ public:
     // Get the current building level
     BuildingLevel getBuildingLevel() const { return level; }
 
+    // Get the festival multiplier value
+    int getFestivalMultiplier() const { return festivalMultiplier; }
+
     // Get the rent levels vector
     const std::vector<int> &getRentLevels() const { return rentLevels; }
     std::string getType() const override { return "Street"; }
 
+    int getFMult() const override { return festivalMultiplier; }
+
+    int getFDur() const override { return festivalDuration; }
+
     int getBuildingCount() const override { return static_cast<int>(level); }
 
+    void setFestival(int fmult, int fdur) override {
+        festivalMultiplier = fmult;
+        festivalDuration = fdur;
+    }
+
     void setBuildingCount(int count) override {
+        if (count < static_cast<int>(BuildingLevel::EMPTY) ||
+            count > static_cast<int>(BuildingLevel::HOTEL)) {
+            throw PropertyBuildException(getCode(), "Level bangunan tidak valid.");
+        }
         level = static_cast<BuildingLevel>(count);
     }
 };

@@ -1,4 +1,4 @@
-#include "gui/GuiWindowInternal.hpp"
+﻿#include "gui/GuiWindowInternal.hpp"
 
 using namespace gui_internal;
 
@@ -11,7 +11,7 @@ void drawRectangleRoundedLinesCompat(Rectangle rec, float roundness, int segment
     RAYLIB_VERSION_MAJOR == 5 && RAYLIB_VERSION_MINOR == 5
     DrawRectangleRoundedLinesEx(rec, roundness, segments, lineThick, color);
 #else
-    DrawRectangleRoundedLines(rec, roundness, segments, lineThick, color);
+    DrawRectangleRoundedLines(rec, roundness, segments, color);
 #endif
 }
 

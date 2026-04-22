@@ -52,16 +52,44 @@ ifeq ($(OS),Windows_NT)
 	@echo "Target download ini untuk WSL/Linux. Untuk MSYS2 Windows, jalankan: pacman -S --needed mingw-w64-ucrt-x86_64-raylib pkgconf"
 else
 	@set -e; \
-	if ! command -v apt-get >/dev/null 2>&1; then \
-		echo "make download saat ini mendukung distro WSL berbasis Debian/Ubuntu."; \
-		echo "Install manual: raylib, pkg-config, build-essential, dan dependency X11/OpenGL."; \
-		exit 1; \
-	fi; \
-	sudo apt-get update; \
-	sudo apt-get install -y build-essential pkg-config git cmake libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev; \
-	if apt-cache show libraylib-dev >/dev/null 2>&1; then \
-		sudo apt-get install -y libraylib-dev; \
-	else \
+	if command -v pacman >/dev/null 2>&1; then \
+		echo "Detected Arch Linux / pacman-based system"; \
+		sudo pacman -Syu; \
+		sudo pacman -S --needed base-devel cmake git alsa-lib mesa libx11 libxrandr libxi libxcursor libxinerama pkg-config; \
+		if pacman -Q raylib >/dev/null 2>&1; then \
+			echo "raylib sudah terinstall via pacman"; \
+		else \
+			echo "Installing raylib from AUR using yay/paru..."; \
+			if command -v yay >/dev/null 2>&1; then \
+				yay -S --needed raylib; \
+			elif command -v paru >/dev/null 2>&1; then \
+				paru -S --needed raylib; \
+			else \
+				echo "yay atau paru tidak ditemukan. Install manual: yay -S raylib atau paru -S raylib"; \
+				exit 1; \
+			fi; \
+		fi; \
+	elif command -v apt-get >/dev/null 2>&1; then \
+		echo "Detected Debian/Ubuntu-based system"; \
+		sudo apt-get update; \
+		sudo apt-get install -y build-essential pkg-config git cmake libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev; \
+		if apt-cache show libraylib-dev >/dev/null 2>&1; then \
+			sudo apt-get install -y libraylib-dev; \
+		else \
+			mkdir -p third_party; \
+			if [ ! -d "$(RAYLIB_DIR)/.git" ]; then \
+				rm -rf "$(RAYLIB_DIR)"; \
+				git clone --depth 1 --branch "$(RAYLIB_VERSION)" https://github.com/raysan5/raylib.git "$(RAYLIB_DIR)"; \
+			fi; \
+			cmake -S "$(RAYLIB_DIR)" -B "$(RAYLIB_DIR)/build" -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release; \
+			cmake --build "$(RAYLIB_DIR)/build"; \
+			sudo cmake --install "$(RAYLIB_DIR)/build"; \
+			sudo ldconfig; \
+		fi; \
+	elif command -v dnf >/dev/null 2>&1; then \
+		echo "Detected Fedora/RHEL-based system"; \
+		sudo dnf groupinstall -y "Development Tools"; \
+		sudo dnf install -y cmake git alsa-lib-devel mesa-libGL-devel libX11-devel libXrandr-devel libXi-devel libXcursor-devel libXinerama-devel pkg-config; \
 		mkdir -p third_party; \
 		if [ ! -d "$(RAYLIB_DIR)/.git" ]; then \
 			rm -rf "$(RAYLIB_DIR)"; \
@@ -71,6 +99,9 @@ else
 		cmake --build "$(RAYLIB_DIR)/build"; \
 		sudo cmake --install "$(RAYLIB_DIR)/build"; \
 		sudo ldconfig; \
+	else \
+		echo "Distro Linux tidak terdeteksi. Install raylib secara manual atau lapor maintainer."; \
+		exit 1; \
 	fi; \
 	echo "raylib siap dipakai. Jalankan: make run"
 endif

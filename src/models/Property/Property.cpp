@@ -1,4 +1,5 @@
 #include "models/Property/Property.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 #include <iostream>
 
 // default ctor (status = "BANK")
@@ -80,11 +81,13 @@ void Property::resetToBank() {
 // Mortgage the property, transition status from OWNED to MORTGAGED
 /// @return The mortgage amount given to the player
 int Property::mortgage() {
-    if (canBeMortgaged()) {
-        status = PropertyStatus::MORTGAGED;
-        return mortgageValue;
+    if (status != PropertyStatus::OWNED) {
+        throw PropertyMortgageException(code,
+            "Properti harus dalam status OWNED sebelum digadaikan.");
     }
-    return 0;
+
+    status = PropertyStatus::MORTGAGED;
+    return mortgageValue;
 }
 
 int Property::getRedeemPrice() const {
@@ -96,7 +99,8 @@ int Property::getRedeemPrice() const {
 /// @return The redeem price charged for this property
 int Property::redeem() {
     if (status != PropertyStatus::MORTGAGED) {
-        return 0;
+        throw PropertyRedeemException(code,
+            "Properti harus dalam status MORTGAGED sebelum ditebus.");
     }
 
     const int redeemPrice = getRedeemPrice();
@@ -129,4 +133,6 @@ void Property::setStatusStr(std::string statusStr) {
         status = PropertyStatus::OWNED;
     else if (statusStr == "MORTGAGED")
         status = PropertyStatus::MORTGAGED;
+    else
+        throw InvalidPropertyStatusException(statusStr);
 }
