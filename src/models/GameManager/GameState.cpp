@@ -51,9 +51,8 @@ string GameState::serialize() const {
                 if (jenis == "MoveCard") {
                     ss << " " << card->getValue();
                 } else if (jenis == "DiscountCard") {
-                    if (DiscountCard *dc = dynamic_cast<DiscountCard *>(card)) {
-                        ss << " " << dc->getValue() << " " << dc->getRemainingDuration();
-                    }
+                    const DiscountCard *dc = static_cast<const DiscountCard *>(card);
+                    ss << " " << dc->getValue() << " " << dc->getRemainingDuration();
                 }
 
                 ss << " ";

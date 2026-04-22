@@ -58,12 +58,11 @@ std::string colorGroupLabel(ColorGroup color) {
 }
 
 std::string buildingLabel(const Property* property) {
-    const Street* street = dynamic_cast<const Street*>(property);
-    if (street == nullptr) {
+    if (property == nullptr || property->getType() != "Street") {
         return "-";
     }
 
-    const int buildingCount = street->getBuildingCount();
+    const int buildingCount = property->getBuildingCount();
     if (buildingCount <= 0) {
         return "Tanpa bangunan";
     }
@@ -91,7 +90,8 @@ void PropertyView::showDeed(Property* property) const {
     std::cout << "+" << std::string(width, '=') << "+\n";
     std::cout << "|        AKTA KEPEMILIKAN\n";
 
-    if (const Street* street = dynamic_cast<const Street*>(property)) {
+    if (property->getType() == "Street") {
+        const Street* street = static_cast<const Street*>(property);
         std::cout << "|    [" << colorGroupLabel(street->getColorGroup()) << "] "
                   << property->getName() << " (" << property->getCode() << ")\n";
     } else {
@@ -103,7 +103,8 @@ void PropertyView::showDeed(Property* property) const {
     std::cout << "| Nilai Gadai       : M" << property->getMortgageValue() << "\n";
     std::cout << "+--------------------------------+\n";
 
-    if (const Street* street = dynamic_cast<const Street*>(property)) {
+    if (property->getType() == "Street") {
+        const Street* street = static_cast<const Street*>(property);
         const std::vector<int>& rents = street->getRentLevels();
         if (!rents.empty()) {
             std::cout << "| Sewa (unimproved) : M" << rents[0] << "\n";
@@ -126,11 +127,13 @@ void PropertyView::showDeed(Property* property) const {
         std::cout << "+--------------------------------+\n";
         std::cout << "| Harga Rumah       : M" << street->getHouseCost() << "\n";
         std::cout << "| Harga Hotel       : M" << street->getHotelCost() << "\n";
-    } else if (const Railroad* railroad = dynamic_cast<const Railroad*>(property)) {
+    } else if (property->getType() == "Railroad") {
+        const Railroad* railroad = static_cast<const Railroad*>(property);
         for (const auto& [ownedCount, rent] : railroad->getRentTable()) {
             std::cout << "| Sewa (" << ownedCount << " stasiun)    : M" << rent << "\n";
         }
-    } else if (const Utility* utility = dynamic_cast<const Utility*>(property)) {
+    } else if (property->getType() == "Utility") {
+        const Utility* utility = static_cast<const Utility*>(property);
         for (const auto& [ownedCount, multiplier] : utility->getMultiplierTable()) {
             std::cout << "| Multiplier (" << ownedCount << " util) : x" << multiplier << "\n";
         }
@@ -249,7 +252,7 @@ void PropertyView::showRedeemOptions(const std::vector<Property*>& mortgaged) co
                       << mortgaged[i]->getName()
                       << " (" << mortgaged[i]->getCode() << ")"
                       << " | Harga Tebus: M"
-                      << (mortgaged[i]->getMortgageValue() * 2)
+                      << (mortgaged[i]->getBuyPrice())
                       << "\n";
         }
     }

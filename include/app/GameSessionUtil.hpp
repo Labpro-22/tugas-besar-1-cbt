@@ -95,12 +95,12 @@ inline std::string colorGroupLabel(ColorGroup color) {
     return "DEFAULT";
 }
 
-inline std::string buildingLabel(const Street* street) {
-    if (street == nullptr) {
+inline std::string buildingLabel(const Property* property) {
+    if (property == nullptr || property->getType() != "Street") {
         return "-";
     }
 
-    const int buildingCount = street->getBuildingCount();
+    const int buildingCount = property->getBuildingCount();
     if (buildingCount <= 0) {
         return "0 rumah";
     }
@@ -152,12 +152,12 @@ inline std::string skillCardDisplayLabel(const Card* card) {
 }
 
 inline std::string resolveTileColorKey(const Tile& tile) {
-    const PropertyTile* propertyTile = dynamic_cast<const PropertyTile*>(&tile);
-    if (propertyTile != nullptr) {
-        const Property& property = propertyTile->getProperty();
-        const Street* street = dynamic_cast<const Street*>(&property);
-        if (street != nullptr) {
-            return colorGroupKey(street->getColorGroup());
+    if (tile.getType() == "property") {
+        const PropertyTile& propTile = static_cast<const PropertyTile&>(tile);
+        const Property& property = propTile.getProperty();
+        if (property.getType() == "Street") {
+            const Street& street = static_cast<const Street&>(property);
+            return colorGroupKey(street.getColorGroup());
         }
         if (property.getType() == "Utility") {
             return "AB";

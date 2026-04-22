@@ -114,7 +114,7 @@ void GameSession::awardSkillCardAtTurnStart() {
         1, static_cast<int>(player.getHand().size()),
         "Pilih nomor kartu yang ingin dibuang: ");
     SkillCard* discardCard =
-        dynamic_cast<SkillCard*>(player.getHand()[static_cast<std::size_t>(discardChoice - 1)]);
+        static_cast<SkillCard*>(player.getHand()[static_cast<std::size_t>(discardChoice - 1)]);
     if (discardCard != nullptr) {
         std::cout << discardCard->getType() << " telah dibuang.\n";
         discardSkillCard(player, discardCard);
@@ -161,12 +161,9 @@ bool GameSession::executeSkillCard(Player& player, SkillCard* card) {
 }
 
 bool GameSession::executeMoveCard(Player& player, SkillCard& card) {
-    MoveCard* moveCard = dynamic_cast<MoveCard*>(&card);
-    if (moveCard == nullptr) {
-        return false;
-    }
+    MoveCard& moveCard = static_cast<MoveCard&>(card);
 
-    const int steps = moveCard->getSteps();
+    const int steps = moveCard.getSteps();
     std::cout << "MoveCard diaktifkan! Bergerak maju " << steps << " petak.\n";
     game.moveCurrentPlayer(steps);
     std::cout << "Bidak mendarat di: "
@@ -178,19 +175,16 @@ bool GameSession::executeMoveCard(Player& player, SkillCard& card) {
 }
 
 bool GameSession::executeDiscountCard(Player& player, SkillCard& card) {
-    DiscountCard* discountCard = dynamic_cast<DiscountCard*>(&card);
-    if (discountCard == nullptr) {
-        return false;
-    }
+    DiscountCard& discountCard = static_cast<DiscountCard&>(card);
 
-    player.applyDiscount(discountCard->getDiscountPercent(),
-                         discountCard->getRemainingDuration());
+    player.applyDiscount(discountCard.getDiscountPercent(),
+                         discountCard.getRemainingDuration());
     std::cout << "DiscountCard diaktifkan! Diskon "
-              << discountCard->getDiscountPercent()
+              << discountCard.getDiscountPercent()
               << "% aktif untuk giliran ini.\n";
     game.getLogger().log(
         game.getCurrentTurn(), player.getUsername(), "KARTU",
-        "DiscountCard aktif " + std::to_string(discountCard->getDiscountPercent()) +
+        "DiscountCard aktif " + std::to_string(discountCard.getDiscountPercent()) +
             "%");
     return true;
 }
@@ -297,10 +291,7 @@ bool GameSession::executeDemolitionCard(Player& player, SkillCard&) {
         std::cout << (i + 1) << ". " << target->getCode() << " | "
                   << target->getName() << " | pemilik: "
                   << (target->getOwner() ? target->getOwner()->getUsername() : "BANK");
-        Street* street = dynamic_cast<Street*>(target);
-        if (street != nullptr) {
-            std::cout << " | " << buildingLabel(street);
-        }
+        std::cout << " | " << buildingLabel(target);
         std::cout << "\n";
     }
 

@@ -64,11 +64,10 @@ bool GameSessionPersistence::save(const GameSession& session,
         file << player.getCardCount() << "\n";
 
         for (Card* card : player.getHand()) {
-            const DiscountCard* discountCard =
-                dynamic_cast<const DiscountCard*>(card);
             file << card->getType() << " " << card->getValue();
-            if (discountCard != nullptr) {
-                file << " " << discountCard->getRemainingDuration();
+            if (card->getType() == "DiscountCard") {
+                const DiscountCard* dc = static_cast<const DiscountCard*>(card);
+                file << " " << dc->getRemainingDuration();
             } else {
                 file << " 0";
             }

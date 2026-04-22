@@ -90,10 +90,9 @@ GameSnapshot GameSession::buildSnapshot() const {
         tileSnapshot.type = tile.getType();
         tileSnapshot.colorKey = resolveTileColorKey(tile);
 
-        const PropertyTile* propertyTile =
-            dynamic_cast<const PropertyTile*>(&tile);
-        if (propertyTile != nullptr) {
-            const Property& property = propertyTile->getProperty();
+        if (tile.getType() == "property") {
+            const PropertyTile& propTile = static_cast<const PropertyTile&>(tile);
+            const Property& property = propTile.getProperty();
             if (property.getOwner() != nullptr) {
                 tileSnapshot.owner = property.getOwner()->getUsername();
             }
@@ -205,13 +204,10 @@ std::string GameSession::buildPlayerDetailText(const Player& player) const {
                 oss << " [M]";
             }
 
-            Street* street = dynamic_cast<Street*>(property);
-            if (street != nullptr) {
-                oss << " | " << buildingLabel(street);
-                if (street->getFMult() > 1) {
-                    oss << " | Festival x" << street->getFMult() << " ("
-                        << street->getFDur() << "t)";
-                }
+            oss << " | " << buildingLabel(property);
+            if (property->getFMult() > 1) {
+                oss << " | Festival x" << property->getFMult() << " ("
+                    << property->getFDur() << "t)";
             }
             oss << "\n";
 

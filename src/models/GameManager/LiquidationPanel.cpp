@@ -46,8 +46,8 @@ bool LiquidationPanel::sellToBank(Property *prop) {
         }
 
         int sellValue = prop->getBuyPrice();
-        Street *street = dynamic_cast<Street *>(prop);
-        if (street != nullptr) {
+        if (prop->getType() == "Street") {
+            const Street *street = static_cast<const Street *>(prop);
             const int buildingCount = street->getBuildingCount();
             if (buildingCount >= static_cast<int>(BuildingLevel::HOTEL)) {
                 sellValue += street->getHotelCost() / 2;

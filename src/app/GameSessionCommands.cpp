@@ -457,7 +457,7 @@ void GameSession::handleUseAbility() {
     }
 
     SkillCard* selected =
-        dynamic_cast<SkillCard*>(hand[static_cast<std::size_t>(choice - 1)]);
+        static_cast<SkillCard*>(hand[static_cast<std::size_t>(choice - 1)]);
     if (selected == nullptr) {
         std::cout << "Kartu terpilih tidak valid.\n";
         return;

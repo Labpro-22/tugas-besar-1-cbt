@@ -24,9 +24,9 @@ std::vector<Property*> GameSessionQueries::getAllProperties() const {
     std::vector<Property*> properties;
     for (int i = 0; i < board.getTileCount(); ++i) {
         Tile& tile = board.getTile(i);
-        PropertyTile* propertyTile = dynamic_cast<PropertyTile*>(&tile);
-        if (propertyTile != nullptr) {
-            properties.push_back(&propertyTile->getProperty());
+        if (tile.getType() == "property") {
+            PropertyTile& propTile = static_cast<PropertyTile&>(tile);
+            properties.push_back(&propTile.getProperty());
         }
     }
     return properties;
@@ -92,10 +92,10 @@ std::vector<Street*> GameSessionQueries::getBuildableStreets() const {
     std::vector<Street*> result;
     const Player& currentPlayer = game.getCurrentPlayer();
     for (Property* property : currentPlayer.getProperties()) {
-        Street* street = dynamic_cast<Street*>(property);
-        if (street == nullptr) {
+        if (property == nullptr || property->getType() != "Street") {
             continue;
         }
+        Street* street = static_cast<Street*>(property);
         if (street->getStatus() != PropertyStatus::OWNED) {
             continue;
         }

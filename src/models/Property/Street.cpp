@@ -90,9 +90,11 @@ bool Street::isMonopolized() const {
 
     int sameColorOwned = 0;
     for (Property *prop : owner->getProperties()) {
-        Street *street = dynamic_cast<Street *>(prop);
-        if (street != nullptr && street->getColorGroup() == color) {
-            ++sameColorOwned;
+        if (prop != nullptr && prop->getType() == "Street") {
+            const Street *street = static_cast<const Street *>(prop);
+            if (street->getColorGroup() == color) {
+                ++sameColorOwned;
+            }
         }
     }
 
