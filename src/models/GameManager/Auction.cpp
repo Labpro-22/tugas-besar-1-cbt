@@ -1,4 +1,5 @@
 #include "models/GameManager/Auction.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 #include <iostream>
 #include <algorithm>
 #include <exception>
@@ -100,6 +101,8 @@ void Auction::determineWinner() {
              << " dengan harga " << currentBid << "!\n\n";
     } else {
         cout << "Tidak ada yang menawar. Properti tidak terjual.\n\n";
+        throw AuctionFailedException("Semua peserta lelang memilih pass. Properti " + 
+                                   property->getName() + " tidak terjual.");
     }
 }
 

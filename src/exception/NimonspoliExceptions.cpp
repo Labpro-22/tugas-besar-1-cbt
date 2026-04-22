@@ -284,6 +284,9 @@ AuctionStateException::AuctionStateException(const std::string& reason)
     : AuctionException("State lelang tidak valid. " + reason,
                        "AUCTION_STATE_ERROR") {}
 
+AuctionFailedException::AuctionFailedException(const std::string& reason)
+    : AuctionException("Lelang gagal. " + reason, "AUCTION_FAILED") {}
+
 CardException::CardException(const std::string& message,
                              const std::string& errorCode)
     : NimonspoliException(message, errorCode) {}

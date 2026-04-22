@@ -266,6 +266,11 @@ public:
     explicit AuctionStateException(const std::string& reason);
 };
 
+class AuctionFailedException final : public AuctionException {
+public:
+    explicit AuctionFailedException(const std::string& reason);
+};
+
 class CardException : public NimonspoliException {
 public:
     explicit CardException(const std::string& message,

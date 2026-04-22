@@ -1,4 +1,5 @@
 #include "models/GameManager/GameManager.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 #include "core/Board-Tiles/Board.hpp"
 #include "core/Board-Tiles/PropertyTile.hpp"
 #include "core/Board-Tiles/Tile.hpp"
@@ -119,7 +120,12 @@ Player &GameManager::getWinner() {
       }
     }
   }
-  return players[std::max(0, winnerIndex)];
+
+  if (winnerIndex < 0) {
+    throw InvalidTurnStateException("Tidak ada pemenang - semua pemain telah bangkrut");
+  }
+
+  return players[winnerIndex];
 }
 
 vector<Player> &GameManager::getPlayers() { return players; }
@@ -146,13 +152,18 @@ void GameManager::movePlayerTo(Player &player, int targetPosition,
                                bool grantGoSalary) {
   const int boardSize = getBoardSize();
   if (boardSize <= 0) {
-    return;
+    throw InvalidBoardPositionException(targetPosition, boardSize);
   }
 
   const int oldPosition = player.getPosition();
   int normalizedTarget = targetPosition % boardSize;
   if (normalizedTarget < 0) {
     normalizedTarget += boardSize;
+  }
+
+  // Validasi bahwa normalizedTarget dalam range yang valid
+  if (normalizedTarget < 0 || normalizedTarget >= boardSize) {
+    throw InvalidBoardPositionException(targetPosition, boardSize);
   }
 
   player.setPosition(normalizedTarget);
