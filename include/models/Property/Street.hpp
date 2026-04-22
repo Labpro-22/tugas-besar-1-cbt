@@ -6,8 +6,6 @@
 #include <iostream>
 #include <vector>
 
-class Player;
-
 class Street : public Property {
 private:
     int buyPrice;

@@ -37,7 +37,7 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
   }
 
   if (communityType == CommunityCardType::BIRTHDAY) {
-    // Spesifikasi: "Dapatkan M100 dari setiap pemain"
+    // Get M100 dari setiap pemain
     const int giftAmount = 100;
 
     for (Player &other : gm->getPlayers()) {
@@ -60,8 +60,7 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
     const int doctorFee = 700;
     if (p->canPay(doctorFee)) {
       p->reduceCash(doctorFee);
-      std::cout << "Kamu membayar M" << doctorFee << " ke Bank."
-                << " Sisa Uang = M" << p->getCash() << ".\n";
+      std::cout << "Kamu membayar M" << doctorFee << " ke Bank." << " Sisa Uang = M" << p->getCash() << ".\n";
       gm->addLogEntry(p->getUsername() + " membayar biaya dokter M" + std::to_string(doctorFee));
     } else {
       std::cout << "Kamu tidak mampu membayar biaya dokter! (M" << doctorFee << ")\n";
@@ -72,7 +71,7 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
   }
 
   if (communityType == CommunityCardType::CAMPAIGN_FEE) {
-    // Spesifikasi: "Bayar M200 kepada setiap pemain"
+    // Pay M200 kepada setiap pemain
     const int campaignFee = 200;
     for (Player &other : gm->getPlayers()) {
       if (&other == p || other.getStatus() == BANKRUPT) {

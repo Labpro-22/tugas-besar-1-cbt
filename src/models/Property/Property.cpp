@@ -51,14 +51,23 @@ int Property::mortgage() {
     return 0;
 }
 
+int Property::getRedeemPrice() const {
+    return getBuyPrice();
+}
+
 // Redeem (un-mortgage) the property, transition status from MORTGAGED back to OWNED
-/// @note Player must pay back mortgage value plus interest to redeem.
-void Property::redeem() {
-    if (status == PropertyStatus::MORTGAGED) {
-        status = PropertyStatus::OWNED;
+/// @note Player must pay back the full buy price to redeem
+/// @return The redeem price charged for this property
+int Property::redeem() {
+    if (status != PropertyStatus::MORTGAGED) {
+        return 0;
     }
 
-    // later
+    const int redeemPrice = getRedeemPrice();
+
+    // Keep object state consistent: a redeemed property should be owned by a player.
+    status = (owner != nullptr) ? PropertyStatus::OWNED : PropertyStatus::BANK;
+    return redeemPrice;
 }
 
 void Property::setCode(std::string newCode) { code = newCode; }

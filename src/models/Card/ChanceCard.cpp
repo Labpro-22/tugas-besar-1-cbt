@@ -32,6 +32,10 @@ void ChanceCard::execute(Player *p, GameManager *gm) {
   }
 
   int boardSize = gm->getBoardSize();
+  if (boardSize <= 0) {
+    gm->addLogEntry("ChanceCard gagal: ukuran board tidak valid");
+    return;
+  }
 
   switch (chanceType) {
   case ChanceCardType::GO_TO_NEAREST_STATION: {

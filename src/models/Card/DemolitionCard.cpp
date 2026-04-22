@@ -54,9 +54,7 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
     }
 
     InputHandler input;
-    const int choice =
-        input.readChoice(1, static_cast<int>(targets.size()),
-                         "Pilih properti untuk DemolitionCard: ");
+    const int choice = input.readChoice(1, static_cast<int>(targets.size()), "Pilih properti untuk DemolitionCard: ");
 
     Property* target = targets[static_cast<std::size_t>(choice - 1)];
     target->demolish();

@@ -27,12 +27,15 @@ void MoveCard::use(Player *p, GameManager *gm) {
   }
 
   if (!p->canUseAbility()) {
-    gm->addLogEntry(p->getUsername() +
-                    " gagal menggunakan MoveCard (ability sudah dipakai)");
+    gm->addLogEntry(p->getUsername() + " gagal menggunakan MoveCard (ability sudah dipakai)");
     return;
   }
 
   int boardSize = gm->getBoardSize();
+  if (boardSize <= 0) {
+    gm->addLogEntry("MoveCard gagal: ukuran board tidak valid");
+    return;
+  }
 
   if (p == &gm->getCurrentPlayer()) {
     gm->moveCurrentPlayer(steps);
@@ -48,6 +51,5 @@ void MoveCard::use(Player *p, GameManager *gm) {
   p->setUsedAbility();
   p->removeCard(this);
 
-  gm->addLogEntry("MoveCard digunakan sebanyak " + std::to_string(steps) +
-                  " langkah");
+  gm->addLogEntry("MoveCard digunakan sebanyak " + std::to_string(steps) + " langkah");
 }

@@ -1,14 +1,10 @@
 #include "../../../include/models/Property/Railroad.hpp"
+#include "../../../include/models/GameManager/Player.hpp"
 #include <iostream>
+#include <iterator>
 
 // ctor
-Railroad::Railroad() : Property(), buyPrice(0) {
-    // Default rent table: key = number of railroad owned, value = rent.
-    rentTable[1] = 25;
-    rentTable[2] = 50;
-    rentTable[3] = 100;
-    rentTable[4] = 200;
-}
+Railroad::Railroad() : Property(), buyPrice(0), rentTable() {}
 
 // custom ctor
 /// @param buyPrice The purchase price of the railroad
@@ -26,7 +22,7 @@ int Railroad::getBuyPrice() const {
 }
 
 // Get property detail 
-/// @return The rent amount to be paid based on owned railroad count (fallback to first entry).
+/// @return The rent amount to be paid based on owned railroad count
 int Railroad::getPropertyDetail() const {
     if (getOwner() == nullptr) {
         return 0;
@@ -36,13 +32,23 @@ int Railroad::getPropertyDetail() const {
         return 0;
     }
 
-    // placeholder
-    auto singleRailroadRent = rentTable.find(1);
-    if (singleRailroadRent != rentTable.end()) {
-        return singleRailroadRent->second;
+    int ownedRailroadCount = getOwner()->getRailroadCount();
+    if (ownedRailroadCount <= 0) {
+        ownedRailroadCount = 1;
     }
 
-    return rentTable.begin()->second;
+    auto exact = rentTable.find(ownedRailroadCount);
+    if (exact != rentTable.end()) {
+        return exact->second;
+    }
+
+    // Fallback to the nearest lower configured tier
+    auto upper = rentTable.upper_bound(ownedRailroadCount);
+    if (upper == rentTable.begin()) {
+        return upper->second;
+    }
+
+    return std::prev(upper)->second;
 }
 
 // Print the title information of this Railroad

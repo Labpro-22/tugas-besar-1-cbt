@@ -1,8 +1,7 @@
 #pragma once
 #include "PropertyStatus.hpp"
+#include "Player.hpp"
 #include <string>
-
-class Player;
 
 class Property {
 private:
@@ -59,8 +58,11 @@ public:
     // Mortgage the property, returns the mortgage amount given to the player
     virtual int mortgage();
 
-    // Redeem (un-mortgage) the property, requires payment from player.
-    virtual void redeem();
+    // Get the amount required to redeem this property.
+    virtual int getRedeemPrice() const;
+
+    // Redeem (un-mortgage) the property, returns the required redeem amount.
+    virtual int redeem();
 
     // ---- Must implement functions ----
 

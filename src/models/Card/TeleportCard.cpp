@@ -29,15 +29,16 @@ void TeleportCard::use(Player *p, GameManager *gm) {
   }
 
   int boardSize = gm->getBoardSize();
+  if (boardSize <= 0) {
+    gm->addLogEntry("TeleportCard gagal: ukuran board tidak valid");
+    return;
+  }
 
   InputHandler input;
-  const int targetTile = input.readChoice(
-      0, boardSize - 1,
-      "Pilih tile tujuan teleport (0-" + std::to_string(boardSize - 1) + "): ");
+  const int targetTile = input.readChoice(0, boardSize - 1, "Pilih tile tujuan teleport (0-" + std::to_string(boardSize - 1) + "): ");
 
   gm->movePlayerTo(*p, targetTile, true);
-  gm->addLogEntry(p->getUsername() + " berteleportasi ke tile " +
-                  std::to_string(targetTile));
+  gm->addLogEntry(p->getUsername() + " berteleportasi ke tile " + std::to_string(targetTile));
   markAsUsed();
   p->setUsedAbility();
   p->removeCard(this);

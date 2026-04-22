@@ -1,12 +1,9 @@
 #include "../../../include/models/Property/Utility.hpp"
+#include "../../../include/models/GameManager/Player.hpp"
 #include <iostream>
 
 // ctor
-Utility::Utility() : Property(), buyPrice(0) {
-    // Default multiplier table: key = owned utility count, value = rent multiplier
-    multiplierTable[1] = 4;
-    multiplierTable[2] = 10;
-}
+Utility::Utility() : Property(), buyPrice(0), multiplierTable() {}
 
 // custom ctor
 /// @param buyPrice The purchase price of the street
@@ -47,13 +44,10 @@ int Utility::getPropertyDetail() const {
         return 0;
     }
 
-    // later
-    int ownedUtilityCount = 1;
-    int multiplier = resolveMultiplier(ownedUtilityCount);
+    const int ownedUtilityCount = std::max(1, getOwner()->getUtilityCount());
+    const int multiplier = resolveMultiplier(ownedUtilityCount);
 
-    // later
-    int diceTotal = 0;
-    return diceTotal * multiplier;
+    return multiplier;
 }
 
 // Print utility title information

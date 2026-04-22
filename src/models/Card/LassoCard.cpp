@@ -51,14 +51,11 @@ void LassoCard::use(Player *p, GameManager *gm) {
     }
 
     InputHandler input;
-    const int choice =
-        input.readChoice(1, static_cast<int>(candidates.size()),
-                         "Pilih target LassoCard: ");
+    const int choice = input.readChoice(1, static_cast<int>(candidates.size()), "Pilih target LassoCard: ");
 
     Player *target = candidates[static_cast<std::size_t>(choice - 1)];
     target->setPosition(p->getPosition());
-    gm->addLogEntry(p->getUsername() + " menarik " + target->getUsername() +
-        " dengan LassoCard");
+    gm->addLogEntry(p->getUsername() + " menarik " + target->getUsername() + " dengan LassoCard");
     markAsUsed();
     p->setUsedAbility();
     p->removeCard(this);

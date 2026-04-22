@@ -1,6 +1,5 @@
 #pragma once
 #include "../../include/core/data/Configuration.hpp"
-#include "../Card/DiscardPile.hpp"
 #include "../Card/CardDeck.hpp"
 #include "../Card/ChanceCard.hpp"
 #include "../Card/CommunityCard.hpp"
@@ -29,7 +28,6 @@ private:
   CardDeck<ChanceCard> chanceDeck;
   CardDeck<CommunityCard> chestDeck;
   CardDeck<SkillCard> skillDeck;
-  DiscardPile discardPile;
   Configuration config;
   TransactionLogger logger;
   FestivalEffect festivalEffect;

@@ -1,9 +1,8 @@
 #pragma once
 #include "ActionCard.hpp"
 #include "ChanceCardType.hpp"
-
-class Player;
-class GameManager;
+#include "Player.hpp"
+#include "GameManager.hpp"
 
 class ChanceCard : public ActionCard {
 private:
