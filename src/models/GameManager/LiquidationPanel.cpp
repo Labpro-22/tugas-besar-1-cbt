@@ -1,7 +1,7 @@
-#include "../../../include/models/GameManager/LiquidationPanel.hpp"
-#include "../../../include/models/Property/Property.hpp"
-#include "../../../include/models/Property/Street.hpp"
-#include "../../../include/models/GameManager/Player.hpp"
+#include "models/GameManager/LiquidationPanel.hpp"
+#include "models/Property/Property.hpp"
+#include "models/Property/Street.hpp"
+#include "models/GameManager/Player.hpp"
 #include <algorithm>
 using namespace std;
 

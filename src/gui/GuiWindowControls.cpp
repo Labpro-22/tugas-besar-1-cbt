@@ -1,6 +1,21 @@
-﻿#include "../../../include/gui/GuiWindowInternal.hpp"
+#include "gui/GuiWindowInternal.hpp"
 
 using namespace gui_internal;
+
+namespace {
+
+void drawRectangleRoundedLinesCompat(Rectangle rec, float roundness, int segments,
+                                     float lineThick, Color color) {
+#if defined(RAYLIB_VERSION_MAJOR) && \
+    defined(RAYLIB_VERSION_MINOR) && \
+    RAYLIB_VERSION_MAJOR == 5 && RAYLIB_VERSION_MINOR == 5
+    DrawRectangleRoundedLinesEx(rec, roundness, segments, lineThick, color);
+#else
+    DrawRectangleRoundedLines(rec, roundness, segments, lineThick, color);
+#endif
+}
+
+}  // namespace
 
 Rectangle GuiWindow::gameOverPopupCardRect() const {
     const float cardWidth = 660.0F;
@@ -431,7 +446,7 @@ void GuiWindow::drawGameOverPopup(const GameSnapshot& currentSnapshot) const {
     const Color statValue = Color{115, 76, 66, 255};
 
     DrawRectangleRounded(cardRect, 0.02F, 6, cardBase);
-    DrawRectangleRoundedLines(cardRect, 0.02F, 6, border);
+    drawRectangleRoundedLinesCompat(cardRect, 0.02F, 6, 2.0F, border);
 
     drawTextCentered(font, "PERMAINAN SELESAI",
                      Rectangle{cardRect.x + 20.0F, cardRect.y + 26.0F,
@@ -464,7 +479,8 @@ void GuiWindow::drawGameOverPopup(const GameSnapshot& currentSnapshot) const {
         Rectangle{badgeRect.x + 1.0F, badgeRect.y + 1.0F, badgeRect.width - 2.0F,
                   badgeRect.height / 2.0F},
         0.16F, 10, badgeTop);
-    DrawRectangleRoundedLines(badgeRect, 0.16F, 10, Color{118, 99, 22, 255});
+    drawRectangleRoundedLinesCompat(badgeRect, 0.16F, 10, 2.0F,
+                                    Color{118, 99, 22, 255});
 
     const int badgeNumber = winnerIndex >= 0 ? winnerIndex + 1 : 1;
     drawTextCentered(font, std::to_string(badgeNumber), badgeRect, 48.0F, 1.0F,

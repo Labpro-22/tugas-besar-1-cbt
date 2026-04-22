@@ -1,5 +1,5 @@
-﻿#include "../../../include/gui/GuiWindow.hpp"
-#include "../../../include/gui/GuiWindowInternal.hpp"
+#include "gui/GuiWindow.hpp"
+#include "gui/GuiWindowInternal.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -94,7 +94,7 @@ int GuiWindow::run() {
         if (georgiaFont.texture.id != 0 && georgiaFont.glyphCount > 0) {
             fontLoaded = true;
             SetTextureFilter(georgiaFont.texture, TEXTURE_FILTER_BILINEAR);
-            std::cout << "âœ“ Font loaded: " << fontPaths[fontIdx] << std::endl;
+            std::cout << "✓ Font loaded: " << fontPaths[fontIdx] << std::endl;
             break;
         }
     }

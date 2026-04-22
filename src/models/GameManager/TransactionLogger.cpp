@@ -1,4 +1,4 @@
-#include "../../../include/models/GameManager/TransactionLogger.hpp"
+#include "models/GameManager/TransactionLogger.hpp"
 #include <algorithm>
 
 

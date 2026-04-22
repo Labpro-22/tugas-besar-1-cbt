@@ -1,15 +1,15 @@
-#include "../../../include/app/GameSessionQueries.hpp"
-#include "../../../include/app/GameSessionUtil.hpp"
+#include "app/GameSessionQueries.hpp"
+#include "app/GameSessionUtil.hpp"
 
-#include "../../../include/core/Board-Tiles/Board.hpp"
-#include "../../../include/core/Board-Tiles/PropertyTile.hpp"
-#include "../../../include/core/Board-Tiles/Tile.hpp"
-#include "../../../include/core/data/Configuration.hpp"
-#include "../../../include/models/GameManager/GameManager.hpp"
-#include "../../../include/models/GameManager/Player.hpp"
-#include "../../../include/models/Property/Property.hpp"
-#include "../../../include/models/Property/PropertyStatus.hpp"
-#include "../../../include/models/Property/Street.hpp"
+#include "core/Board-Tiles/Board.hpp"
+#include "core/Board-Tiles/PropertyTile.hpp"
+#include "core/Board-Tiles/Tile.hpp"
+#include "data/Configuration.hpp"
+#include "models/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
+#include "models/Property/Property.hpp"
+#include "models/Property/PropertyStatus.hpp"
+#include "models/Property/Street.hpp"
 
 #include <algorithm>
 

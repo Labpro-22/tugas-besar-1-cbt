@@ -1,5 +1,5 @@
-#include "../../../include/models/Property/Street.hpp"
-#include "../../../include/models/GameManager/Player.hpp"
+#include "models/Property/Street.hpp"
+#include "models/GameManager/Player.hpp"
 #include <algorithm>
 #include <iostream>
 

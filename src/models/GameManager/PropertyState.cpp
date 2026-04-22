@@ -1,4 +1,4 @@
-#include "../../../include/models/GameManager/PropertyState.hpp"
+#include "models/GameManager/PropertyState.hpp"
 
 
 PropertyState::PropertyState(int fmult, int fdur, int buildingLevel) : fmult(fmult), fdur(fdur), buildingLevel(buildingLevel) {};

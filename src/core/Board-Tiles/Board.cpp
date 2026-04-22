@@ -1,34 +1,62 @@
-#include "../../../include/core/Board-Tiles/Board.hpp"
-#include "../../../include/core/Board-Tiles/ChanceTile.hpp"
-#include "../../../include/core/Board-Tiles/ActionTile.hpp"
-#include "../../../include/core/Board-Tiles/CommunityChestTile.hpp"
-#include "../../../include/core/Board-Tiles/FestivalTile.hpp"
-#include "../../../include/core/Board-Tiles/FreeParkingTile.hpp"
-#include "../../../include/core/Board-Tiles/GoTile.hpp"
-#include "../../../include/core/Board-Tiles/GoToJailTile.hpp"
-#include "../../../include/core/Board-Tiles/JailTile.hpp"
-#include "../../../include/core/Board-Tiles/PBMTaxTile.hpp"
-#include "../../../include/core/Board-Tiles/PPHTaxTile.hpp"
-#include "../../../include/core/Board-Tiles/PropertyTile.hpp"
-#include "../../../include/core/Board-Tiles/Tile.hpp"
-#include "../../../include/models/Card/Card.hpp"
-#include "../../../include/models/Card/CardDeck.hpp"
-#include "../../../include/models/Property/Property.hpp"
-#include "../../../include/models/Property/Railroad.hpp"
-#include "../../../include/models/Property/Street.hpp"
-#include "../../../include/models/Property/Utility.hpp"
-#include "../../data/Configuration.hpp"
+#include "core/Board-Tiles/Board.hpp"
+#include "core/Board-Tiles/ChanceTile.hpp"
+#include "core/Board-Tiles/ActionTile.hpp"
+#include "core/Board-Tiles/CommunityChestTile.hpp"
+#include "core/Board-Tiles/FestivalTile.hpp"
+#include "core/Board-Tiles/FreeParkingTile.hpp"
+#include "core/Board-Tiles/GoTile.hpp"
+#include "core/Board-Tiles/GoToJailTile.hpp"
+#include "core/Board-Tiles/JailTile.hpp"
+#include "core/Board-Tiles/PBMTaxTile.hpp"
+#include "core/Board-Tiles/PPHTaxTile.hpp"
+#include "core/Board-Tiles/PropertyTile.hpp"
+#include "core/Board-Tiles/Tile.hpp"
+#include "models/Property/Property.hpp"
+#include "models/Property/Railroad.hpp"
+#include "models/Property/Street.hpp"
+#include "models/Property/Utility.hpp"
+#include "data/Configuration.hpp"
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 
-// helper internal file-scope (tanpa anonymous namespace / class tracker)
-static CardDeck<Card> chanceDeck;
-static CardDeck<Card> communityChestDeck;
+namespace {
+
+std::string toUpper(std::string text) {
+  std::transform(text.begin(), text.end(), text.begin(), [](unsigned char ch) {
+    return static_cast<char>(std::toupper(ch));
+  });
+  return text;
+}
+
+std::string toLower(std::string text) {
+  std::transform(text.begin(), text.end(), text.begin(), [](unsigned char ch) {
+    return static_cast<char>(std::tolower(ch));
+  });
+  return text;
+}
+
+ColorGroup parseColorGroup(const std::string &colorGroup) {
+  const std::string color = toUpper(colorGroup);
+  if (color == "COKLAT") return ColorGroup::COKLAT;
+  if (color == "BIRU_MUDA") return ColorGroup::BIRU_MUDA;
+  if (color == "MERAH_MUDA" || color == "PINK") return ColorGroup::MERAH_MUDA;
+  if (color == "ORANGE") return ColorGroup::ORANGE;
+  if (color == "MERAH") return ColorGroup::MERAH;
+  if (color == "KUNING") return ColorGroup::KUNING;
+  if (color == "HIJAU") return ColorGroup::HIJAU;
+  if (color == "BIRU_TUA") return ColorGroup::BIRU_TUA;
+  if (color == "ABU_ABU" || color == "ABU-ABU") return ColorGroup::ABU_ABU;
+  return ColorGroup::ABU_ABU;
+}
+
+std::string getPropertyNameFromConfig(const PropertyConfig &cfg,
+                                      const std::string &fallbackName) {
+  return cfg.name.empty() ? fallbackName : cfg.name;
+}
 
 static int gActionCount = 0;
 static int gPropertyCount = 0;
@@ -66,6 +94,8 @@ static std::string nextTileId(char category) {
   oss << category << std::setw(2) << std::setfill('0') << *target;
   return oss.str();
 }
+
+}  // namespace
 
 Property *buildPropertyFromConfig(const PropertyConfig &cfg,
                                          const Configuration &configuration,
@@ -124,8 +154,6 @@ void Board::initialize(Configuration &config) {
 
   const std::vector<BoardTileConfig> &layout = config.getBoardLayout();
 
-  initializeCardDecks(config);
-
   const TaxConfig &tax = config.getTaxConfig();
   const int goSalary = config.getGoSalary();
   resetTileCounters();
@@ -159,14 +187,12 @@ void Board::initialize(Configuration &config) {
     if (type == "chance") {
       ChanceTile *chanceTile =
           new ChanceTile(nextTileId('C'), entry.name, pos);
-      attachDeckIfSupported(*chanceTile, &chanceDeck);
       tiles.push_back(chanceTile);
       continue;
     }
     if (type == "community_chest") {
       CommunityChestTile *communityChestTile =
           new CommunityChestTile(nextTileId('C'), entry.name, pos);
-      attachDeckIfSupported(*communityChestTile, &communityChestDeck);
       tiles.push_back(communityChestTile);
       continue;
     }
@@ -261,16 +287,16 @@ int Board::findNearestStation(int currentPos) const {
 
     const PropertyTile *propertyTile = static_cast<const PropertyTile *>(tiles[i]);
     if (toUpper(propertyTile->getProperty().getType()) == "RAILROAD") {
-      if (first_station < 0) first_station = i;
-      if (i > current_pos && best_pos < 0) best_pos = i;
+      if (firstStation < 0) firstStation = i;
+      if (i > currentPos && bestPos < 0) bestPos = i;
     }
   }
 
-  if (best_pos < 0) best_pos = first_station;
-  if (best_pos < 0) {
+  if (bestPos < 0) bestPos = firstStation;
+  if (bestPos < 0) {
     throw std::runtime_error("No station tile found in board layout.");
   }
-  return best_pos;
+  return bestPos;
 }
 
 int Board::findJailPosition() const {

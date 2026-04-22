@@ -1,5 +1,5 @@
-#include "../../../include/models/Card/LassoCard.hpp"
-#include "../../../include/views/InputHandler.hpp"
+#include "models/Card/LassoCard.hpp"
+#include "views/InputHandler.hpp"
 
 // ctor
 LassoCard::LassoCard() : SkillCard() {}

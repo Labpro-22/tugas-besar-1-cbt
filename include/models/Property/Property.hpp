@@ -1,7 +1,8 @@
 #pragma once
 #include "PropertyStatus.hpp"
-#include "Player.hpp"
 #include <string>
+
+class Player;
 
 class Property {
 private:

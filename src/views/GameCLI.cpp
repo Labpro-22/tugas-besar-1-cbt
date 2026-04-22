@@ -1,10 +1,10 @@
-#include "../../../include/views/GameCLI.hpp"
+#include "views/GameCLI.hpp"
 
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "../models/GameManager/Player.hpp"
+#include "models/GameManager/Player.hpp"
 
 GameCLI::GameCLI()
     : input(),

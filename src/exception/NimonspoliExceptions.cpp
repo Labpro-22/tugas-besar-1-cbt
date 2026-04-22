@@ -1,4 +1,4 @@
-#include "../../include/exception/NimonspoliExceptions.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 
 #include <string>
 

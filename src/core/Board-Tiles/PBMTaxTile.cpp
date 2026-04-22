@@ -1,6 +1,6 @@
-#include "../../../include/core/Board-Tiles/PBMTaxTile.hpp"
-#include "../../../include/models/GameManager/GameManager.hpp"
-#include "../../../include/models/GameManager/Player.hpp"
+#include "core/Board-Tiles/PBMTaxTile.hpp"
+#include "models/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
 
 PBMTaxTile::PBMTaxTile(const std::string &code, const std::string &name, int pos, int flat)
     : TaxTile(code, name, pos, "pbm"), pbm_flat(flat) {}

@@ -1,5 +1,5 @@
-#include "../../../include/models/Property/Railroad.hpp"
-#include "../../../include/models/GameManager/Player.hpp"
+#include "models/Property/Railroad.hpp"
+#include "models/GameManager/Player.hpp"
 #include <iostream>
 #include <iterator>
 

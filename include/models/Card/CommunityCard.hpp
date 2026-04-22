@@ -1,8 +1,6 @@
 #pragma once
 #include "ActionCard.hpp"
 #include "CommunityCardType.hpp"
-#include "Player.hpp"
-#include "GameManager.hpp"
 
 class CommunityCard : public ActionCard {
 private:

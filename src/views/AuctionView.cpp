@@ -1,4 +1,4 @@
-#include "../../../include/views/AuctionView.hpp"
+#include "views/AuctionView.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
-#include "InputHandler.hpp"
-#include "../models/GameManager/Player.hpp"
-#include "../models/Property/Property.hpp"
-#include "../utils/CommandParser.hpp"
+#include "views/InputHandler.hpp"
+#include "models/GameManager/Player.hpp"
+#include "models/Property/Property.hpp"
+#include "utils/CommandParser.hpp"
 
 AuctionView::AuctionView() : highestBidShown(0), currentPropertyCode("") {}
 

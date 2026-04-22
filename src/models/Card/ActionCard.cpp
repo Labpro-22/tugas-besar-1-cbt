@@ -1,4 +1,4 @@
-#include "../../../include/models/Card/ActionCard.hpp"
+#include "models/Card/ActionCard.hpp"
 
 // ctor
 ActionCard::ActionCard() : Card() {}

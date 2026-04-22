@@ -1,7 +1,7 @@
-#include "../../../include/models/Card/ChanceCard.hpp"
-#include "../../../include/core/Board-Tiles/Board.hpp"
-#include "../../../include/models/GameManager/GameManager.hpp"
-#include "../../../include/models/GameManager/Player.hpp"
+#include "models/Card/ChanceCard.hpp"
+#include "core/Board-Tiles/Board.hpp"
+#include "models/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
 
 // ctor
 ChanceCard::ChanceCard(int cardId, ChanceCardType type)

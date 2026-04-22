@@ -1,6 +1,6 @@
-#include "../../../include/core/Board-Tiles/GoTile.hpp"
-#include "../../../include/models/GameManager/GameManager.hpp"
-#include "../../../include/models/GameManager/Player.hpp"
+#include "core/Board-Tiles/GoTile.hpp"
+#include "models/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
 
 GoTile::GoTile(const std::string &code, const std::string &name, int pos,
                int salary)

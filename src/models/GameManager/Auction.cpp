@@ -1,4 +1,4 @@
-#include "../../../include/models/GameManager/Auction.hpp"
+#include "models/GameManager/Auction.hpp"
 #include <iostream>
 #include <algorithm>
 #include <exception>

@@ -1,4 +1,4 @@
-#include "../../../include/models/Card/MoveCard.hpp"
+#include "models/Card/MoveCard.hpp"
 
 // ctor
 MoveCard::MoveCard() : SkillCard(), steps(0) {}

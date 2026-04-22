@@ -1,13 +1,13 @@
-#include "../../../include/app/SkillCardFactory.hpp"
-#include "../../../include/app/GameSessionUtil.hpp"
+#include "app/SkillCardFactory.hpp"
+#include "app/GameSessionUtil.hpp"
 
-#include "../../../include/models/Card/DemolitionCard.hpp"
-#include "../../../include/models/Card/DiscountCard.hpp"
-#include "../../../include/models/Card/LassoCard.hpp"
-#include "../../../include/models/Card/MoveCard.hpp"
-#include "../../../include/models/Card/ShieldCard.hpp"
-#include "../../../include/models/Card/SkillCard.hpp"
-#include "../../../include/models/Card/TeleportCard.hpp"
+#include "models/Card/DemolitionCard.hpp"
+#include "models/Card/DiscountCard.hpp"
+#include "models/Card/LassoCard.hpp"
+#include "models/Card/MoveCard.hpp"
+#include "models/Card/ShieldCard.hpp"
+#include "models/Card/SkillCard.hpp"
+#include "models/Card/TeleportCard.hpp"
 
 #include <algorithm>
 

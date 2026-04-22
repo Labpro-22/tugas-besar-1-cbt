@@ -1,4 +1,4 @@
-#include "../../../include/utils/CommandParser.hpp"
+#include "utils/CommandParser.hpp"
 
 #include <algorithm>
 #include <cctype>

@@ -1,4 +1,4 @@
-#include "../../../include/views/InputHandler.hpp"
+#include "views/InputHandler.hpp"
 
 #include <algorithm>
 #include <cctype>

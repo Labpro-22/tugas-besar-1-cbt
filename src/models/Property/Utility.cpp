@@ -1,5 +1,5 @@
-#include "../../../include/models/Property/Utility.hpp"
-#include "../../../include/models/GameManager/Player.hpp"
+#include "models/Property/Utility.hpp"
+#include "models/GameManager/Player.hpp"
 #include <iostream>
 
 // ctor

@@ -1,6 +1,6 @@
-#include "../../../include/core/Board-Tiles/GoToJailTile.hpp"
-#include "../../../include/models/GameManager/GameManager.hpp"
-#include "../../../include/models/GameManager/Player.hpp"
+#include "core/Board-Tiles/GoToJailTile.hpp"
+#include "models/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
 
 GoToJailTile::GoToJailTile(const std::string &code, const std::string &name,
                            int pos)

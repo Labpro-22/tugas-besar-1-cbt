@@ -2,7 +2,7 @@
 #define BOARD_HPP
 
 #include "Tile.hpp"
-#include "../../../src/data/Configuration.hpp"
+#include "data/Configuration.hpp"
 
 #include <string>
 #include <vector>

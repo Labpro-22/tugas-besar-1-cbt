@@ -1,11 +1,11 @@
-#include "../../../include/core/Board-Tiles/FestivalTile.hpp"
+#include "core/Board-Tiles/FestivalTile.hpp"
 
-#include "../../../include/core/Board-Tiles/Board.hpp"
-#include "../../../include/core/Board-Tiles/PropertyTile.hpp"
-#include "../../../include/models/GameManager/GameManager.hpp"
-#include "../../../include/models/GameManager/Player.hpp"
-#include "../../../include/models/Property/Property.hpp"
-#include "../../../include/views/InputHandler.hpp"
+#include "core/Board-Tiles/Board.hpp"
+#include "core/Board-Tiles/PropertyTile.hpp"
+#include "models/GameManager/GameManager.hpp"
+#include "models/GameManager/Player.hpp"
+#include "models/Property/Property.hpp"
+#include "views/InputHandler.hpp"
 
 #include <iostream>
 #include <unordered_map>

@@ -1,13 +1,13 @@
-#include "../../../include/views/StatusView.hpp"
+#include "views/StatusView.hpp"
 
 #include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "../../../include/models/Card/Card.hpp"
-#include "../../../include/models/GameManager/Player.hpp"
-#include "../../../include/models/Property/Property.hpp"
+#include "models/Card/Card.hpp"
+#include "models/GameManager/Player.hpp"
+#include "models/Property/Property.hpp"
 
 void StatusView::showDiceResult(int d1, int d2, const std::string& destination) const {
     std::cout << "Hasil: " << d1 << " + " << d2 << " = " << (d1 + d2) << '\n';
