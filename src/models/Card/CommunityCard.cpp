@@ -31,8 +31,7 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
   }
 
   if (communityType != CommunityCardType::BIRTHDAY && p->hasShieldActive()) {
-    gm->addLogEntry(p->getUsername() +
-                    " terlindungi shield dari efek kartu community chest");
+    gm->addLogEntry(p->getUsername() + " terlindungi shield dari efek kartu community chest");
     return;
   }
 

@@ -1,5 +1,6 @@
 #include "models/Card/DiscountCard.hpp"
 #include <algorithm>
+#include "exception/NimonspoliExceptions.hpp"
 
 // ctor
 DiscountCard::DiscountCard() : SkillCard(), discountPercent(0), remainingDuration(0) {}
@@ -41,7 +42,7 @@ int DiscountCard::getDuration() const {
 // apply discount
 int DiscountCard::applyDiscount(int amount) {
     if (amount <= 0) {
-        return 0;
+        throw InvalidInputException("Jumlah yang akan didiskon harus positif.");
     }
 
     int effectiveDiscount = std::clamp(discountPercent, 0, 100);
@@ -50,7 +51,7 @@ int DiscountCard::applyDiscount(int amount) {
 
 void DiscountCard::use(Player* p, GameManager* gm) {
     if (p == nullptr || gm == nullptr) {
-        return;
+        throw InternalGameException("DiscountCard::use menerima konteks yang tidak valid.");
     }
 
     if (!p->canUseAbility()) {

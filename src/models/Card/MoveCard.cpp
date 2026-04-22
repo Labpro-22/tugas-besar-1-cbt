@@ -1,8 +1,8 @@
 #include "models/Card/MoveCard.hpp"
 #include "core/Board-Tiles/Board.hpp"
 #include "core/Board-Tiles/Tile.hpp"
-
 #include <iostream>
+#include "exception/NimonspoliExceptions.hpp"
 
 // ctor
 MoveCard::MoveCard() : SkillCard(), steps(0) {}
@@ -37,11 +37,8 @@ void MoveCard::use(Player *p, GameManager *gm) {
 
   int boardSize = gm->getBoardSize();
   if (boardSize <= 0) {
-    gm->addLogEntry("MoveCard gagal: ukuran board tidak valid");
-    return;
+    throw InternalGameException("MoveCard digunakan saat ukuran board tidak valid.");
   }
-
-  std::cout << "MoveCard diaktifkan! Bergerak maju " << steps << " petak.\n";
 
   if (p == &gm->getCurrentPlayer()) {
     gm->moveCurrentPlayer(steps);

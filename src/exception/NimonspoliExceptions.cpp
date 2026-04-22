@@ -210,6 +210,20 @@ PropertyMortgageException::PropertyMortgageException(
                             " tidak valid. " + reason,
                         "PROPERTY_MORTGAGE_ERROR") {}
 
+PropertyRedeemException::PropertyRedeemException(const std::string& propertyCode,
+                                                 const std::string& reason)
+    : PropertyException("Redeem properti " +
+                            quoted(namedOrFallback(propertyCode, "<kosong>")) +
+                            " tidak valid. " + reason,
+                        "PROPERTY_REDEEM_ERROR") {}
+
+InvalidPropertyStatusException::InvalidPropertyStatusException(
+    const std::string& statusStr)
+    : PropertyException("Status properti " +
+                            quoted(namedOrFallback(statusStr, "<kosong>")) +
+                            " tidak dikenali.",
+                        "INVALID_PROPERTY_STATUS") {}
+
 PropertyBuildException::PropertyBuildException(const std::string& propertyCode,
                                                const std::string& reason)
     : PropertyException("Pembangunan properti " +
