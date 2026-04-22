@@ -1,6 +1,6 @@
-#include "core/Board-Tiles/FreeParkingTile.hpp"
-#include "models/GameManager/GameManager.hpp"
-#include "models/GameManager/Player.hpp"
+#include "../../../include/core/Board-Tiles/FreeParkingTile.hpp"
+#include "../../../include/models/GameManager/GameManager.hpp"
+#include "../../../include/models/GameManager/Player.hpp"
 
 #include <iostream>
 

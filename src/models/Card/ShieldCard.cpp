@@ -1,4 +1,4 @@
-#include "ShieldCard.hpp"
+#include "../../../include/models/Card/ShieldCard.hpp"
 
 // ctor
 ShieldCard::ShieldCard() : SkillCard() {}

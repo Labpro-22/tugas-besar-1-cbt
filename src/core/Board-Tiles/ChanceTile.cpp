@@ -1,8 +1,8 @@
-#include "core/Board-Tiles/ChanceTile.hpp"
-#include "models/Card/ChanceCard.hpp"
-#include "models/Card/ChanceCardType.hpp"
-#include "models/GameManager/GameManager.hpp"
-#include "models/GameManager/Player.hpp"
+#include "../../../include/core/Board-Tiles/ChanceTile.hpp"
+#include "../../../include/models/Card/ChanceCard.hpp"
+#include "../../../include/models/Card/ChanceCardType.hpp"
+#include "../../../include/models/GameManager/GameManager.hpp"
+#include "../../../include/models/GameManager/Player.hpp"
 
 #include <algorithm>
 #include <iostream>

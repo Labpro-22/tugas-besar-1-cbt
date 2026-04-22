@@ -1,4 +1,4 @@
-#include "core/Board-Tiles/Tile.hpp"
+#include "../../../include/core/Board-Tiles/Tile.hpp"
 
 Tile::Tile(const std::string &code, const std::string &name, int pos, const std::string &type)
     : id(code), name(name), position(pos), tile_type(type) {}

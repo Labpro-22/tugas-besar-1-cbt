@@ -1,8 +1,8 @@
-#include "GameManager.hpp"
-#include "../../core/Board-Tiles/Board.hpp"
-#include "../../views/InputHandler.hpp"
-#include "BankruptcyHandler.hpp"
-#include "../Property/Property.hpp"
+#include "../../../include/models/GameManager/GameManager.hpp"
+#include "../../../include/core/Board-Tiles/Board.hpp"
+#include "../../../include/views/InputHandler.hpp"
+#include "../../../include/models/GameManager/BankruptcyHandler.hpp"
+#include "../../../include/models/Property/Property.hpp"
 #include <algorithm>
 #include <cctype>
 #include <exception>

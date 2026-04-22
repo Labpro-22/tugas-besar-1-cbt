@@ -1,5 +1,5 @@
-#include "TeleportCard.hpp"
-#include "views/InputHandler.hpp"
+#include "../../../include/models/Card/TeleportCard.hpp"
+#include "../../../include/views/InputHandler.hpp"
 
 // ctor
 TeleportCard::TeleportCard() : SkillCard() {}

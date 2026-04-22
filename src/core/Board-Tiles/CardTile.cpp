@@ -1,4 +1,4 @@
-#include "core/Board-Tiles/CardTile.hpp"
+#include "../../../include/core/Board-Tiles/CardTile.hpp"
 
 CardTile::CardTile(const std::string &code, const std::string &name, int pos, const std::string &cardType) 
     : Tile(code, name, pos, "card"), card_type(cardType) {}

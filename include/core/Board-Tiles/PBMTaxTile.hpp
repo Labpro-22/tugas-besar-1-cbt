@@ -1,7 +1,7 @@
 #ifndef PBM_TAX_TILE_HPP
 #define PBM_TAX_TILE_HPP
 
-#include "core/Board-Tiles/TaxTile.hpp"
+#include "TaxTile.hpp"
 
 class PBMTaxTile : public TaxTile {
     private:

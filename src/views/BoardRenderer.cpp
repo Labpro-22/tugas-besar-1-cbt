@@ -1,4 +1,4 @@
-#include "BoardRenderer.hpp"
+#include "../../../include/views/BoardRenderer.hpp"
 
 #include <algorithm>
 #include <iomanip>
@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
-#include "../core/Board-Tiles/Board.hpp"
-#include "../core/Board-Tiles/Tile.hpp"
-#include "../models/GameManager/Player.hpp"
+#include "../../../include/core/Board-Tiles/Board.hpp"
+#include "../../../include/core/Board-Tiles/Tile.hpp"
+#include "../../../include/models/GameManager/Player.hpp"
 
 namespace {
 

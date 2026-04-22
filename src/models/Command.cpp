@@ -1,4 +1,4 @@
-#include "Command.hpp"
+#include "../../../include/models/Command.hpp"
 
 Command::Command() : name(""), args() {}
 

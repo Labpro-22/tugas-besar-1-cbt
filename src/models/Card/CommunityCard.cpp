@@ -1,6 +1,6 @@
-#include "CommunityCard.hpp"
-#include "../GameManager/GameManager.hpp"
-#include "../GameManager/Player.hpp"
+#include "../../../include/models/Card/CommunityCard.hpp"
+#include "../../../include/models/GameManager/GameManager.hpp"
+#include "../../../include/models/GameManager/Player.hpp"
 
 // ctor
 CommunityCard::CommunityCard(int cardId, CommunityCardType type)

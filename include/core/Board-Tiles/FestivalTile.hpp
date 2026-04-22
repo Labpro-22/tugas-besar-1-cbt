@@ -1,7 +1,7 @@
 #ifndef FESTIVAL_TILE_HPP
 #define FESTIVAL_TILE_HPP
 
-#include "core/Board-Tiles/Tile.hpp"
+#include "Tile.hpp"
 
 class FestivalTile : public Tile {
     public:

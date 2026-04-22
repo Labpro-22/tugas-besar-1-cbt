@@ -1,4 +1,4 @@
-#include "AuctionView.hpp"
+#include "../../../include/views/AuctionView.hpp"
 
 #include <algorithm>
 #include <cctype>

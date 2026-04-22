@@ -1,7 +1,7 @@
 #ifndef CARD_TILE_HPP
 #define CARD_TILE_HPP
 
-#include "core/Board-Tiles/Tile.hpp"
+#include "Tile.hpp"
 #include <string>
 
 // Deklarasi di awal

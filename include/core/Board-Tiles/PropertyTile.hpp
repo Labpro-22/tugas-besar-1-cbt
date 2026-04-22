@@ -1,7 +1,7 @@
 #ifndef PROPERTY_TILE_HPP
 #define PROPERTY_TILE_HPP
 
-#include "core/Board-Tiles/Tile.hpp"
+#include "Tile.hpp"
 
 // Deklarasi terlebih dahulu
 class Property;

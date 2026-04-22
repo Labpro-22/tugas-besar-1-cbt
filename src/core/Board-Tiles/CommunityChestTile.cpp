@@ -1,8 +1,8 @@
-#include "core/Board-Tiles/CommunityChestTile.hpp"
-#include "models/Card/CommunityCard.hpp"
-#include "models/Card/CommunityCardType.hpp"
-#include "models/GameManager/GameManager.hpp"
-#include "models/GameManager/Player.hpp"
+#include "../../../include/core/Board-Tiles/CommunityChestTile.hpp"
+#include "../../../include/models/Card/CommunityCard.hpp"
+#include "../../../include/models/Card/CommunityCardType.hpp"
+#include "../../../include/models/GameManager/GameManager.hpp"
+#include "../../../include/models/GameManager/Player.hpp"
 
 #include <algorithm>
 #include <iostream>

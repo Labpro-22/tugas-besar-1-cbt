@@ -1,4 +1,4 @@
-#include "Property.hpp"
+#include "../../../include/models/Property/Property.hpp"
 #include <iostream>
 
 // default ctor (status = "BANK")

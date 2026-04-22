@@ -1,4 +1,4 @@
-#include "PropertyView.hpp"
+#include "../../../include/views/PropertyView.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -8,12 +8,12 @@
 #include <string>
 #include <vector>
 
-#include "InputHandler.hpp"
-#include "../models/GameManager/Player.hpp"
-#include "../models/Property/Property.hpp"
-#include "../models/Property/Railroad.hpp"
-#include "../models/Property/Street.hpp"
-#include "../models/Property/Utility.hpp"
+#include "../../../include/views/InputHandler.hpp"
+#include "../../../include/models/GameManager/Player.hpp"
+#include "../../../include/models/Property/Property.hpp"
+#include "../../../include/models/Property/Railroad.hpp"
+#include "../../../include/models/Property/Street.hpp"
+#include "../../../include/models/Property/Utility.hpp"
 
 namespace {
 

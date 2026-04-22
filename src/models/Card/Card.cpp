@@ -1,4 +1,4 @@
-#include "Card.hpp"
+#include "../../../include/models/Card/Card.hpp"
 
 // static var
 int Card::nextCardId = 1;

@@ -1,4 +1,4 @@
-#include "DiscountCard.hpp"
+#include "../../../include/models/Card/DiscountCard.hpp"
 #include <algorithm>
 
 // ctor

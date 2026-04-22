@@ -1,4 +1,4 @@
-#include "SkillCard.hpp"
+#include "../../../include/models/Card/SkillCard.hpp"
 
 // ctor
 SkillCard::SkillCard() : Card(), used(false) {}

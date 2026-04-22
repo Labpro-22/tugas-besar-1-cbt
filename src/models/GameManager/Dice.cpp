@@ -1,4 +1,4 @@
-#include "Dice.hpp"
+#include "../../../include/models/GameManager/Dice.hpp"
 
 Dice::Dice() : dice1(0), dice2(0), consecutiveDouble(0) {}
 int Dice::roll() {

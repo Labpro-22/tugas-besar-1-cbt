@@ -1,13 +1,13 @@
-#include "GameState.hpp"
-#include "../Card/DemolitionCard.hpp"
-#include "../Card/DiscountCard.hpp"
-#include "../Card/LassoCard.hpp"
-#include "../Card/MoveCard.hpp"
-#include "../Card/ShieldCard.hpp"
-#include "../Card/TeleportCard.hpp"
-#include "../Property/Railroad.hpp"
-#include "../Property/Street.hpp"
-#include "../Property/Utility.hpp"
+#include "../../../include/models/GameManager/GameState.hpp"
+#include "../../../include/models/Card/DemolitionCard.hpp"
+#include "../../../include/models/Card/DiscountCard.hpp"
+#include "../../../include/models/Card/LassoCard.hpp"
+#include "../../../include/models/Card/MoveCard.hpp"
+#include "../../../include/models//Card/ShieldCard.hpp"
+#include "../../../include/models/Card/TeleportCard.hpp"
+#include "../../../include/models/Property/Railroad.hpp"
+#include "../../../include/models/Property/Street.hpp"
+#include "../../../include/models/Property/Utility.hpp"
 #include <iostream>
 #include <sstream>
 

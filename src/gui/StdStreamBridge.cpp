@@ -1,4 +1,4 @@
-#include "StdStreamBridge.hpp"
+#include "../../../include/gui/StdStreamBridge.hpp"
 
 #include <iostream>
 

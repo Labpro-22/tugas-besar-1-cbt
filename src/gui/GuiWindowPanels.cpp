@@ -1,4 +1,4 @@
-﻿#include "GuiWindowInternal.hpp"
+﻿#include "../../../include/gui/GuiWindowInternal.hpp"
 
 using namespace gui_internal;
 

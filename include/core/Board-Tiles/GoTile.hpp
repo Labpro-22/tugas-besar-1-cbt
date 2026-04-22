@@ -1,7 +1,7 @@
 #ifndef GO_TILE_HPP
 #define GO_TILE_HPP
 
-#include "core/Board-Tiles/ActionTile.hpp"
+#include "ActionTile.hpp"
 
 class GoTile : public ActionTile {
     private:

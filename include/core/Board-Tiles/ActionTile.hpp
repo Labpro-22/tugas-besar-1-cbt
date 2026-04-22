@@ -1,7 +1,7 @@
 #ifndef ACTION_TILE_HPP
 #define ACTION_TILE_HPP
 
-#include "core/Board-Tiles/Tile.hpp"
+#include "Tile.hpp"
 
 class ActionTile : public Tile {
     protected:

@@ -1,4 +1,4 @@
-#include "GameCLI.hpp"
+#include "../../../include/views/GameCLI.hpp"
 
 #include <iostream>
 #include <string>

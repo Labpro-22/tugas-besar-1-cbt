@@ -1,7 +1,7 @@
 #ifndef JAIL_TILE_HPP
 #define JAIL_TILE_HPP
 
-#include "core/Board-Tiles/ActionTile.hpp"
+#include "ActionTile.hpp"
 
 class JailTile : public ActionTile {
     public:

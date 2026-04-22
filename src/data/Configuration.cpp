@@ -1,4 +1,4 @@
-#include "Configuration.hpp"
+#include "../../include/data/Configuration.hpp"
 
 #include <algorithm>
 #include <cctype>

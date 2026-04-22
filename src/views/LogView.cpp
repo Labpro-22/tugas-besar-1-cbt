@@ -1,4 +1,4 @@
-#include "LogView.hpp"
+#include "../../../include/views/LogView.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "../models/GameManager/LogEntry.hpp"
+#include "../../../include/models/GameManager/LogEntry.hpp"
 
 LogView::LogView(int maxPreviewWidth) : maxPreviewWidth(maxPreviewWidth) {}
 

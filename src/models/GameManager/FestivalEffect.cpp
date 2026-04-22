@@ -1,4 +1,4 @@
-#include "FestivalEffect.hpp"
+#include "../../../include/models/GameManager/FestivalEffect.hpp"
 int FestivalEffect::activateEffect(string propertyCode, int currentFMULT) {
     int newFMULT;
 

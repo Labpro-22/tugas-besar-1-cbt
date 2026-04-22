@@ -1,6 +1,6 @@
-﻿#include "GameSession.hpp"
-#include "ExceptionHandler.hpp"
-#include "GameSessionUtil.hpp"
+﻿#include "../../../include/app/GameSession.hpp"
+#include "../../../include/app/ExceptionHandler.hpp"
+#include "../../../include/app/GameSessionUtil.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -13,20 +13,20 @@
 #include <stdexcept>
 #include <utility>
 
-#include "../core/Board-Tiles/PropertyTile.hpp"
-#include "../core/Board-Tiles/Tile.hpp"
-#include "../models/Card/DemolitionCard.hpp"
-#include "../models/Card/DiscountCard.hpp"
-#include "../models/Card/LassoCard.hpp"
-#include "../models/Card/MoveCard.hpp"
-#include "../models/Card/ShieldCard.hpp"
-#include "../models/Card/SkillCard.hpp"
-#include "../models/Card/TeleportCard.hpp"
-#include "../models/GameManager/LogEntry.hpp"
-#include "../models/GameManager/Player.hpp"
-#include "../models/Property/Railroad.hpp"
-#include "../models/Property/Street.hpp"
-#include "../models/Property/Utility.hpp"
+#include "../../../include/core/Board-Tiles/PropertyTile.hpp"
+#include "../../../include/core/Board-Tiles/Tile.hpp"
+#include "../../../include/models/Card/DemolitionCard.hpp"
+#include "../../../include/models/Card/DiscountCard.hpp"
+#include "../../../include/models/Card/LassoCard.hpp"
+#include "../../../include/models/Card/MoveCard.hpp"
+#include "../../../include/models/Card/ShieldCard.hpp"
+#include "../../../include/models/Card/SkillCard.hpp"
+#include "../../../include/models/Card/TeleportCard.hpp"
+#include "../../../include/models/GameManager/LogEntry.hpp"
+#include "../../../include/models/GameManager/Player.hpp"
+#include "../../../include/models/Property/Railroad.hpp"
+#include "../../../include/models/Property/Street.hpp"
+#include "../../../include/models/Property/Utility.hpp"
 
 
 using namespace app;

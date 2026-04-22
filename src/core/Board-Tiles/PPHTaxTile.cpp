@@ -1,7 +1,7 @@
-#include "core/Board-Tiles/PPHTaxTile.hpp"
-#include "models/GameManager/GameManager.hpp"
-#include "models/GameManager/Player.hpp"
-#include "views/InputHandler.hpp"
+#include "../../../include/core/Board-Tiles/PPHTaxTile.hpp"
+#include "../../../include/models/GameManager/GameManager.hpp"
+#include "../../../include/models/GameManager/Player.hpp"
+#include "../../../include/views/InputHandler.hpp"
 #include <iostream>
 
 PPHTaxTile::PPHTaxTile(const std::string &code, const std::string &name, int pos, int flat, int percentage)

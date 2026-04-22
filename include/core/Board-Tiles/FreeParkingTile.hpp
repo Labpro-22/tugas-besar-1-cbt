@@ -1,7 +1,7 @@
 #ifndef FREE_PARKING_TILE_HPP
 #define FREE_PARKING_TILE_HPP
 
-#include "core/Board-Tiles/ActionTile.hpp"
+#include "ActionTile.hpp"
 
 class FreeParkingTile : public ActionTile {
     public:

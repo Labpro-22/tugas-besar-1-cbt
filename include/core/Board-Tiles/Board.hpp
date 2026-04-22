@@ -1,7 +1,7 @@
 #ifndef BOARD_HPP
 #define BOARD_HPP
 
-#include "core/Board-Tiles/Tile.hpp"
+#include "Tile.hpp"
 
 #include <string>
 #include <vector>

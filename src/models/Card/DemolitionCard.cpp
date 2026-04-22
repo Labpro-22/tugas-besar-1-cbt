@@ -1,5 +1,5 @@
-#include "DemolitionCard.hpp"
-#include "views/InputHandler.hpp"
+#include "../../../include/models/Card/DemolitionCard.hpp"
+#include "../../../include/views/InputHandler.hpp"
 
 // ctor
 DemolitionCard::DemolitionCard() : SkillCard() {}

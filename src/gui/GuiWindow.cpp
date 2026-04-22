@@ -1,5 +1,5 @@
-﻿#include "GuiWindow.hpp"
-#include "GuiWindowInternal.hpp"
+﻿#include "../../../include/gui/GuiWindow.hpp"
+#include "../../../include/gui/GuiWindowInternal.hpp"
 
 #include <algorithm>
 #include <cctype>

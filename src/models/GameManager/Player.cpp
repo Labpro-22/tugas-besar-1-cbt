@@ -1,5 +1,5 @@
-#include "Player.hpp"
-#include "JailManager.hpp"
+#include "../../../include/models/GameManager/Player.hpp"
+#include "../../../include/models/GameManager/JailManager.hpp"
 
 #include <stdexcept>
 

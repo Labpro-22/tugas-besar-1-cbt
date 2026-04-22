@@ -1,5 +1,5 @@
 #pragma once
-#include "../../data/Configuration.hpp"
+#include "../../include/core/data/Configuration.hpp"
 #include "../Card/DiscardPile.hpp"
 #include "../Card/CardDeck.hpp"
 #include "../Card/ChanceCard.hpp"

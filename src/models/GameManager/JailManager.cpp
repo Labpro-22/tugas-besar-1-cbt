@@ -1,5 +1,5 @@
-#include "JailManager.hpp"
-#include "Player.hpp"
+#include "../../../include/models/GameManager/JailManager.hpp"
+#include "../../../include/models/GameManager/Player.hpp"
 
 JailManager::JailManager() : maxJailTurns(3), jailFine(50) {}
 
