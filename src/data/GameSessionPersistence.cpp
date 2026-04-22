@@ -44,8 +44,7 @@ bool GameSessionPersistence::save(const GameSession& session,
     const Configuration& configuration = session.configuration;
     const GameManager& game = session.game;
     const GameSessionQueries& queries = session.queries;
-    const std::vector<std::string>& skillDeck = session.skillDeck;
-    const std::vector<std::string>& skillDiscard = session.skillDiscard;
+    const CardDeck<std::string>& skillDeck = session.skillDeck;
 
     std::filesystem::path path(rawFilename);
     if (path.extension().empty()) {
@@ -110,8 +109,8 @@ bool GameSessionPersistence::save(const GameSession& session,
         file << "\n";
     }
 
-    std::vector<std::string> serializedDeck = skillDeck;
-    serializedDeck.insert(serializedDeck.end(), skillDiscard.begin(), skillDiscard.end());
+    std::vector<std::string> serializedDeck = skillDeck.getActiveDeck();
+    serializedDeck.insert(serializedDeck.end(), skillDeck.getDiscardPile().begin(), skillDeck.getDiscardPile().end());
     file << serializedDeck.size() << "\n";
     for (const std::string& cardType : serializedDeck) {
         file << cardType << "\n";
@@ -131,8 +130,7 @@ bool GameSessionPersistence::load(GameSession& session,
                                   const std::string& rawFilename) const {
     GameManager& game = session.game;
     const GameSessionQueries& queries = session.queries;
-    std::vector<std::string>& skillDeck = session.skillDeck;
-    std::vector<std::string>& skillDiscard = session.skillDiscard;
+    CardDeck<std::string>& skillDeck = session.skillDeck;
     std::map<std::string, int>& jailAttemptCounts = session.jailAttemptCounts;
 
     std::filesystem::path path(rawFilename);
@@ -307,14 +305,13 @@ bool GameSessionPersistence::load(GameSession& session,
         return false;
     }
     skillDeck.clear();
-    skillDiscard.clear();
     std::string discardLine;
     std::getline(file, discardLine);
     for (int i = 0; i < deckCount; ++i) {
         std::getline(file, discardLine);
         discardLine = trim(discardLine);
         if (!discardLine.empty()) {
-            skillDeck.push_back(discardLine);
+            skillDeck.addCard(discardLine);
         }
     }
 

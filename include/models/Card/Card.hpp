@@ -27,4 +27,5 @@ class Card {
         virtual std::string getType() const = 0;
         virtual int getValue() const = 0;
         virtual int getDuration() const { return 0; }
+        virtual std::string getDisplayLabel() const;
 };

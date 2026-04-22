@@ -65,10 +65,9 @@ std::vector<Property*> GameSessionQueries::getMortgageableProperties() const {
         if (property == nullptr) {
             continue;
         }
-        if (property->getStatus() != PropertyStatus::OWNED) {
-            continue;
+        if (property->canBeMortgaged()) {
+            result.push_back(property);
         }
-        result.push_back(property);
     }
     return result;
 }

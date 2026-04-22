@@ -304,11 +304,11 @@ int Board::findNearestStation(int currentPos) const {
     }
   }
 
-  if (bestPos < 0) bestPos = first_station;
-  if (best_pos < 0) {
+  if (bestPos < 0) bestPos = firstStation;
+  if (bestPos < 0) {
     throw TileNotFoundException("RAILROAD");
   }
-  return best_pos;
+  return bestPos;
 }
 
 int Board::findJailPosition() const {

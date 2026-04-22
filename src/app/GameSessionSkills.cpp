@@ -25,31 +25,26 @@ using namespace app;
 
 void GameSession::initializeSkillDeck() {
     skillDeck.clear();
-    skillDiscard.clear();
 
-    skillDeck.insert(skillDeck.end(), 4, "MoveCard");
-    skillDeck.insert(skillDeck.end(), 3, "DiscountCard");
-    skillDeck.insert(skillDeck.end(), 2, "ShieldCard");
-    skillDeck.insert(skillDeck.end(), 2, "TeleportCard");
-    skillDeck.insert(skillDeck.end(), 2, "LassoCard");
-    skillDeck.insert(skillDeck.end(), 2, "DemolitionCard");
-    shuffleSkillDeck();
+    for (int i = 0; i < 4; ++i) skillDeck.addCard("MoveCard");
+    for (int i = 0; i < 3; ++i) skillDeck.addCard("DiscountCard");
+    for (int i = 0; i < 2; ++i) skillDeck.addCard("ShieldCard");
+    for (int i = 0; i < 2; ++i) skillDeck.addCard("TeleportCard");
+    for (int i = 0; i < 2; ++i) skillDeck.addCard("LassoCard");
+    for (int i = 0; i < 2; ++i) skillDeck.addCard("DemolitionCard");
+    
+    skillDeck.shuffle();
 }
 
 void GameSession::shuffleSkillDeck() {
-    std::shuffle(skillDeck.begin(), skillDeck.end(),
-                 std::mt19937(std::random_device{}()));
+    skillDeck.shuffle();
 }
 
 void GameSession::ensureSkillDeckAvailable() {
-    if (!skillDeck.empty() || skillDiscard.empty()) {
-        return;
+    if (skillDeck.isEmpty()) {
+        skillDeck.reshuffleDiscard();
+        std::cout << "Deck kartu kemampuan habis. Mencampur ulang discard pile...\n";
     }
-
-    skillDeck = skillDiscard;
-    skillDiscard.clear();
-    shuffleSkillDeck();
-    std::cout << "Deck kartu kemampuan habis. Mencampur ulang discard pile...\n";
 }
 
 SkillCard* GameSession::createSkillCardInstance(const std::string& type,
@@ -59,14 +54,12 @@ SkillCard* GameSession::createSkillCardInstance(const std::string& type,
 }
 
 SkillCard* GameSession::drawSkillCard() {
-    ensureSkillDeckAvailable();
-    if (skillDeck.empty()) {
+    try {
+        const std::string type = skillDeck.draw();
+        return createSkillCardInstance(type);
+    } catch (const EmptyDeckException&) {
         return nullptr;
     }
-
-    const std::string type = skillDeck.back();
-    skillDeck.pop_back();
-    return createSkillCardInstance(type);
 }
 
 void GameSession::awardSkillCardAtTurnStart() {
@@ -120,7 +113,7 @@ void GameSession::discardSkillCard(Player& player, SkillCard* card) {
         return;
     }
 
-    skillDiscard.push_back(card->getType());
+    skillDeck.discardCard(card->getType());
     player.removeCard(card);
     skillCardFactory.release(card);
 }
@@ -144,4 +137,3 @@ bool GameSession::executeSkillCard(Player& player, SkillCard* card) {
     discardSkillCard(player, card);
     return true;
 }
-

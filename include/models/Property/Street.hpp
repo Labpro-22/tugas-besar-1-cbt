@@ -84,6 +84,12 @@ public:
     int getFDur() const override { return festivalDuration; }
 
     int getBuildingCount() const override { return static_cast<int>(level); }
+    std::string getBuildingLabel() const override {
+        const int count = getBuildingCount();
+        if (count <= 0) return "0 rumah";
+        if (count >= 5) return "Hotel"; // BuildingLevel::HOTEL is 5
+        return std::to_string(count) + " rumah";
+    }
 
     void setFestival(int fmult, int fdur) override {
         festivalMultiplier = fmult;

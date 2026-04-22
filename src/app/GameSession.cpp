@@ -50,12 +50,12 @@ GameSession::GameSession()
       snapshotCallback(),
       jailAttemptCounts(),
       skillCardFactory(),
-      skillDeck(),
-      skillDiscard() {}
+      skillDeck() {}
 
 void GameSession::setSnapshotCallback(SnapshotCallback callback) {
     snapshotCallback = std::move(callback);
 }
+ 
 
 void GameSession::requestStop() { running = false; }
 
@@ -224,7 +224,6 @@ void GameSession::resetSessionState() {
     jailAttemptCounts.clear();
     skillCardFactory.clear();
     skillDeck.clear();
-    skillDiscard.clear();
     gameStarted = false;
     turnActionTaken = false;
     diceRolledThisTurn = false;

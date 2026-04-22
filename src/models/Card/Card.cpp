@@ -20,3 +20,11 @@ Card::~Card(){}
 int Card::getCardId() const{
     return cardId;
 }
+
+std::string Card::getDisplayLabel() const {
+    std::string label = getType();
+    if (getValue() != 0) {
+        label += " (" + std::to_string(getValue()) + ")";
+    }
+    return label;
+}

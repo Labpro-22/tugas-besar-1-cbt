@@ -96,19 +96,10 @@ inline std::string colorGroupLabel(ColorGroup color) {
 }
 
 inline std::string buildingLabel(const Property* property) {
-    if (property == nullptr || property->getType() != "Street") {
+    if (property == nullptr) {
         return "-";
     }
-
-    const int buildingCount = property->getBuildingCount();
-    if (buildingCount <= 0) {
-        return "0 rumah";
-    }
-    if (buildingCount >= static_cast<int>(BuildingLevel::HOTEL)) {
-        return "Hotel";
-    }
-
-    return std::to_string(buildingCount) + " rumah";
+    return property->getBuildingLabel();
 }
 
 inline std::string trim(const std::string& text) {
@@ -142,13 +133,7 @@ inline std::string skillCardDisplayLabel(const Card* card) {
     if (card == nullptr) {
         return "-";
     }
-
-    std::ostringstream oss;
-    oss << card->getType();
-    if (card->getValue() != 0) {
-        oss << " (" << card->getValue() << ")";
-    }
-    return oss.str();
+    return card->getDisplayLabel();
 }
 
 inline std::string resolveTileColorKey(const Tile& tile) {

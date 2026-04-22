@@ -31,7 +31,20 @@ class CardDeck {
 
         // Check whether the deck has no active cards
         bool isEmpty() const;
+
+        // Clear both deck and discard pile
+        void clear();
+
+        // Getters for persistence
+        const std::vector<T>& getActiveDeck() const { return deck; }
+        const std::vector<T>& getDiscardPile() const { return discardPile; }
 };
+
+template <class T>
+void CardDeck<T>::clear() {
+    deck.clear();
+    discardPile.clear();
+}
 
 template <class T>
 T CardDeck<T>::draw() {

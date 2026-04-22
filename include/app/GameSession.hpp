@@ -11,6 +11,7 @@
 #include "GameSessionQueries.hpp"
 #include "models/Card/SkillCardFactory.hpp"
 #include "../models/Card/SkillCard.hpp"
+#include "../models/Card/CardDeck.hpp"
 #include "../models/GameManager/Dice.hpp"
 #include "../models/GameManager/GameManager.hpp"
 #include "../data/Configuration.hpp"
@@ -111,8 +112,7 @@ private:
     SnapshotCallback snapshotCallback;
     std::map<std::string, int> jailAttemptCounts;
     SkillCardFactory skillCardFactory;
-    std::vector<std::string> skillDeck;
-    std::vector<std::string> skillDiscard;
+    CardDeck<std::string> skillDeck;
 
     bool initializeGameFromMenu();
     bool initializeNewGame();

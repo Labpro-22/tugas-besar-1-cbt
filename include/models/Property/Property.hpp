@@ -52,6 +52,7 @@ public:
     virtual int getBuildingCount() const { return 0; }
     virtual int getBuildingInvestmentValue() const { return 0; }
     virtual int getBuildingSellValue() const { return getBuildingInvestmentValue() / 2; }
+    virtual std::string getBuildingLabel() const { return "-"; }
 
     void setCode(std::string newCode);
     void setName(std::string newName);

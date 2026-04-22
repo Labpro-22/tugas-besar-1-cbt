@@ -62,8 +62,7 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
     const std::string targetName = target->getName();
     const std::string targetCode = target->getCode();
     gm->destroyProperty(*p, *target);
-    std::cout << "Properti " << targetName
-              << " dihancurkan oleh DemolitionCard dan kembali ke Bank.\n";
+    std::cout << "Properti " << targetName << " dihancurkan oleh DemolitionCard dan kembali ke Bank.\n";
 
     gm->addLogEntry(p->getUsername() + " menghancurkan properti " + targetCode);
     markAsUsed();
