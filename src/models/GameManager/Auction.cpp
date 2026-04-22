@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <exception>
 
-// Constructor
+
 Auction::Auction(Property* prop, vector<Player*> participants) {
     this->property = prop;
     this->participants = participants;
@@ -72,14 +72,14 @@ void Auction::pass(Player* player) {
     cout << "-- " << player->getUsername() << " memilih PASS (Mundur).\n";
     passCount++;
     
+
+    nextParticipant();
+
     if (passCount >= static_cast<int>(participants.size()) - 1 && winnerIndex != -1) {
         determineWinner();
     } 
     else if (passCount >= static_cast<int>(participants.size())) {
         determineWinner();
-    } 
-    else {
-        nextParticipant();
     }
 }
 

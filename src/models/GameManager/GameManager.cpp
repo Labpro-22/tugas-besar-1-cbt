@@ -161,7 +161,6 @@ void GameManager::movePlayerTo(Player &player, int targetPosition,
     normalizedTarget += boardSize;
   }
 
-  // Validasi bahwa normalizedTarget dalam range yang valid
   if (normalizedTarget < 0 || normalizedTarget >= boardSize) {
     throw InvalidBoardPositionException(targetPosition, boardSize);
   }

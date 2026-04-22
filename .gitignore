@@ -42,3 +42,11 @@ bin/
 
 # debug information files
 *.dwo
+
+
+raylib/
+third_party/raylib/
+build/
+bin/
+*.exe
+*.dll
