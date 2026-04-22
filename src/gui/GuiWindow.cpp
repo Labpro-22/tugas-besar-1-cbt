@@ -52,6 +52,11 @@ GuiWindow::GuiWindow()
       quickButtonLabels{{"", "", "", "", "", ""}},
       quickButtonEnabled{{false, false, false, false, false, false}},
       manualEnabled(false),
+      gameOverPopupDismissed(false),
+      lastAnnouncedActivePlayerIndex(-1),
+      turnPopupPlayerIndex(-1),
+      turnPopupPlayerName(),
+      turnPopupTimer(0.0F),
       georgiaFont{},
       modalPosition{0.0F, 0.0F},
       modalDragOffset{0.0F, 0.0F},
@@ -130,6 +135,8 @@ int GuiWindow::run() {
         BeginDrawing();
         ClearBackground(kPaper);
         drawFrame(layout, currentSnapshot);
+        drawTurnChangePopup(currentSnapshot);
+        drawGameOverPopup(currentSnapshot);
         EndDrawing();
     }
 
@@ -255,6 +262,36 @@ void GuiWindow::openPendingErrorPopup() {
 
 void GuiWindow::applySnapshot(const GameSnapshot& nextSnapshot) {
     std::lock_guard<std::mutex> lock(snapshotMutex);
+
+    if (!nextSnapshot.gameOver) {
+        gameOverPopupDismissed = false;
+    } else if (!hasSnapshot || !snapshot.gameOver) {
+        gameOverPopupDismissed = false;
+    }
+
+    if (nextSnapshot.gameStarted &&
+        nextSnapshot.activePlayerIndex >= 0 &&
+        nextSnapshot.activePlayerIndex <
+            static_cast<int>(nextSnapshot.players.size()) &&
+        hasSnapshot && snapshot.gameStarted &&
+        nextSnapshot.activePlayerIndex != lastAnnouncedActivePlayerIndex) {
+        turnPopupPlayerIndex = nextSnapshot.activePlayerIndex;
+        turnPopupPlayerName =
+            nextSnapshot
+                .players[static_cast<std::size_t>(nextSnapshot.activePlayerIndex)]
+                .name;
+        turnPopupTimer = 2.2F;
+    }
+
+    if (nextSnapshot.gameStarted) {
+        lastAnnouncedActivePlayerIndex = nextSnapshot.activePlayerIndex;
+    } else {
+        lastAnnouncedActivePlayerIndex = -1;
+        turnPopupPlayerIndex = -1;
+        turnPopupPlayerName.clear();
+        turnPopupTimer = 0.0F;
+    }
+
     snapshot = nextSnapshot;
     hasSnapshot = true;
 }

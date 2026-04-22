@@ -130,6 +130,27 @@ inline Color colorFromKey(const std::string& key) {
     return Color{215, 222, 208, 255};
 }
 
+inline Color playerPieceColor(const int playerIndex) {
+    constexpr std::array<Color, 4> kPlayerColors = {
+        Color{211, 47, 47, 255},
+        Color{30, 96, 190, 255},
+        Color{33, 135, 85, 255},
+        Color{231, 123, 21, 255},
+    };
+
+    if (playerIndex < 0) {
+        return kPlayerColors[0];
+    }
+
+    return kPlayerColors[static_cast<std::size_t>(playerIndex) %
+                         kPlayerColors.size()];
+}
+
+inline Color contrastingTextColor(const Color bg) {
+    const int luminance = 299 * bg.r + 587 * bg.g + 114 * bg.b;
+    return luminance > 145000 ? kInk : kWhitePanel;
+}
+
 inline std::string playerStateLabel(const PlayerSnapshot& player) {
     if (player.bankrupt) return "BANKRUPT";
     if (player.jailed) return "JAILED";

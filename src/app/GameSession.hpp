@@ -49,6 +49,7 @@ class GameSnapshot {
 public:
     bool gameStarted = false;
     bool gameOver = false;
+    bool hasWinnerSummary = false;
     int currentTurn = 0;
     int maxTurn = 0;
     int activePlayerIndex = 0;
@@ -61,6 +62,11 @@ public:
     bool hasDiceResult = false;
     std::string headerText;
     std::string statusText;
+    std::string gameOverReason;
+    std::vector<std::string> winnerNames;
+    int winnerCash = 0;
+    int winnerPropertyCount = 0;
+    int winnerCardCount = 0;
     std::vector<PlayerSnapshot> players;
     std::vector<TileSnapshot> tiles;
 };
@@ -93,6 +99,11 @@ private:
     bool turnActionTaken;
     bool diceRolledThisTurn;
     bool gameOverAnnounced;
+    std::string gameOverReason;
+    std::vector<std::string> winnerNames;
+    int winnerCash;
+    int winnerPropertyCount;
+    int winnerCardCount;
     std::string startupMode;
     std::string startupPrompt;
     int startupExpectedPlayers;

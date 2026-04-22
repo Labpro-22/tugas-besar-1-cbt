@@ -2,6 +2,32 @@
 
 using namespace gui_internal;
 
+Rectangle GuiWindow::gameOverPopupCardRect() const {
+    const float cardWidth = 660.0F;
+    const float cardHeight = 498.0F;
+    return Rectangle{(GetScreenWidth() - cardWidth) / 2.0F,
+                     (GetScreenHeight() - cardHeight) / 2.0F,
+                     cardWidth, cardHeight};
+}
+
+Rectangle GuiWindow::gameOverPopupExitButtonRect() const {
+    const Rectangle cardRect = gameOverPopupCardRect();
+    return Rectangle{cardRect.x + 28.0F, cardRect.y + cardRect.height - 114.0F,
+                     292.0F, 46.0F};
+}
+
+Rectangle GuiWindow::gameOverPopupNewGameButtonRect() const {
+    const Rectangle cardRect = gameOverPopupCardRect();
+    return Rectangle{cardRect.x + cardRect.width - 320.0F,
+                     cardRect.y + cardRect.height - 114.0F, 292.0F, 46.0F};
+}
+
+Rectangle GuiWindow::gameOverPopupCloseButtonRect() const {
+    const Rectangle cardRect = gameOverPopupCardRect();
+    return Rectangle{cardRect.x + 28.0F, cardRect.y + cardRect.height - 58.0F,
+                     cardRect.width - 56.0F, 42.0F};
+}
+
 void GuiWindow::drawActionBar(const Layout& layout,
                               const GameSnapshot& currentSnapshot) const {
     const Font& font = georgiaFont;
@@ -197,4 +223,256 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
                    current.yesNo && current.backendOwned ? "TIDAK" : "BATAL", true,
                    false);
     }
+}
+
+void GuiWindow::drawTurnChangePopup(const GameSnapshot& currentSnapshot) const {
+    if (!currentSnapshot.gameStarted) {
+        return;
+    }
+
+    int popupPlayer = -1;
+    std::string popupPlayerName;
+    float popupTimer = 0.0F;
+    {
+        std::lock_guard<std::mutex> lock(snapshotMutex);
+        popupPlayer = turnPopupPlayerIndex;
+        popupPlayerName = turnPopupPlayerName;
+        popupTimer = turnPopupTimer;
+    }
+
+    if (popupTimer <= 0.0F || currentSnapshot.players.empty()) {
+        return;
+    }
+
+    int resolvedPlayerIndex = -1;
+    if (!popupPlayerName.empty()) {
+        for (std::size_t i = 0; i < currentSnapshot.players.size(); ++i) {
+            if (currentSnapshot.players[i].name == popupPlayerName) {
+                resolvedPlayerIndex = static_cast<int>(i);
+                break;
+            }
+        }
+    }
+    if (resolvedPlayerIndex < 0 && popupPlayer >= 0 &&
+        popupPlayer < static_cast<int>(currentSnapshot.players.size())) {
+        resolvedPlayerIndex = popupPlayer;
+    }
+    if (resolvedPlayerIndex < 0) {
+        return;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(modalMutex);
+        if (modal.active) {
+            return;
+        }
+    }
+
+    const Font& font = georgiaFont;
+    const float showDuration = 2.2F;
+    const float fadeWindow = 0.35F;
+    const float alphaScale = popupTimer < fadeWindow ? popupTimer / fadeWindow : 1.0F;
+    const float cardWidth = 430.0F;
+    const float cardHeight = 116.0F;
+    const Rectangle cardRect{(GetScreenWidth() - cardWidth) / 2.0F, 30.0F, cardWidth,
+                             cardHeight};
+
+    const Color pieceColor = playerPieceColor(resolvedPlayerIndex);
+    const Color textColor = contrastingTextColor(pieceColor);
+    const unsigned char panelAlpha =
+        static_cast<unsigned char>(clampFloat(240.0F * alphaScale, 0.0F, 255.0F));
+    const unsigned char textAlpha =
+        static_cast<unsigned char>(clampFloat(255.0F * alphaScale, 0.0F, 255.0F));
+    const unsigned char shadowAlpha =
+        static_cast<unsigned char>(clampFloat(90.0F * alphaScale, 0.0F, 255.0F));
+    Color panel = pieceColor;
+    panel.a = panelAlpha;
+    Color text = textColor;
+    text.a = textAlpha;
+
+    DrawRectangleRounded(
+        Rectangle{cardRect.x + 6.0F, cardRect.y + 6.0F, cardRect.width, cardRect.height},
+        0.22F, 16, Color{20, 18, 16, shadowAlpha});
+    DrawRectangleRounded(cardRect, 0.22F, 16, panel);
+    DrawRectangleRoundedLines(cardRect, 0.22F, 16,
+                              Color{255, 255, 255, panelAlpha});
+
+    DrawTextEx(font, "GILIRAN BERGANTI", Vector2{cardRect.x + 18.0F, cardRect.y + 16.0F},
+               24.0F, 1.0F, text);
+    const std::string playerText =
+        currentSnapshot.players[static_cast<std::size_t>(resolvedPlayerIndex)].name;
+    drawTextCentered(font,
+                     truncateText(font, playerText, 34.0F, 1.0F, cardRect.width - 34.0F),
+                     Rectangle{cardRect.x + 12.0F, cardRect.y + 44.0F,
+                               cardRect.width - 24.0F, 56.0F},
+                     34.0F, 1.0F, text);
+
+    const float progress = clampFloat(popupTimer / showDuration, 0.0F, 1.0F);
+    DrawRectangleRounded(
+        Rectangle{cardRect.x + 20.0F, cardRect.y + cardRect.height - 16.0F,
+                  (cardRect.width - 40.0F) * progress, 6.0F},
+        0.4F, 8, Color{text.r, text.g, text.b, static_cast<unsigned char>(150 * alphaScale)});
+}
+
+void GuiWindow::drawGameOverPopup(const GameSnapshot& currentSnapshot) const {
+    if (!currentSnapshot.gameOver || !currentSnapshot.hasWinnerSummary) {
+        return;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(snapshotMutex);
+        if (gameOverPopupDismissed) {
+            return;
+        }
+    }
+
+    if (currentSnapshot.winnerNames.empty()) {
+        return;
+    }
+
+    const Font& font = georgiaFont;
+
+    int winnerIndex = -1;
+    if (!currentSnapshot.winnerNames.empty()) {
+        for (std::size_t i = 0; i < currentSnapshot.players.size(); ++i) {
+            if (currentSnapshot.players[i].name == currentSnapshot.winnerNames.front()) {
+                winnerIndex = static_cast<int>(i);
+                break;
+            }
+        }
+    }
+
+    const Color pieceColor = playerPieceColor(winnerIndex);
+    const Color textColor = contrastingTextColor(pieceColor);
+    const Rectangle overlay{0.0F, 0.0F, static_cast<float>(GetScreenWidth()),
+                            static_cast<float>(GetScreenHeight())};
+    DrawRectangleRec(overlay, Color{20, 18, 16, 120});
+
+    const Rectangle cardRect = gameOverPopupCardRect();
+    const Rectangle innerRect{cardRect.x + 18.0F, cardRect.y + 122.0F,
+                              cardRect.width - 36.0F, 256.0F};
+    const Rectangle statsLine{innerRect.x + 28.0F, innerRect.y + 186.0F,
+                              innerRect.width - 56.0F, 1.0F};
+    const Rectangle badgeRect{innerRect.x + innerRect.width / 2.0F - 44.0F,
+                              innerRect.y + 30.0F, 88.0F, 88.0F};
+
+    const Color cardBase = Color{232, 226, 214, 255};
+    const Color surface = Color{235, 229, 218, 255};
+    const Color border = Color{214, 206, 193, 255};
+    const Color heading = Color{129, 107, 56, 255};
+    const Color muted = Color{123, 114, 98, 255};
+    const Color statLabel = Color{153, 145, 133, 255};
+    const Color statValue = Color{115, 76, 66, 255};
+
+    DrawRectangleRounded(cardRect, 0.02F, 6, cardBase);
+    DrawRectangleRoundedLines(cardRect, 0.02F, 6, border);
+
+    drawTextCentered(font, "PERMAINAN SELESAI",
+                     Rectangle{cardRect.x + 20.0F, cardRect.y + 26.0F,
+                               cardRect.width - 40.0F, 28.0F},
+                     28.0F, 1.0F, heading);
+    drawTextCentered(font, "THE BOARD IS RESOLVED",
+                     Rectangle{cardRect.x + 20.0F, cardRect.y + 56.0F,
+                               cardRect.width - 40.0F, 20.0F},
+                     19.0F, 1.0F, muted);
+    DrawLineEx(Vector2{cardRect.x + 60.0F, cardRect.y + 76.0F},
+               Vector2{cardRect.x + cardRect.width - 60.0F, cardRect.y + 76.0F},
+               1.0F, border);
+
+    if (!currentSnapshot.gameOverReason.empty()) {
+        drawTextCentered(
+            font,
+            "\"" + currentSnapshot.gameOverReason + "\"",
+            Rectangle{cardRect.x + 32.0F, cardRect.y + 84.0F, cardRect.width - 64.0F,
+                      24.0F},
+            18.0F, 1.0F, muted);
+    }
+
+    DrawRectangleRec(innerRect, surface);
+    DrawRectangleLinesEx(innerRect, 1.0F, border);
+
+    const Color badgeTop = Color{188, 164, 63, 255};
+    const Color badgeBottom = Color{141, 118, 19, 255};
+    DrawRectangleRounded(badgeRect, 0.16F, 10, badgeBottom);
+    DrawRectangleRounded(
+        Rectangle{badgeRect.x + 1.0F, badgeRect.y + 1.0F, badgeRect.width - 2.0F,
+                  badgeRect.height / 2.0F},
+        0.16F, 10, badgeTop);
+    DrawRectangleRoundedLines(badgeRect, 0.16F, 10, Color{118, 99, 22, 255});
+
+    const int badgeNumber = winnerIndex >= 0 ? winnerIndex + 1 : 1;
+    drawTextCentered(font, std::to_string(badgeNumber), badgeRect, 48.0F, 1.0F,
+                     Color{58, 48, 18, 255});
+
+    drawTextCentered(font, "Victory Claimed",
+                     Rectangle{innerRect.x + 20.0F, innerRect.y + 126.0F,
+                               innerRect.width - 40.0F, 22.0F},
+                     22.0F, 1.0F, statValue);
+
+    std::string winnerLine = "ESTATE MANAGER: ";
+    for (std::size_t i = 0; i < currentSnapshot.winnerNames.size(); ++i) {
+        if (i > 0) {
+            winnerLine += ", ";
+        }
+        winnerLine += currentSnapshot.winnerNames[i];
+    }
+    drawTextCentered(font,
+                     truncateText(font, winnerLine, 17.0F, 1.0F,
+                                  innerRect.width - 24.0F),
+                     Rectangle{innerRect.x + 12.0F, innerRect.y + 152.0F,
+                               innerRect.width - 24.0F, 22.0F},
+                     17.0F, 1.0F, muted);
+
+    DrawRectangleRec(statsLine, border);
+    DrawRectangleRec(Rectangle{innerRect.x + innerRect.width / 3.0F,
+                               statsLine.y + 14.0F, 1.0F, 52.0F},
+                     border);
+    DrawRectangleRec(Rectangle{innerRect.x + (innerRect.width * 2.0F) / 3.0F,
+                               statsLine.y + 14.0F, 1.0F, 52.0F},
+                     border);
+
+    const float statY = statsLine.y + 14.0F;
+    const float colW = innerRect.width / 3.0F;
+    drawTextCentered(font, "CASH",
+                     Rectangle{innerRect.x, statY, colW, 18.0F}, 16.0F, 1.0F,
+                     statLabel);
+    drawTextCentered(font, "M" + std::to_string(currentSnapshot.winnerCash),
+                     Rectangle{innerRect.x, statY + 20.0F, colW, 28.0F}, 30.0F, 1.0F,
+                     statValue);
+
+    drawTextCentered(font, "PROPERTI",
+                     Rectangle{innerRect.x + colW, statY, colW, 18.0F}, 16.0F, 1.0F,
+                     statLabel);
+    drawTextCentered(font, std::to_string(currentSnapshot.winnerPropertyCount),
+                     Rectangle{innerRect.x + colW, statY + 20.0F, colW, 28.0F},
+                     30.0F, 1.0F, statValue);
+
+    drawTextCentered(font, "KARTU",
+                     Rectangle{innerRect.x + colW * 2.0F, statY, colW, 18.0F}, 16.0F,
+                     1.0F, statLabel);
+    drawTextCentered(font, std::to_string(currentSnapshot.winnerCardCount),
+                     Rectangle{innerRect.x + colW * 2.0F, statY + 20.0F, colW, 28.0F},
+                     30.0F, 1.0F, statValue);
+
+    const Rectangle exitRect = gameOverPopupExitButtonRect();
+    const Rectangle newGameRect = gameOverPopupNewGameButtonRect();
+    const Rectangle closeRect = gameOverPopupCloseButtonRect();
+
+    DrawRectangleRec(exitRect, Color{214, 214, 214, 255});
+    DrawRectangleLinesEx(exitRect, 1.0F, Color{196, 196, 196, 255});
+    drawTextCentered(font, "KELUAR", exitRect, 22.0F, 1.0F, Color{88, 82, 74, 255});
+
+    DrawRectangleRec(newGameRect, Color{98, 8, 8, 255});
+    DrawRectangleLinesEx(newGameRect, 1.0F, Color{120, 35, 35, 255});
+    drawTextCentered(font, "MAIN LAGI", newGameRect, 22.0F, 1.0F,
+                     Color{245, 239, 227, 255});
+
+    const Color closeFill = Color{122, 102, 6, 255};
+    const Color closeText = contrastingTextColor(closeFill);
+    DrawRectangleRec(closeRect, closeFill);
+    DrawRectangleLinesEx(closeRect, 1.0F, Color{147, 127, 23, 255});
+    drawTextCentered(font, "TUTUP", closeRect, 24.0F, 1.0F, closeText);
+
+    (void)pieceColor;
+    (void)textColor;
 }

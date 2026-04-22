@@ -121,8 +121,53 @@ GuiWindow::Layout GuiWindow::computeLayout(const int screenWidth,
 
 void GuiWindow::updateFrame(const Layout& layout,
                             const GameSnapshot& currentSnapshot) {
+    {
+        std::lock_guard<std::mutex> lock(snapshotMutex);
+        if (turnPopupTimer > 0.0F) {
+            turnPopupTimer = std::max(0.0F, turnPopupTimer - GetFrameTime());
+            if (turnPopupTimer <= 0.0F) {
+                turnPopupPlayerIndex = -1;
+            }
+        }
+    }
+
     openPendingErrorPopup();
     updateModalInput();
+
+    if (currentSnapshot.gameOver && currentSnapshot.hasWinnerSummary) {
+        bool popupDismissed = false;
+        {
+            std::lock_guard<std::mutex> lock(snapshotMutex);
+            popupDismissed = gameOverPopupDismissed;
+        }
+
+        if (!popupDismissed) {
+            if (isButtonPressed(gameOverPopupExitButtonRect(), true)) {
+                submitInputLine("EXIT");
+                std::lock_guard<std::mutex> lock(snapshotMutex);
+                gameOverPopupDismissed = true;
+                return;
+            }
+
+            if (isButtonPressed(gameOverPopupNewGameButtonRect(), true)) {
+                submitInputLine("NEW_GAME");
+                std::lock_guard<std::mutex> lock(snapshotMutex);
+                gameOverPopupDismissed = true;
+                return;
+            }
+        }
+
+        if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_ESCAPE) ||
+            isButtonPressed(gameOverPopupCloseButtonRect(), true)) {
+            std::lock_guard<std::mutex> lock(snapshotMutex);
+            gameOverPopupDismissed = true;
+            return;
+        }
+
+        if (!popupDismissed) {
+            return;
+        }
+    }
 
     ModalState currentModal;
     {

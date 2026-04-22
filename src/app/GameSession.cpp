@@ -44,6 +44,11 @@ GameSession::GameSession()
       turnActionTaken(false),
       diceRolledThisTurn(false),
       gameOverAnnounced(false),
+      gameOverReason(),
+      winnerNames(),
+      winnerCash(0),
+      winnerPropertyCount(0),
+      winnerCardCount(0),
       startupMode("MAIN_MENU"),
       startupPrompt(),
       startupExpectedPlayers(0),
@@ -230,6 +235,11 @@ void GameSession::resetSessionState() {
     turnActionTaken = false;
     diceRolledThisTurn = false;
     gameOverAnnounced = false;
+    gameOverReason.clear();
+    winnerNames.clear();
+    winnerCash = 0;
+    winnerPropertyCount = 0;
+    winnerCardCount = 0;
     startupMode = "MAIN_MENU";
     startupPrompt.clear();
     startupExpectedPlayers = 0;
@@ -389,12 +399,19 @@ void GameSession::announceWinner() {
     int bestProperties = -1;
     int bestCards = -1;
 
+    winnerNames.clear();
+    winnerCash = 0;
+    winnerPropertyCount = 0;
+    winnerCardCount = 0;
+
     std::cout << "\nPermainan selesai!\n";
     if (game.getMaxTurn() > 0 && game.getCurrentTurn() > game.getMaxTurn()) {
-        std::cout << "Alasan: Batas maksimum giliran tercapai.\n";
+        gameOverReason = "Batas maksimum giliran tercapai.";
     } else {
-        std::cout << "Alasan: Semua pemain kecuali satu bangkrut.\n";
+        gameOverReason = "Semua pemain kecuali pemenang bangkrut.";
     }
+
+    std::cout << "Alasan: " << gameOverReason << "\n";
 
     std::cout << "\nRekap pemain:\n";
     for (Player& player : game.getPlayers()) {
@@ -426,6 +443,17 @@ void GameSession::announceWinner() {
             bestCards = cards;
         } else if (tied) {
             winners.push_back(&player);
+        }
+    }
+
+    if (!winners.empty()) {
+        winnerCash = winners.front()->getCash();
+        winnerPropertyCount = winners.front()->getPropertyCount();
+        winnerCardCount = winners.front()->getCardCount();
+        for (Player* winner : winners) {
+            if (winner != nullptr) {
+                winnerNames.push_back(winner->getUsername());
+            }
         }
     }
 

@@ -45,6 +45,7 @@ GameSnapshot GameSession::buildSnapshot() const {
     GameSnapshot snapshot;
     snapshot.gameStarted = gameStarted;
     snapshot.gameOver = gameStarted && game.isGameOver();
+    snapshot.hasWinnerSummary = snapshot.gameOver && !winnerNames.empty();
     snapshot.currentTurn = game.getCurrentTurn();
     snapshot.maxTurn = game.getMaxTurn();
     snapshot.activePlayerIndex = game.getActivePlayerIndex();
@@ -57,6 +58,11 @@ GameSnapshot GameSession::buildSnapshot() const {
     snapshot.hasDiceResult = dice.getDie1() > 0 && dice.getDie2() > 0;
     snapshot.headerText = buildHeaderText();
     snapshot.statusText = buildStatusText();
+    snapshot.gameOverReason = gameOverReason;
+    snapshot.winnerNames = winnerNames;
+    snapshot.winnerCash = winnerCash;
+    snapshot.winnerPropertyCount = winnerPropertyCount;
+    snapshot.winnerCardCount = winnerCardCount;
 
     for (const Player& player : game.getPlayers()) {
         PlayerSnapshot playerSnapshot;

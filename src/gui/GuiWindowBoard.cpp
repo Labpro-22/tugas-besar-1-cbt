@@ -92,9 +92,6 @@ void GuiWindow::drawBoard(const Layout& layout,
         }
     }
 
-    const std::array<Color, 4> playerColors = {
-        Color{211, 47, 47, 255}, Color{30, 96, 190, 255},
-        Color{33, 135, 85, 255}, Color{231, 123, 21, 255}};
     for (std::size_t i = 0; i < currentSnapshot.players.size(); ++i) {
         const PlayerSnapshot& player = currentSnapshot.players[i];
         const Rectangle tileRect =
@@ -107,7 +104,7 @@ void GuiWindow::drawBoard(const Layout& layout,
         const float markerY = tileRect.y + 7.0F + row * (markerSize + markerGap);
         DrawCircle(markerX + markerSize / 2.0F, markerY + markerSize / 2.0F,
                    markerSize / 2.0F,
-                   playerColors[i % playerColors.size()]);
+                   playerPieceColor(static_cast<int>(i)));
         drawTextCentered(font, std::to_string(static_cast<int>(i + 1)),
                          Rectangle{markerX, markerY, markerSize, markerSize}, 13.0F,
                          1.0F, kWhitePanel);

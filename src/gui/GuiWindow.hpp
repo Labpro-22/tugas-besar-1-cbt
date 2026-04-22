@@ -97,6 +97,11 @@ private:
     std::array<std::string, 6> quickButtonLabels;
     std::array<bool, 6> quickButtonEnabled;
     bool manualEnabled;
+    bool gameOverPopupDismissed;
+    int lastAnnouncedActivePlayerIndex;
+    int turnPopupPlayerIndex;
+    std::string turnPopupPlayerName;
+    float turnPopupTimer;
     Font georgiaFont;
     Vector2 modalPosition;
     Vector2 modalDragOffset;
@@ -136,6 +141,12 @@ private:
     void drawBoard(const Layout& layout, const GameSnapshot& currentSnapshot) const;
     void drawActionBar(const Layout& layout, const GameSnapshot& currentSnapshot) const;
     void drawLogPanel(const Layout& layout);
+    void drawTurnChangePopup(const GameSnapshot& currentSnapshot) const;
+    void drawGameOverPopup(const GameSnapshot& currentSnapshot) const;
+    Rectangle gameOverPopupCardRect() const;
+    Rectangle gameOverPopupExitButtonRect() const;
+    Rectangle gameOverPopupNewGameButtonRect() const;
+    Rectangle gameOverPopupCloseButtonRect() const;
     void drawModal(const GameSnapshot& currentSnapshot) const;
 };
 
