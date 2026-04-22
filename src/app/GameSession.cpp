@@ -13,18 +13,11 @@
 #include <stdexcept>
 #include <utility>
 
-<<<<<<< Updated upstream
-#include "core/Board-Tiles/PropertyTile.hpp"
-#include "core/Board-Tiles/Tile.hpp"
-#include "models/Card/SkillCard.hpp"
-#include "models/GameManager/LogEntry.hpp"
-=======
 #include "core/Board-Tiles/PropertyTile.hpp"
 #include "core/Board-Tiles/Tile.hpp"
 #include "exception/NimonspoliExceptions.hpp"
 #include "models/Card/SkillCard.hpp"
 #include "models/GameManager/LogEntry.hpp"
->>>>>>> Stashed changes
 #include "models/GameManager/Player.hpp"
 #include "models/Property/Railroad.hpp"
 #include "models/Property/Street.hpp"
@@ -183,7 +176,7 @@ bool GameSession::initializeNewGame() {
                                    " dari " + std::to_string(playerCount) + ".",
                                playerCount, i);
             notifySnapshot();
-            username = trim(cli.getInputHandler().readPromptLine(
+            username = app::trim(cli.getInputHandler().readPromptLine(
                 "Masukkan username pemain " + std::to_string(i + 1) + ": ",
                 "Username Pemain"));
         } while (username.empty());
@@ -426,7 +419,7 @@ void GameSession::announceWinner() {
     std::cout << "\nRekap pemain:\n";
     for (Player& player : game.getPlayers()) {
         std::cout << "- " << player.getUsername()
-                  << " | Status: " << playerStatusLabel(player)
+                  << " | Status: " << app::playerStatusLabel(player)
                   << " | Uang: M" << player.getCash()
                   << " | Properti: " << player.getPropertyCount()
                   << " | Kartu: " << player.getCardCount() << "\n";

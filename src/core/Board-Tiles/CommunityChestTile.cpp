@@ -6,16 +6,15 @@
 #include "exception/NimonspoliExceptions.hpp"
 
 #include <algorithm>
-#include <iostream>
 #include <random>
 #include <vector>
 
-static std::vector<CommunityCardType> makeCommunityDeck() {
+std::vector<CommunityCardType> CommunityChestTile::makeCommunityDeck() {
   return {CommunityCardType::BIRTHDAY, CommunityCardType::DOCTOR_FEE,
           CommunityCardType::CAMPAIGN_FEE};
 }
 
-static CommunityCardType drawCommunityCardType() {
+CommunityCardType CommunityChestTile::drawCommunityCardType() {
   static std::vector<CommunityCardType> deck;
   static std::mt19937 rng(std::random_device{}());
 
@@ -41,9 +40,9 @@ void CommunityChestTile::drawCardandExecute(Player &player,
   try {
     CommunityCard card(0, drawCommunityCardType());
 
-    std::cout << "Kamu mendarat di Petak Dana Umum!\n";
-    std::cout << "Mengambil kartu...\n";
-    std::cout << "Kartu: \"" << card.getDescription() << "\"\n";
+    logTileEvent(game, player, "KARTU",
+                 "Mendarat di Dana Umum dan mengambil kartu: " +
+                     card.getDescription());
 
     card.execute(&player, &game);
   } catch (const NimonspoliException &) {

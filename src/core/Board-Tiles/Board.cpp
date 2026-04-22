@@ -24,23 +24,27 @@
 #include <stdexcept>
 #include <utility>
 
-namespace {
+int Board::actionCount = 0;
+int Board::propertyCount = 0;
+int Board::taxCount = 0;
+int Board::cardCount = 0;
+int Board::festivalCount = 0;
 
-std::string toUpper(std::string text) {
+std::string Board::toUpper(std::string text) {
   std::transform(text.begin(), text.end(), text.begin(), [](unsigned char ch) {
     return static_cast<char>(std::toupper(ch));
   });
   return text;
 }
 
-std::string toLower(std::string text) {
+std::string Board::toLower(std::string text) {
   std::transform(text.begin(), text.end(), text.begin(), [](unsigned char ch) {
     return static_cast<char>(std::tolower(ch));
   });
   return text;
 }
 
-ColorGroup parseColorGroup(const std::string &colorGroup) {
+ColorGroup Board::parseColorGroup(const std::string &colorGroup) {
   const std::string color = toUpper(colorGroup);
   if (color == "COKLAT") return ColorGroup::COKLAT;
   if (color == "BIRU_MUDA") return ColorGroup::BIRU_MUDA;
@@ -54,37 +58,31 @@ ColorGroup parseColorGroup(const std::string &colorGroup) {
   return ColorGroup::ABU_ABU;
 }
 
-std::string getPropertyNameFromConfig(const PropertyConfig &cfg,
-                                      const std::string &fallbackName) {
+std::string Board::getPropertyNameFromConfig(
+    const PropertyConfig &cfg, const std::string &fallbackName) {
   return cfg.name.empty() ? fallbackName : cfg.name;
 }
 
-static int gActionCount = 0;
-static int gPropertyCount = 0;
-static int gTaxCount = 0;
-static int gCardCount = 0;
-static int gFestivalCount = 0;
-
-static void resetTileCounters() {
-  gActionCount = 0;
-  gPropertyCount = 0;
-  gTaxCount = 0;
-  gCardCount = 0;
-  gFestivalCount = 0;
+void Board::resetTileCounters() {
+  actionCount = 0;
+  propertyCount = 0;
+  taxCount = 0;
+  cardCount = 0;
+  festivalCount = 0;
 }
 
-static std::string nextTileId(char category) {
+std::string Board::nextTileId(char category) {
   int *target = nullptr;
   if (category == 'A')
-    target = &gActionCount;
+    target = &actionCount;
   else if (category == 'P')
-    target = &gPropertyCount;
+    target = &propertyCount;
   else if (category == 'T')
-    target = &gTaxCount;
+    target = &taxCount;
   else if (category == 'C')
-    target = &gCardCount;
+    target = &cardCount;
   else if (category == 'F')
-    target = &gFestivalCount;
+    target = &festivalCount;
 
   if (target == nullptr) {
     throw InvalidBoardConfigurationException("Kategori ID petak tidak dikenali.");
@@ -96,11 +94,9 @@ static std::string nextTileId(char category) {
   return oss.str();
 }
 
-}  // namespace
-
-Property *buildPropertyFromConfig(const PropertyConfig &cfg,
-                                  const Configuration &configuration,
-                                  const std::string &fallbackName) {
+Property *Board::buildPropertyFromConfig(const PropertyConfig &cfg,
+                                         const Configuration &configuration,
+                                         const std::string &fallbackName) {
   const std::string propertyType = toUpper(cfg.type);
 
   if (propertyType == "STREET") {
@@ -304,21 +300,12 @@ int Board::findNearestStation(int currentPos) const {
     }
   }
 
-<<<<<<< Updated upstream
   if (bestPos < 0) bestPos = firstStation;
   if (bestPos < 0) {
     throw TileNotFoundException("RAILROAD");
   }
   return bestPos;
 }
-=======
-  if (bestPos < 0) bestPos = firstStation;
-  if (bestPos < 0) {
-    throw TileNotFoundException("RAILROAD");
-  }
-  return bestPos;
-}
->>>>>>> Stashed changes
 
 int Board::findJailPosition() const {
   for (int i = 0; i < tileCount; ++i) {

@@ -13,7 +13,7 @@ void GuiWindow::drawFrame(const Layout& layout,
     drawStatusPanel(layout, currentSnapshot);
     drawBoard(layout, currentSnapshot);
     drawRoster(layout, currentSnapshot);
-    drawLogPanel(layout);
+    drawLogPanel(layout, currentSnapshot);
     drawActionBar(layout, currentSnapshot);
     drawModal(currentSnapshot);
 }

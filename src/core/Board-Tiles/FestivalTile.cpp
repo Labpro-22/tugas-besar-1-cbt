@@ -8,7 +8,7 @@
 #include "views/InputHandler.hpp"
 #include "exception/NimonspoliExceptions.hpp"
 
-#include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -39,21 +39,27 @@ void FestivalTile::onLanded(Player &player, GameManager &game) {
         }
 
         if (ownedTiles.empty()) {
-            std::cout << "Kamu mendarat di petak Festival!\n";
-            std::cout << "Kamu belum memiliki properti untuk diberi efek festival.\n";
+            logTileEvent(game, player, "FESTIVAL",
+                         "Mendarat di Festival, tetapi belum memiliki properti.");
             return;
         }
 
-        std::cout << "Kamu mendarat di petak Festival!\n\n";
-        std::cout << "Daftar properti milikmu:\n";
+        std::ostringstream propertyList;
+        propertyList << "Mendarat di Festival. Properti yang dapat dipilih: ";
+        bool firstProperty = true;
         for (PropertyTile *tile : ownedTiles) {
             if (tile == nullptr) {
                 continue;
             }
 
-            std::cout << "- " << tile->getProperty().getCode() << " ("
-                      << tile->getProperty().getName() << ")\n";
+            if (!firstProperty) {
+                propertyList << ", ";
+            }
+            propertyList << tile->getProperty().getCode() << " ("
+                         << tile->getProperty().getName() << ")";
+            firstProperty = false;
         }
+        logTileEvent(game, player, "FESTIVAL", propertyList.str());
 
         PropertyTile *selectedTile = nullptr;
         InputHandler input;
@@ -69,7 +75,9 @@ void FestivalTile::onLanded(Player &player, GameManager &game) {
             }
 
             if (selectedTile == nullptr) {
-                std::cout << "-> Kode properti tidak valid!\n";
+                logTileEvent(game, player, "FESTIVAL",
+                             "Kode properti festival tidak valid: " +
+                                 propertyCode);
             }
         }
 
@@ -86,12 +94,12 @@ void FestivalTile::onLanded(Player &player, GameManager &game) {
             nextMultiplier *= 2;
         }
 
-        if (currentMultiplier == 1) {
-            std::cout << "\nEfek festival aktif!\n";
-        } else if (nextMultiplier == currentMultiplier) {
-            std::cout << "\nEfek sudah maksimum (harga sewa sudah digandakan tiga kali)\n";
-        } else {
-            std::cout << "\nEfek diperkuat!\n";
+        std::string festivalState = "Efek festival aktif.";
+        if (nextMultiplier == currentMultiplier) {
+            festivalState =
+                "Efek festival sudah maksimum; harga sewa sudah digandakan tiga kali.";
+        } else if (currentMultiplier > 1) {
+            festivalState = "Efek festival diperkuat.";
         }
 
         const int baseRent = selectedTile->getProperty().getPropertyDetail();
@@ -103,13 +111,19 @@ void FestivalTile::onLanded(Player &player, GameManager &game) {
         selectedTile->applyFestivalEffect(nextMultiplier, 3);
         game.executeFestival(player, selectedTile->getProperty().getCode());
 
+        std::ostringstream detail;
+        detail << festivalState << " Properti "
+               << selectedTile->getProperty().getCode() << " ("
+               << selectedTile->getProperty().getName() << "). ";
         if (currentMultiplier > 1) {
-            std::cout << "Sewa sebelumnya: M" << (baseRent * currentMultiplier) << "\n";
+            detail << "Sewa sebelumnya M" << (baseRent * currentMultiplier)
+                   << ". ";
         } else {
-            std::cout << "Sewa awal: M" << baseRent << "\n";
+            detail << "Sewa awal M" << baseRent << ". ";
         }
-        std::cout << "Sewa sekarang: M" << (baseRent * nextMultiplier) << "\n";
-        std::cout << "Durasi: 3 giliran\n";
+        detail << "Sewa sekarang M" << (baseRent * nextMultiplier)
+               << ". Durasi 3 giliran.";
+        logTileEvent(game, player, "FESTIVAL", detail.str());
     } catch (const NimonspoliException &) {
         throw;
     } catch (const std::exception &e) {

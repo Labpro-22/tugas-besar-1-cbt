@@ -46,6 +46,14 @@ public:
     int festivalDuration = 0;
 };
 
+class LogSnapshot {
+public:
+    int turn = 0;
+    std::string username;
+    std::string actionType;
+    std::string detail;
+};
+
 class GameSnapshot {
 public:
     bool gameStarted = false;
@@ -70,6 +78,7 @@ public:
     int winnerCardCount = 0;
     std::vector<PlayerSnapshot> players;
     std::vector<TileSnapshot> tiles;
+    std::vector<LogSnapshot> logs;
 };
 
 class Property;

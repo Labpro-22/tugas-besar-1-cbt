@@ -217,6 +217,33 @@ inline std::vector<std::string> splitLines(const std::string& text) {
     return lines;
 }
 
+inline std::string formatTransactionLogEntry(const LogSnapshot& entry) {
+    std::ostringstream oss;
+    oss << "[Turn " << entry.turn << "] ";
+    oss << (entry.username.empty() ? "-" : entry.username);
+
+    if (!entry.actionType.empty()) {
+        oss << " | " << entry.actionType;
+    }
+    if (!entry.detail.empty()) {
+        oss << " | " << entry.detail;
+    }
+
+    return oss.str();
+}
+
+inline std::string buildTransactionLogText(const GameSnapshot& currentSnapshot) {
+    if (currentSnapshot.logs.empty()) {
+        return "Belum ada transaksi/log yang tercatat.";
+    }
+
+    std::ostringstream oss;
+    for (const LogSnapshot& entry : currentSnapshot.logs) {
+        oss << formatTransactionLogEntry(entry) << '\n';
+    }
+    return oss.str();
+}
+
 inline std::string truncateText(const Font& font, const std::string& text,
                          const float fontSize, const float spacing,
                          const float maxWidth) {

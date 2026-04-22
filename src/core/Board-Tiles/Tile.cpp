@@ -28,3 +28,10 @@ void Tile::removePlayer(Player &player) {
         on_tile.erase(target);
     }
 }
+
+void Tile::logTileEvent(GameManager &game, const Player &player,
+                        const std::string &action,
+                        const std::string &detail) {
+    game.getLogger().log(game.getCurrentTurn(), player.getUsername(), action,
+                         detail);
+}

@@ -287,14 +287,9 @@ void GuiWindow::updateFrame(const Layout& layout,
             std::max(20.0F, layout.logRect.width - logScrollbarWidth - 10.0F),
             layout.logRect.height};
 
-        std::string outputCopy;
-        {
-            std::lock_guard<std::mutex> lock(outputMutex);
-            outputCopy = outputText;
-        }
-
+        const std::string logText = buildTransactionLogText(currentSnapshot);
         const auto lines =
-            wrapText(georgiaFont, outputCopy, 15.0F, 1.0F, textRect.width, 100000);
+            wrapText(georgiaFont, logText, 15.0F, 1.0F, textRect.width, 100000);
         const int visibleLines =
             std::max(1, static_cast<int>(layout.logRect.height / logLineHeight));
         const int maxStartLine =

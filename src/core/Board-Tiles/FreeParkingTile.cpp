@@ -2,14 +2,12 @@
 #include "models/GameManager/GameManager.hpp"
 #include "models/GameManager/Player.hpp"
 
-#include <iostream>
-
 FreeParkingTile::FreeParkingTile(const std::string &code,
                                  const std::string &name, int pos)
     : ActionTile(code, name, pos, "free_parking") {}
 
 void FreeParkingTile::onLanded(Player &player, GameManager &game) {
-  (void)game;
-  std::cout << player.getUsername() << " berhenti di " << getName()
-            << ". Tidak ada aksi.\n";
+  logTileEvent(game, player, "PETAK",
+               player.getUsername() + " berhenti di " + getName() +
+                   ". Tidak ada aksi.");
 }

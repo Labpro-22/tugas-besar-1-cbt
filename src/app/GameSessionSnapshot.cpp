@@ -100,6 +100,16 @@ GameSnapshot GameSession::buildSnapshot() const {
         snapshot.tiles.push_back(tileSnapshot);
     }
 
+    const std::vector<LogEntry> logEntries = game.getLogger().getEntries();
+    for (const LogEntry& entry : logEntries) {
+        LogSnapshot logSnapshot;
+        logSnapshot.turn = entry.turn;
+        logSnapshot.username = entry.username;
+        logSnapshot.actionType = entry.actionType;
+        logSnapshot.detail = entry.detail;
+        snapshot.logs.push_back(logSnapshot);
+    }
+
     return snapshot;
 }
 

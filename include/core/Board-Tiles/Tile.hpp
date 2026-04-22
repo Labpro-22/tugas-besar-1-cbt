@@ -16,6 +16,10 @@ class Tile {
         std::string tile_type;
         std::vector<Player *> on_tile;
 
+        static void logTileEvent(GameManager &game, const Player &player,
+                                 const std::string &action,
+                                 const std::string &detail);
+
     public:
         // Konstruktor dan Destruktor
         Tile(const std::string &code, const std::string &name, int pos, const std::string &type = "base");

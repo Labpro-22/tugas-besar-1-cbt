@@ -140,7 +140,7 @@ private:
     void drawRoster(const Layout& layout, const GameSnapshot& currentSnapshot) const;
     void drawBoard(const Layout& layout, const GameSnapshot& currentSnapshot) const;
     void drawActionBar(const Layout& layout, const GameSnapshot& currentSnapshot) const;
-    void drawLogPanel(const Layout& layout);
+    void drawLogPanel(const Layout& layout, const GameSnapshot& currentSnapshot);
     void drawTurnChangePopup(const GameSnapshot& currentSnapshot) const;
     void drawGameOverPopup(const GameSnapshot& currentSnapshot) const;
     Rectangle gameOverPopupCardRect() const;

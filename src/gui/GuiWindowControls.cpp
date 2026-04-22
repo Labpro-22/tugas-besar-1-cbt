@@ -89,18 +89,13 @@ void GuiWindow::drawActionBar(const Layout& layout,
                manualEnabled, false);
 }
 
-void GuiWindow::drawLogPanel(const Layout& layout) {
+void GuiWindow::drawLogPanel(const Layout& layout,
+                             const GameSnapshot& currentSnapshot) {
     const Font& font = georgiaFont;
     DrawTextEx(font, "CATATAN TRANSAKSI",
                Vector2{layout.rightPanelRect.x + 22.0F,
                        layout.rosterRect.y + layout.rosterRect.height + 10.0F},
                20.0F, 1.0F, kAccentDark);
-
-    std::string outputCopy;
-    {
-        std::lock_guard<std::mutex> lock(outputMutex);
-        outputCopy = outputText;
-    }
 
     const float scrollbarWidth = 12.0F;
     const Rectangle textRect{
@@ -108,8 +103,9 @@ void GuiWindow::drawLogPanel(const Layout& layout) {
         layout.logRect.y,
         std::max(20.0F, layout.logRect.width - scrollbarWidth - 10.0F),
         layout.logRect.height};
+    const std::string logText = buildTransactionLogText(currentSnapshot);
     const auto lines =
-        wrapText(font, outputCopy, 15.0F, 1.0F, textRect.width, 100000);
+        wrapText(font, logText, 15.0F, 1.0F, textRect.width, 100000);
     const float lineHeight = 19.0F;
     const int visibleLines = std::max(1, static_cast<int>(layout.logRect.height / lineHeight));
     const int maxStartLine =

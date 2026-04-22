@@ -6,16 +6,15 @@
 #include "exception/NimonspoliExceptions.hpp"
 
 #include <algorithm>
-#include <iostream>
 #include <random>
 #include <vector>
 
-static std::vector<ChanceCardType> makeChanceDeck() {
+std::vector<ChanceCardType> ChanceTile::makeChanceDeck() {
   return {ChanceCardType::GO_TO_NEAREST_STATION, ChanceCardType::MOVE_BACK_3,
           ChanceCardType::GO_TO_JAIL};
 }
 
-static ChanceCardType drawChanceCardType() {
+ChanceCardType ChanceTile::drawChanceCardType() {
   static std::vector<ChanceCardType> deck;
   static std::mt19937 rng(std::random_device{}());
 
@@ -40,9 +39,9 @@ void ChanceTile::drawCardandExecute(Player &player, GameManager &game) {
   try {
     ChanceCard card(0, drawChanceCardType());
 
-    std::cout << "Kamu mendarat di Petak Kesempatan!\n";
-    std::cout << "Mengambil kartu...\n";
-    std::cout << "Kartu: \"" << card.getDescription() << "\"\n";
+    logTileEvent(game, player, "KARTU",
+                 "Mendarat di Kesempatan dan mengambil kartu: " +
+                     card.getDescription());
 
     card.execute(&player, &game);
   } catch (const NimonspoliException &) {
