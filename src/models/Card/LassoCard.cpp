@@ -66,7 +66,11 @@ void LassoCard::use(Player *p, GameManager *gm) {
     gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", targetListLog);
     gm->pushSnapshot();
     InputHandler input;
-    const int choice = input.readChoice(1, static_cast<int>(candidates.size()), "Pilih target LassoCard: ");
+    std::string promptStr = "Pilih target LassoCard:\n";
+    for (size_t i = 0; i < candidates.size(); ++i) {
+        promptStr += std::to_string(i + 1) + ". " + candidates[i]->getUsername() + " (Tile " + std::to_string(candidates[i]->getPosition()) + ")\n";
+    }
+    const int choice = input.readChoice(1, static_cast<int>(candidates.size()), promptStr);
 
     Player *target = candidates[static_cast<std::size_t>(choice - 1)];
     target->setPosition(p->getPosition());

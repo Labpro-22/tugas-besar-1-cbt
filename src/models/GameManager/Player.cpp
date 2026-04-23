@@ -1,6 +1,7 @@
 #include "models/GameManager/Player.hpp"
 
 #include <stdexcept>
+#include "exception/NimonspoliExceptions.hpp"
 
 Player::Player(string username, int startingCash, PlayerStatus state,
     int startPosition, vector<Card *> startHand,
@@ -69,9 +70,7 @@ bool Player::operator>(const Player& other) const {
 
 void Player::ensureCanPay(int amount) const {
     if (!canPay(amount)) {
-        throw std::runtime_error("Uang " + username + " tidak cukup. Butuh M" +
-                                 std::to_string(amount) + ", tersedia M" +
-                                 std::to_string(cash) + ".");
+        throw InsufficientFundsException(username, amount, cash);
     }
 }
 
@@ -102,8 +101,7 @@ int Player::getPropertyCount() const { return properties.size(); }
 
 void Player::addCard(SkillCard *card) {
     if (hand.size() >= 4) {
-        throw std::runtime_error(
-            "Slot kartu skill penuh. Maksimal 3 kartu, kartu ke-4 wajib dibuang.");
+        throw CardHandLimitException(3);
     }
     hand.push_back(card);
 }
