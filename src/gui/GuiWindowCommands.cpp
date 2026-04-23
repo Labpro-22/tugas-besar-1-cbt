@@ -377,6 +377,53 @@ int GuiWindow::effectiveInspectedPlayerIndex(
 }
 
 Rectangle GuiWindow::modalDialogRect() const {
-    return Rectangle{modalPosition.x, modalPosition.y, 500.0F, 320.0F};
-}
+    std::lock_guard<std::mutex> lock(modalMutex);
+    std::lock_guard<std::mutex> lock2(snapshotMutex);
 
+    float width = 500.0F;
+    float height = 340.0F;
+
+    if (modal.active) {
+        if (!snapshot.gameStarted) {
+            if (snapshot.startupMode == "PLAYER_COUNT") {
+                width = 500.0F;
+                height = 520.0F;
+            } else if (snapshot.startupMode == "USERNAME") {
+                width = 520.0F;
+                height = 420.0F;
+            }
+        } else if (modal.backendOwned) {
+            if (modal.prompt.find("[PROPERTY_PURCHASE:") != std::string::npos) {
+                width = 480.0F;
+                height = 640.0F;
+            } else if (modal.prompt.find("Tangan penuh!") != std::string::npos) {
+                width = 1000.0F;
+                height = 560.0F;
+            } else if (modal.prompt.find("Pilih kartu yang ingin digunakan") != std::string::npos) {
+                width = 620.0F;
+                height = 580.0F;
+            } else if (modal.prompt.find("Pilih target LassoCard") != std::string::npos) {
+                width = 720.0F;
+                height = 620.0F;
+            } else if (modal.prompt.find("Pilih tile tujuan teleport") != std::string::npos) {
+                width = 540.0F;
+                height = 580.0F;
+            } else if (modal.prompt.find("Aksi lelang") != std::string::npos) {
+                width = 500.0F;
+                height = 540.0F;
+            } else if (modal.prompt.find("Masukkan kode properti") != std::string::npos && modal.title.find("Festival") != std::string::npos) {
+                width = 500.0F;
+                height = 340.0F;
+            } else if (modal.title == "Pilih Opsi" || modal.prompt.find("Pilihan (1/") != std::string::npos) {
+                width = 480.0F;
+                bool isJail = (modal.prompt.find("(1/2/3)") != std::string::npos);
+                height = isJail ? 680.0F : 550.0F;
+            } else if (modal.prompt.find("DemolitionCard") != std::string::npos) {
+                width = 1300.0F;
+                height = 820.0F;
+            }
+        }
+    }
+
+    return Rectangle{modalPosition.x, modalPosition.y, width, height};
+}

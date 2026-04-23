@@ -54,7 +54,9 @@ GuiWindow::GuiWindow()
       modalPosition{0.0F, 0.0F},
       modalDragOffset{0.0F, 0.0F},
       modalDragging(false),
-      modalPositionInitialized(false) {}
+      modalPositionInitialized(false),
+      modalScrollOffset(0.0F),
+      modalScrollMax(0.0F) {}
 
 GuiWindow::~GuiWindow() { stopSession(); }
 

@@ -3,9 +3,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "Player.hpp"
 using namespace std;
-
-class Player;
 
 class JailManager {
 private:

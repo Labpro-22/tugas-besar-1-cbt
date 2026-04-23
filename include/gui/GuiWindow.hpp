@@ -107,6 +107,8 @@ private:
     Vector2 modalDragOffset;
     bool modalDragging;
     bool modalPositionInitialized;
+    float modalScrollOffset;
+    float modalScrollMax;
 
     static bool shouldShowErrorPopup(const std::string& text);
     static std::string lowercaseText(std::string text);

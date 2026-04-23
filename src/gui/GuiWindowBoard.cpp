@@ -1,4 +1,4 @@
-#include "gui/GuiWindowBoard.hpp"
+﻿#include "gui/GuiWindowBoard.hpp"
 
 #include <algorithm>
 #include <sstream>
@@ -112,7 +112,7 @@ void GuiWindow::drawBoard(const Layout& layout,
     }
 
     DrawTextEx(font, "NIMONSPOLI",
-               Vector2{centerField.x + centerField.width / 2.0F - 185.0F,
+               Vector2{centerField.x + centerField.width / 2.0F - 150.0F,
                        centerField.y + 70.0F},
                52.0F, 2.0F, GuiWindowInternal::kAccentDark);
 

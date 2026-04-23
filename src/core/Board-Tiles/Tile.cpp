@@ -1,4 +1,6 @@
 #include "core/Board-Tiles/Tile.hpp"
+#include "models/GameManager/Player.hpp"
+#include "models/GameManager/GameManager.hpp"
 
 Tile::Tile(const std::string &code, const std::string &name, int pos, const std::string &type)
     : id(code), name(name), position(pos), tile_type(type) {}

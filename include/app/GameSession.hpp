@@ -80,6 +80,7 @@ public:
     int winnerCash = 0;
     int winnerPropertyCount = 0;
     int winnerCardCount = 0;
+    int jailFine = 0;
     std::vector<PlayerSnapshot> players;
     std::vector<TileSnapshot> tiles;
     std::vector<LogSnapshot> logs;

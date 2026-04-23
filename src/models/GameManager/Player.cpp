@@ -1,4 +1,7 @@
 #include "models/GameManager/Player.hpp"
+#include "models/Property/Property.hpp"
+#include "models/Card/Card.hpp"
+#include "models/Card/SkillCard.hpp"
 
 #include <stdexcept>
 #include "exception/NimonspoliExceptions.hpp"

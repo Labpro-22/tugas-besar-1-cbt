@@ -1,4 +1,5 @@
 #include "models/GameManager/Auction.hpp"
+#include "models/Property/Property.hpp"
 #include "exception/NimonspoliExceptions.hpp"
 #include <iostream>
 #include <algorithm>

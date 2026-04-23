@@ -1,11 +1,13 @@
 #pragma once
-#include "../Card/Card.hpp"
-#include "../Card/SkillCard.hpp"
-#include "../Property/Property.hpp"
 #include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
+
+class Property;
+class Card;
+class SkillCard;
+
 using namespace std;
 
 enum PlayerStatus {
@@ -80,4 +82,3 @@ public:
     int getRailroadCount() const;
     int getUtilityCount() const;
 };
-
