@@ -6,7 +6,6 @@
 #include "LogEntry.hpp"
 using namespace std;
 
-
 class TransactionLogger {
 private:
     vector<LogEntry> entries;

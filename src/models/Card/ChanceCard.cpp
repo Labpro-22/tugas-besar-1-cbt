@@ -1,4 +1,5 @@
 #include "models/Card/ChanceCard.hpp"
+#include "core/Board-Tiles/Tile.hpp"
 #include "core/Board-Tiles/Board.hpp"
 #include "models/GameManager/GameManager.hpp"
 #include "models/GameManager/Player.hpp"

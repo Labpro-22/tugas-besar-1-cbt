@@ -4,8 +4,9 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include "../../models/GameManager/Player.hpp"
-#include "../../models/GameManager/GameManager.hpp"
+
+class Player;
+class GameManager;
 
 class Tile {
     protected:

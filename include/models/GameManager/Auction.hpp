@@ -6,7 +6,6 @@
 #include "Player.hpp"
 using namespace std;
 
-
 class Auction{
     private :
         Property* property;

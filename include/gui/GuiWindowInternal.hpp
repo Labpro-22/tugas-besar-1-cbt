@@ -64,6 +64,8 @@ public:
     static const Color kWhitePanel;
     static const Color kInspected;
     static const Color kDisabled;
+    static const Color kGold;
+    static const Color kCream;
     static const std::array<StartedQuickActionSpec, 14> kStartedQuickActions;
 
     static int clampInt(int value, int minimum, int maximum);

@@ -101,7 +101,7 @@ GuiWindow::Layout GuiWindow::computeLayout(const int screenWidth,
         const Rectangle boardSurface = GuiWindowInternal::insetRect(layout.boardRect, 10.0F, 10.0F);
         const int borderThickness =
             GuiWindowInternal::clampInt(static_cast<int>(std::min(boardSurface.width, boardSurface.height) /
-                                      7.0F),
+                                       7.0F),
                      56, 96);
         const Rectangle centerField{
             boardSurface.x + borderThickness,
@@ -135,6 +135,18 @@ void GuiWindow::updateFrame(const Layout& layout,
     openPendingErrorPopup();
     updateModalInput();
 
+    // If modal is active, some updateFrame logic should be skipped
+    ModalState currentModal;
+    {
+        std::lock_guard<std::mutex> lock(modalMutex);
+        currentModal = modal;
+    }
+
+    if (currentModal.active) {
+        // Modal input is handled in updateModalInput
+        return;
+    }
+
     if (currentSnapshot.gameOver && currentSnapshot.hasWinnerSummary) {
         bool popupDismissed = false;
         {
@@ -156,125 +168,15 @@ void GuiWindow::updateFrame(const Layout& layout,
                 gameOverPopupDismissed = true;
                 return;
             }
-        }
-
-        if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_ESCAPE) ||
-            GuiWindowInternal::isButtonPressed(gameOverPopupCloseButtonRect(), true)) {
-            std::lock_guard<std::mutex> lock(snapshotMutex);
-            gameOverPopupDismissed = true;
-            return;
-        }
-
-        if (!popupDismissed) {
-            return;
-        }
-    }
-
-    ModalState currentModal;
-    {
-        std::lock_guard<std::mutex> lock(modalMutex);
-        currentModal = modal;
-    }
-
-    if (currentModal.active) {
-        if (currentModal.localType != LocalDialogType::ErrorMessage &&
-            (!currentModal.backendOwned || !currentModal.yesNo)) {
-            int character = GetCharPressed();
-            while (character > 0) {
-                if (character >= 32 && character <= 126 &&
-                    currentModal.inputText.size() < 128) {
-                    std::lock_guard<std::mutex> lock(modalMutex);
-                    modal.inputText.push_back(static_cast<char>(character));
-                    modal.errorText.clear();
-                }
-                character = GetCharPressed();
-            }
-
-            if (IsKeyPressed(KEY_BACKSPACE)) {
-                std::lock_guard<std::mutex> lock(modalMutex);
-                if (!modal.inputText.empty()) {
-                    modal.inputText.pop_back();
-                }
-                modal.errorText.clear();
-            }
-        }
-
-        const Rectangle dialogRect = modalDialogRect();
-        const Rectangle okRect{dialogRect.x + dialogRect.width - 210.0F,
-                               dialogRect.y + dialogRect.height - 58.0F, 90.0F,
-                               34.0F};
-        const Rectangle cancelRect{dialogRect.x + dialogRect.width - 110.0F,
-                                   dialogRect.y + dialogRect.height - 58.0F, 90.0F,
-                                   34.0F};
-        const Rectangle errorOkRect{dialogRect.x + dialogRect.width - 120.0F,
-                                    dialogRect.y + dialogRect.height - 58.0F,
-                                    90.0F, 34.0F};
-
-        if (currentModal.backendOwned &&
-            currentModal.request.kind == InputPromptKind::Choice &&
-            !currentSnapshot.gameStarted) {
-            for (std::size_t i = 0; i < layout.quickButtonRects.size(); ++i) {
-                if (!GuiWindowInternal::isButtonPressed(layout.quickButtonRects[i],
-                                     quickButtonEnabled[i])) {
-                    continue;
-                }
-
-                std::string value;
-                if (currentSnapshot.startupMode == "PLAYER_COUNT") {
-                    if (i == 0) value = "2";
-                    if (i == 1) value = "3";
-                    if (i == 2) value = "4";
-                } else if (currentSnapshot.startupMode == "MAIN_MENU") {
-                    if (i == 0) value = "1";
-                    if (i == 1) value = "2";
-                    if (i == 2) value = "0";
-                }
-
-                if (!value.empty()) {
-                    std::lock_guard<std::mutex> lock(modalMutex);
-                    modal.response.accepted = true;
-                    modal.response.value = value;
-                    modal.backendResolved = true;
-                    modal.active = false;
-                    modalDragging = false;
-                    modalCondition.notify_all();
-                    if (currentSnapshot.startupMode == "MAIN_MENU" &&
-                        value == "0") {
-                        exitRequested.store(true);
-                    }
-                    return;
-                }
-            }
-        }
-        if (currentModal.localType == LocalDialogType::ErrorMessage) {
+            
             if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_ESCAPE) ||
-                GuiWindowInternal::isButtonPressed(errorOkRect, true)) {
-                confirmLocalDialog();
+                GuiWindowInternal::isButtonPressed(gameOverPopupCloseButtonRect(), true)) {
+                std::lock_guard<std::mutex> lock(snapshotMutex);
+                gameOverPopupDismissed = true;
+                return;
             }
-        } else if (currentModal.backendOwned && currentModal.yesNo) {
-            if (GuiWindowInternal::isButtonPressed(okRect, true)) {
-                std::lock_guard<std::mutex> lock(modalMutex);
-                modal.response.accepted = true;
-                modal.response.value = "y";
-                modal.backendResolved = true;
-                modal.active = false;
-                modalCondition.notify_all();
-            } else if (GuiWindowInternal::isButtonPressed(cancelRect, true)) {
-                std::lock_guard<std::mutex> lock(modalMutex);
-                modal.response.accepted = true;
-                modal.response.value = "n";
-                modal.backendResolved = true;
-                modal.active = false;
-                modalCondition.notify_all();
-            }
-        } else {
-            if (IsKeyPressed(KEY_ENTER) || GuiWindowInternal::isButtonPressed(okRect, true)) {
-                confirmLocalDialog();
-            } else if (IsKeyPressed(KEY_ESCAPE) || GuiWindowInternal::isButtonPressed(cancelRect, true)) {
-                cancelLocalDialog();
-            }
+            return;
         }
-        return;
     }
 
     const Vector2 mouse = GetMousePosition();
@@ -411,8 +313,13 @@ void GuiWindow::updateFrame(const Layout& layout,
 }
 
 void GuiWindow::updateModalInput() {
-    std::lock_guard<std::mutex> lock(modalMutex);
-    if (!modal.active) {
+    ModalState currentModal;
+    {
+        std::lock_guard<std::mutex> lock(modalMutex);
+        currentModal = modal;
+    }
+
+    if (!currentModal.active) {
         modalDragging = false;
         return;
     }
@@ -446,6 +353,143 @@ void GuiWindow::updateModalInput() {
         } else {
             modalDragging = false;
         }
+        return; // Skip other input while dragging
+    }
+
+    // Keyboard Input for Text
+    if (currentModal.localType != LocalDialogType::ErrorMessage &&
+        (!currentModal.backendOwned || !currentModal.yesNo)) {
+        int character = GetCharPressed();
+        while (character > 0) {
+            if (character >= 32 && character <= 126 &&
+                currentModal.inputText.size() < 128) {
+                std::lock_guard<std::mutex> lock(modalMutex);
+                modal.inputText.push_back(static_cast<char>(character));
+                modal.errorText.clear();
+            }
+            character = GetCharPressed();
+        }
+
+        if (IsKeyPressed(KEY_BACKSPACE)) {
+            std::lock_guard<std::mutex> lock(modalMutex);
+            if (!modal.inputText.empty()) {
+                modal.inputText.pop_back();
+            }
+            modal.errorText.clear();
+        }
+    }
+
+    // Interaction with specialized buttons
+    std::lock_guard<std::mutex> lock(snapshotMutex);
+    if (!snapshot.gameStarted && snapshot.startupMode == "PLAYER_COUNT") {
+        float centerY = dialogRect.y + 250;
+        Rectangle minusRect = {dialogRect.x + dialogRect.width/2 - 120, centerY - 30, 60, 60};
+        Rectangle plusRect = {dialogRect.x + dialogRect.width/2 + 60, centerY - 30, 60, 60};
+        
+        if (GuiWindowInternal::isButtonPressed(minusRect, true)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            int pCount = std::atoi(modal.inputText.c_str());
+            if (pCount > 2) modal.inputText = std::to_string(pCount - 1);
+            else modal.inputText = "2";
+            return;
+        }
+        if (GuiWindowInternal::isButtonPressed(plusRect, true)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            int pCount = std::atoi(modal.inputText.c_str());
+            if (pCount < 4) modal.inputText = std::to_string(pCount + 1);
+            else modal.inputText = "4";
+            return;
+        }
+
+        Rectangle okBtn = {dialogRect.x + dialogRect.width/2 + 10, dialogRect.y + dialogRect.height - 80, 140, 50};
+        Rectangle cancelBtn = {dialogRect.x + dialogRect.width/2 - 150, dialogRect.y + dialogRect.height - 80, 140, 50};
+        
+        if (GuiWindowInternal::isButtonPressed(okBtn, true)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            modal.response.accepted = true;
+            modal.response.value = modal.inputText.empty() ? "4" : modal.inputText;
+            modal.backendResolved = true;
+            modal.active = false;
+            modalCondition.notify_all();
+            return;
+        }
+        if (GuiWindowInternal::isButtonPressed(cancelBtn, true)) {
+            exitRequested.store(true);
+            return;
+        }
+    } else if (!snapshot.gameStarted && snapshot.startupMode == "USERNAME") {
+        Rectangle okBtn = {dialogRect.x + dialogRect.width/2 + 10, dialogRect.y + dialogRect.height - 80, 180, 50};
+        Rectangle cancelBtn = {dialogRect.x + dialogRect.width/2 - 190, dialogRect.y + dialogRect.height - 80, 180, 50};
+        
+        if (GuiWindowInternal::isButtonPressed(okBtn, true) || IsKeyPressed(KEY_ENTER)) {
+            confirmLocalDialog();
+            return;
+        }
+        if (GuiWindowInternal::isButtonPressed(cancelBtn, true)) {
+            cancelLocalDialog();
+            return;
+        }
+    } else if (currentModal.active && currentModal.prompt.find("[PROPERTY_PURCHASE:") != std::string::npos) {
+        Rectangle yaBtn = {dialogRect.x + dialogRect.width/2 + 10, dialogRect.y + dialogRect.height - 80, 140, 50};
+        Rectangle tidakBtn = {dialogRect.x + dialogRect.width/2 - 150, dialogRect.y + dialogRect.height - 80, 140, 50};
+        
+        if (GuiWindowInternal::isButtonPressed(yaBtn, true) || IsKeyPressed(KEY_Y)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            modal.response.accepted = true;
+            modal.response.value = "y";
+            modal.backendResolved = true;
+            modal.active = false;
+            modalCondition.notify_all();
+            return;
+        }
+        if (GuiWindowInternal::isButtonPressed(tidakBtn, true) || IsKeyPressed(KEY_N)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            modal.response.accepted = true;
+            modal.response.value = "n";
+            modal.backendResolved = true;
+            modal.active = false;
+            modalCondition.notify_all();
+            return;
+        }
+    } else {
+        // Fallback OK/CANCEL buttons
+        const Rectangle okRect{dialogRect.x + dialogRect.width - 210.0F,
+                               dialogRect.y + dialogRect.height - 58.0F, 90.0F,
+                               34.0F};
+        const Rectangle cancelRect{dialogRect.x + dialogRect.width - 110.0F,
+                                   dialogRect.y + dialogRect.height - 58.0F, 90.0F,
+                                   34.0F};
+        const Rectangle errorOkRect{dialogRect.x + dialogRect.width - 120.0F,
+                                    dialogRect.y + dialogRect.height - 58.0F,
+                                    90.0F, 34.0F};
+
+        if (currentModal.localType == LocalDialogType::ErrorMessage) {
+            if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_ESCAPE) ||
+                GuiWindowInternal::isButtonPressed(errorOkRect, true)) {
+                confirmLocalDialog();
+            }
+        } else if (currentModal.backendOwned && currentModal.yesNo) {
+            if (GuiWindowInternal::isButtonPressed(okRect, true)) {
+                std::lock_guard<std::mutex> lock2(modalMutex);
+                modal.response.accepted = true;
+                modal.response.value = "y";
+                modal.backendResolved = true;
+                modal.active = false;
+                modalCondition.notify_all();
+            } else if (GuiWindowInternal::isButtonPressed(cancelRect, true)) {
+                std::lock_guard<std::mutex> lock2(modalMutex);
+                modal.response.accepted = true;
+                modal.response.value = "n";
+                modal.backendResolved = true;
+                modal.active = false;
+                modalCondition.notify_all();
+            }
+        } else {
+            if (IsKeyPressed(KEY_ENTER) || GuiWindowInternal::isButtonPressed(okRect, true)) {
+                confirmLocalDialog();
+            } else if (IsKeyPressed(KEY_ESCAPE) || GuiWindowInternal::isButtonPressed(cancelRect, true)) {
+                cancelLocalDialog();
+            }
+        }
     }
 }
-

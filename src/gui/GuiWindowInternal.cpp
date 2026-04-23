@@ -8,17 +8,19 @@
 
 const int GuiWindowInternal::kWindowWidth = 1520;
 const int GuiWindowInternal::kWindowHeight = 940;
-const Color GuiWindowInternal::kPaper = {244, 239, 226, 255};
-const Color GuiWindowInternal::kPanel = {249, 246, 236, 255};
+const Color GuiWindowInternal::kPaper = {249, 243, 232, 255};
+const Color GuiWindowInternal::kPanel = {252, 249, 240, 255};
 const Color GuiWindowInternal::kBoardField = {225, 234, 220, 255};
-const Color GuiWindowInternal::kAccent = {118, 10, 16, 255};
-const Color GuiWindowInternal::kAccentDark = {76, 7, 11, 255};
-const Color GuiWindowInternal::kInk = {45, 26, 22, 255};
-const Color GuiWindowInternal::kMuted = {113, 98, 88, 255};
+const Color GuiWindowInternal::kAccent = {96, 0, 0, 255};
+const Color GuiWindowInternal::kAccentDark = {80, 0, 0, 255};
+const Color GuiWindowInternal::kInk = {64, 26, 22, 255};
+const Color GuiWindowInternal::kMuted = {143, 128, 118, 255};
 const Color GuiWindowInternal::kPanelBorder = {198, 186, 173, 255};
-const Color GuiWindowInternal::kWhitePanel = {255, 252, 245, 255};
+const Color GuiWindowInternal::kWhitePanel = {255, 254, 250, 255};
 const Color GuiWindowInternal::kInspected = {243, 236, 220, 255};
 const Color GuiWindowInternal::kDisabled = {220, 214, 205, 255};
+const Color GuiWindowInternal::kGold = {212, 175, 55, 255};
+const Color GuiWindowInternal::kCream = {249, 243, 232, 255};
 
 const std::array<StartedQuickActionSpec, 14>
     GuiWindowInternal::kStartedQuickActions = {{

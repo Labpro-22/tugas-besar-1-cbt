@@ -377,6 +377,26 @@ int GuiWindow::effectiveInspectedPlayerIndex(
 }
 
 Rectangle GuiWindow::modalDialogRect() const {
-    return Rectangle{modalPosition.x, modalPosition.y, 500.0F, 320.0F};
-}
+    std::lock_guard<std::mutex> lock(modalMutex);
+    std::lock_guard<std::mutex> lock2(snapshotMutex);
 
+    float width = 500.0F;
+    float height = 340.0F;
+
+    if (modal.active) {
+        if (!snapshot.gameStarted) {
+            if (snapshot.startupMode == "PLAYER_COUNT") {
+                width = 500.0F;
+                height = 520.0F;
+            } else if (snapshot.startupMode == "USERNAME") {
+                width = 520.0F;
+                height = 420.0F;
+            }
+        } else if (modal.backendOwned && modal.prompt.find("[PROPERTY_PURCHASE:") != std::string::npos) {
+            width = 480.0F;
+            height = 640.0F;
+        }
+    }
+
+    return Rectangle{modalPosition.x, modalPosition.y, width, height};
+}

@@ -1,14 +1,13 @@
 #ifndef BOARD_HPP
 #define BOARD_HPP
 
-#include "Tile.hpp"
 #include "data/Configuration.hpp"
 #include "models/Property/ColorGroup.hpp"
-
+#include "models/Property/Property.hpp"
 #include <string>
 #include <vector>
 
-class Property;
+class Tile;
 
 class Board {
 private:

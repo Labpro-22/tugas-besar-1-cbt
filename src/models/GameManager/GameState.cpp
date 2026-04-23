@@ -1,7 +1,10 @@
 #include "models/GameManager/GameState.hpp"
+#include "models/Property/Property.hpp"
 #include "models/Property/Railroad.hpp"
 #include "models/Property/Street.hpp"
 #include "models/Property/Utility.hpp"
+#include "models/Card/Card.hpp"
+#include "models/Card/SkillCard.hpp"
 #include <iostream>
 #include <sstream>
 

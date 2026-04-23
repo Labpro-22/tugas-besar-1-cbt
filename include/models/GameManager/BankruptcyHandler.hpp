@@ -2,10 +2,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
-using namespace std;
 
-class Player;
 class Property;
+class Player;
+
+using namespace std;
 
 class BankruptcyHandler {
 private:

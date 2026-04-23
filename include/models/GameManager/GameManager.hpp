@@ -12,11 +12,12 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
 using namespace std;
 
-// Forward declarations
 class Board;
 class Street;
+class Property;
 
 class GameManager {
 private:

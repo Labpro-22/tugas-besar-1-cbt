@@ -4,8 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-
-class SkillCard;
+#include "SkillCard.hpp"
 
 class SkillCardFactory {
 public:
