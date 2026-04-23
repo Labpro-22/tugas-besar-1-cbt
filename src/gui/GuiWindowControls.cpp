@@ -152,7 +152,7 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
     DrawRectangleRec(Rectangle{dialogRect.x, dialogRect.y, dialogRect.width, 6.0F}, GuiWindowInternal::kAccent);
 
     if (!currentSnapshot.gameStarted && currentSnapshot.startupMode == "PLAYER_COUNT") {
-        // --- PLAYER COUNT DESIGN ---
+        // Player Count
         GuiWindowInternal::drawTextCentered(font, "Pilih Opsi", Rectangle{dialogRect.x, dialogRect.y + 30, dialogRect.width, 60}, 48.0F, 1.5F, GuiWindowInternal::kAccent);
         GuiWindowInternal::drawWrappedText(font, "Tentukan jumlah eksekutif aset yang akan berpartisipasi dalam transaksi properti ini.", 
                         Rectangle{dialogRect.x + 40, dialogRect.y + 100, dialogRect.width - 80, 80}, 18.0F, 1.0F, GuiWindowInternal::kInk, 3);
@@ -194,7 +194,7 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
         GuiWindowInternal::drawTextCentered(font, "BATAL", cancelRect, 20.0F, 1.0F, GuiWindowInternal::kAccent);
 
     } else if (!currentSnapshot.gameStarted && currentSnapshot.startupMode == "USERNAME") {
-        // --- USERNAME DESIGN ---
+        // Username
         float iconY = dialogRect.y + 40;
         DrawRectangleRounded({dialogRect.x + dialogRect.width/2 - 30, iconY, 60, 60}, 0.2F, 8, GuiWindowInternal::kGold);
         DrawCircle(dialogRect.x + dialogRect.width/2, iconY + 22, 10, GuiWindowInternal::kAccent);
@@ -224,7 +224,7 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
         GuiWindowInternal::drawTextCentered(font, "BATAL", cancelRect, 20.0F, 1.0F, GuiWindowInternal::kAccent);
 
     } else if (current.active && current.prompt.find("[PROPERTY_PURCHASE:") != std::string::npos) {
-        // --- PROPERTY PURCHASE DESIGN ---
+        // Purchase Property
         GuiWindowInternal::drawTextCentered(font, "Konfirmasi", Rectangle{dialogRect.x + 20, dialogRect.y + 15, 120, 30}, 24.0F, 1.0F, GuiWindowInternal::kAccent);
         
         if (currentSnapshot.activePlayerIndex >= 0 && currentSnapshot.activePlayerIndex < static_cast<int>(currentSnapshot.players.size())) {
@@ -305,6 +305,191 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
         GuiWindowInternal::drawTextCentered(font, "YA", yaRect, 20.0F, 1.0F, WHITE);
         DrawRectangleLinesEx(tidakRect, 2.0F, GuiWindowInternal::kAccent);
         GuiWindowInternal::drawTextCentered(font, "TIDAK", tidakRect, 20.0F, 1.0F, GuiWindowInternal::kAccent);
+
+    } else if (current.active && current.prompt.find("Tangan penuh!") != std::string::npos) {
+        // Discard Card
+        float sideWidth = 340.0F;
+        Rectangle leftSide = {dialogRect.x, dialogRect.y, sideWidth, dialogRect.height};
+        DrawRectangleRec(leftSide, Color{70, 0, 0, 255}); // Rich Deep Maroon
+        
+        GuiWindowInternal::drawTextCentered(font, "ASSET CAPACITY", Rectangle{leftSide.x + 20, leftSide.y + 40, leftSide.width - 40, 30}, 16.0F, 2.0F, Color{220, 180, 180, 255});
+        GuiWindowInternal::drawTextCentered(font, "Kartu penuh!", Rectangle{leftSide.x + 20, leftSide.y + 70, leftSide.width - 40, 50}, 32.0F, 1.2F, WHITE);
+        
+        GuiWindowInternal::drawWrappedText(font, "Sesuai regulasi Nimonspoli, aset operasional Anda terbatas pada 3 slot aktif. Selesaikan transaksi ini dengan melepas satu kartu.", 
+                        Rectangle{leftSide.x + 40, leftSide.y + 160, leftSide.width - 80, 160}, 18.0F, 1.2F, {230, 210, 210, 255}, 6);
+
+        Rectangle infoBox = {leftSide.x + 40, leftSide.y + 360, leftSide.width - 80, 100};
+        DrawRectangleLinesEx(infoBox, 1.0F, {140, 60, 60, 255});
+        DrawCircle(infoBox.x + 25, infoBox.y + 50, 12, GuiWindowInternal::kGold);
+        GuiWindowInternal::drawTextCentered(font, "i", {infoBox.x + 13, infoBox.y + 38, 24, 24}, 14.0F, 1.0F, BLACK);
+        GuiWindowInternal::drawWrappedText(font, "Kartu yang dibuang akan dikembalikan ke tumpukan Archive.", {infoBox.x + 50, infoBox.y + 25, infoBox.width - 65, 60}, 14.0F, 1.0F, WHITE, 3);
+
+        DrawTextEx(font, "Kapasitas Saat Ini", {leftSide.x + 40, leftSide.y + dialogRect.height - 85}, 14, 1, {180, 140, 140, 255});
+        DrawTextEx(font, "4 / 3 KARTU", {leftSide.x + 40, leftSide.y + dialogRect.height - 60}, 28, 1, GuiWindowInternal::kGold);
+
+        // Right side (Cards)
+        float rightX = leftSide.x + leftSide.width;
+        float rightWidth = dialogRect.width - sideWidth;
+        
+        GuiWindowInternal::drawTextCentered(font, "Pilih Kartu untuk Dibuang", {rightX, dialogRect.y + 45, rightWidth, 40}, 28.0F, 1.2F, {60, 20, 20, 255});
+        DrawRectangle(rightX + (rightWidth - 120)/2.0F, dialogRect.y + 90, 120, 4, GuiWindowInternal::kGold);
+
+        // Parse cards from prompt
+        std::vector<std::string> cards;
+        std::stringstream ss(current.prompt);
+        std::string line;
+        while (std::getline(ss, line)) {
+            if (line.find(". ") != std::string::npos) {
+                cards.push_back(line.substr(line.find(". ") + 2));
+            }
+        }
+
+        float cardW = 145.0F;
+        float cardH = 220.0F;
+        float spacing = 15.0F;
+        float totalW = cards.size() * cardW + (cards.size() - 1) * spacing;
+        float startX = rightX + (rightWidth - totalW) / 2.0F;
+        float startY = dialogRect.y + 140.0F;
+
+        for (size_t i = 0; i < cards.size(); ++i) {
+            Rectangle cr = {startX + i * (cardW + spacing), startY, cardW, cardH};
+            bool selected = (current.inputText == std::to_string(i + 1));
+            
+            DrawRectangleRec(cr, WHITE);
+            DrawRectangleLinesEx(cr, selected ? 3.0F : 1.0F, selected ? GuiWindowInternal::kGold : LIGHTGRAY);
+            
+            Color topBarColor = (cards[i].find("Move") != std::string::npos) ? Color{80, 180, 120, 255} : 
+                               (cards[i].find("Discount") != std::string::npos) ? Color{210, 180, 60, 255} : Color{100, 150, 220, 255};
+            DrawRectangle(cr.x, cr.y, cr.width, 8, topBarColor);
+
+            GuiWindowInternal::drawTextCentered(font, cards[i], {cr.x + 10, cr.y + 90, cr.width - 20, 40}, 16.0F, 1.0F, BLACK);
+            GuiWindowInternal::drawTextCentered(font, "STRATEGI", {cr.x, cr.y + 180, cr.width, 20}, 11.0F, 2.0F, GRAY);
+            
+            if (selected) {
+                DrawRectangleRec(cr, {topBarColor.r, topBarColor.g, topBarColor.b, 15});
+            }
+        }
+
+        Rectangle btnConfirm = {rightX + (rightWidth - 220)/2.0F, dialogRect.y + dialogRect.height - 100, 220, 55};
+        DrawRectangleRec(btnConfirm, Color{100, 0, 0, 255});
+        GuiWindowInternal::drawTextCentered(font, "Konfirmasi Pilihan", btnConfirm, 18.0F, 1.0F, WHITE);
+
+    } else if (current.active && current.prompt.find("Pilih kartu yang ingin digunakan") != std::string::npos) {
+        // Use Card
+        Rectangle headerRect = {dialogRect.x, dialogRect.y, dialogRect.width, 110};
+        DrawRectangleRec(headerRect, Color{110, 0, 0, 255});
+        GuiWindowInternal::drawTextCentered(font, "Pilih kartu yang ingin digunakan", {headerRect.x + 40, headerRect.y + 25, dialogRect.width - 80, 40}, 30.0F, 1.2F, WHITE);
+        DrawTextEx(font, "ACTION REQUIRED: STRATEGY PHASE", {headerRect.x + (dialogRect.width - 260)/2.0F, headerRect.y + 70}, 14, 2, {200, 150, 150, 255});
+
+        std::vector<std::string> cards;
+        std::stringstream ss(current.prompt);
+        std::string line;
+        while (std::getline(ss, line)) {
+            if (line.find(". ") != std::string::npos) {
+                cards.push_back(line.substr(line.find(". ") + 2));
+            }
+        }
+
+        float cardY = headerRect.y + 130.0F;
+        for (size_t i = 0; i < cards.size(); ++i) {
+            Rectangle itemRect = {dialogRect.x + 40, cardY, dialogRect.width - 80, 80};
+            bool selected = (current.inputText == std::to_string(i + 1));
+            
+            DrawRectangleRec(itemRect, selected ? Color{245, 240, 235, 255} : WHITE);
+            DrawRectangleLinesEx(itemRect, 1.0F, selected ? Color{120, 0, 0, 255} : LIGHTGRAY);
+            
+            Rectangle iconBox = {itemRect.x + 15, itemRect.y + 10, 60, 60};
+            DrawRectangleRec(iconBox, {240, 230, 210, 255});
+            DrawRectangle(iconBox.x, iconBox.y, iconBox.width, 6, {130, 110, 30, 255});
+            
+            // Draw simple icon based on card type
+            if (cards[i].find("Move") != std::string::npos) {
+                DrawCircle(iconBox.x + 30, iconBox.y + 35, 10, {100, 150, 100, 255});
+            } else if (cards[i].find("Discount") != std::string::npos) {
+                DrawRectangle(iconBox.x + 20, iconBox.y + 25, 20, 20, {210, 180, 60, 255});
+            } else {
+                DrawCircle(iconBox.x + 30, iconBox.y + 35, 12, {100, 120, 200, 255});
+            }
+
+            DrawTextEx(font, cards[i].c_str(), {itemRect.x + 90, itemRect.y + 20}, 20, 1, BLACK);
+            DrawTextEx(font, "Aset pendukung operasional strategis.", {itemRect.x + 90, itemRect.y + 45}, 14, 1, GRAY);
+            
+            DrawCircle(itemRect.x + itemRect.width - 40, itemRect.y + 40, 12, {230, 230, 230, 255});
+            if (selected) DrawCircle(itemRect.x + itemRect.width - 40, itemRect.y + 40, 7, Color{120, 0, 0, 255});
+            
+            cardY += 95.0F;
+        }
+
+        Rectangle confirmBtn = {dialogRect.x + 40, dialogRect.y + dialogRect.height - 85, dialogRect.width - 240, 55};
+        Rectangle cancelBtn = {dialogRect.x + dialogRect.width - 180, dialogRect.y + dialogRect.height - 85, 140, 55};
+        DrawRectangleRec(confirmBtn, Color{110, 0, 0, 255});
+        GuiWindowInternal::drawTextCentered(font, "CONFIRM SELECTION", confirmBtn, 17.0F, 1.0F, WHITE);
+        DrawRectangleLinesEx(cancelBtn, 2.0F, Color{110, 0, 0, 255});
+        GuiWindowInternal::drawTextCentered(font, "CANCEL", cancelBtn, 17.0F, 1.0F, Color{110, 0, 0, 255});
+
+    } else if (current.active && current.prompt.find("Pilih target LassoCard") != std::string::npos) {
+        // Lasso Card
+        Rectangle headerRect = {dialogRect.x, dialogRect.y, dialogRect.width, 90};
+        DrawRectangleRec(headerRect, Color{90, 0, 0, 255});
+        
+        Rectangle iconBox = {headerRect.x + 25, headerRect.y + 15, 60, 60};
+        DrawRectangleRec(iconBox, GuiWindowInternal::kGold);
+        GuiWindowInternal::drawTextCentered(font, "L", iconBox, 32.0F, 1.0F, Color{90, 0, 0, 255});
+        
+        DrawTextEx(font, "PILIH TARGET LASSOCARD", {headerRect.x + 100, headerRect.y + 20}, 24, 1, WHITE);
+        DrawTextEx(font, "Strategic Asset Acquisition", {headerRect.x + 100, headerRect.y + 50}, 16, 1, {200, 130, 130, 255});
+
+        Rectangle infoBar = {dialogRect.x + 35, dialogRect.y + 115, dialogRect.width - 70, 70};
+        DrawRectangleRec(infoBar, Color{250, 245, 240, 255});
+        DrawRectangle(infoBar.x, infoBar.y, 4, infoBar.height, GuiWindowInternal::kGold);
+        GuiWindowInternal::drawWrappedText(font, "\"LassoCard hanya dapat digunakan pada lawan yang berada di depanmu.\"", {infoBar.x + 40, infoBar.y + 15, infoBar.width - 80, 50}, 15.0F, 1.2F, GRAY, 2);
+
+        // Parse candidates
+        struct Candidate { std::string name; std::string tile; };
+        std::vector<Candidate> candidates;
+        std::stringstream ss(current.prompt);
+        std::string line;
+        while (std::getline(ss, line)) {
+            if (line.find(". ") != std::string::npos) {
+                size_t dotPos = line.find(". ");
+                size_t bracketPos = line.find(" (Tile ");
+                if (bracketPos != std::string::npos) {
+                    Candidate c;
+                    c.name = line.substr(dotPos + 2, bracketPos - (dotPos + 2));
+                    c.tile = line.substr(bracketPos + 7, line.find(")", bracketPos) - (bracketPos + 7));
+                    candidates.push_back(c);
+                }
+            }
+        }
+
+        float gridX = dialogRect.x + 40.0F;
+        float gridY = dialogRect.y + 210.0F;
+        float itemW = (dialogRect.width - 110.0F) / 2.0F;
+        float itemH = 160.0F;
+
+        for (size_t i = 0; i < candidates.size(); ++i) {
+            Rectangle itemR = {gridX + (i % 2) * (itemW + 30), gridY + (i / 2) * (itemH + 30), itemW, itemH};
+            bool selected = (current.inputText == std::to_string(i + 1));
+            
+            DrawRectangleRec(itemR, WHITE);
+            DrawRectangleLinesEx(itemR, selected ? 2.0F : 1.0F, selected ? GuiWindowInternal::kGold : LIGHTGRAY);
+            DrawRectangle(itemR.x, itemR.y, itemR.width, 6, (i % 2 == 0) ? Color{60, 160, 230, 255} : Color{60, 190, 110, 255});
+            
+            DrawCircle(itemR.x + 45, itemR.y + 50, 28, {230, 230, 230, 255});
+            DrawRectangleRec({itemR.x + itemR.width - 85, itemR.y + 20, 65, 24}, {240, 235, 225, 255});
+            GuiWindowInternal::drawTextCentered(font, "TILE " + candidates[i].tile, {itemR.x + itemR.width - 85, itemR.y + 20, 65, 24}, 11.0F, 1.0F, GRAY);
+            
+            DrawTextEx(font, candidates[i].name.c_str(), {itemR.x + 25, itemR.y + 95}, 20, 1, BLACK);
+            DrawTextEx(font, "Executive Portfolio", {itemR.x + 25, itemR.y + 120}, 14, 1, GRAY);
+            
+            if (selected) {
+                DrawTextEx(font, "READY TO TARGET", {itemR.x + 25, itemR.y + 140}, 10, 1.5, GuiWindowInternal::kGold);
+            }
+        }
+
+        Rectangle targetBtn = {dialogRect.x + dialogRect.width - 250, dialogRect.y + dialogRect.height - 85, 210, 55};
+        DrawRectangleRec(targetBtn, Color{90, 0, 0, 255});
+        GuiWindowInternal::drawTextCentered(font, "CONFIRM TARGET", targetBtn, 16.0F, 1.0F, WHITE);
 
     } else {
         // --- GENERIC FALLBACK ---

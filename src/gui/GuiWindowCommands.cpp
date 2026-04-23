@@ -392,9 +392,20 @@ Rectangle GuiWindow::modalDialogRect() const {
                 width = 520.0F;
                 height = 420.0F;
             }
-        } else if (modal.backendOwned && modal.prompt.find("[PROPERTY_PURCHASE:") != std::string::npos) {
-            width = 480.0F;
-            height = 640.0F;
+        } else if (modal.backendOwned) {
+            if (modal.prompt.find("[PROPERTY_PURCHASE:") != std::string::npos) {
+                width = 480.0F;
+                height = 640.0F;
+            } else if (modal.prompt.find("Tangan penuh!") != std::string::npos) {
+                width = 1000.0F;
+                height = 560.0F;
+            } else if (modal.prompt.find("Pilih kartu yang ingin digunakan") != std::string::npos) {
+                width = 620.0F;
+                height = 580.0F;
+            } else if (modal.prompt.find("Pilih target LassoCard") != std::string::npos) {
+                width = 720.0F;
+                height = 620.0F;
+            }
         }
     }
 
