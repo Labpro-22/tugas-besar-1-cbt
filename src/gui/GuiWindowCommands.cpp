@@ -405,6 +405,21 @@ Rectangle GuiWindow::modalDialogRect() const {
             } else if (modal.prompt.find("Pilih target LassoCard") != std::string::npos) {
                 width = 720.0F;
                 height = 620.0F;
+            } else if (modal.prompt.find("Pilih tile tujuan teleport") != std::string::npos) {
+                width = 540.0F;
+                height = 580.0F;
+            } else if (modal.prompt.find("Aksi lelang") != std::string::npos) {
+                width = 500.0F;
+                height = 540.0F;
+            } else if (modal.prompt.find("Masukkan kode properti") != std::string::npos && modal.title.find("Festival") != std::string::npos) {
+                width = 500.0F;
+                height = 340.0F;
+            } else if (modal.title == "Pilih Opsi" || modal.prompt.find("Pilihan (1/") != std::string::npos) {
+                width = 480.0F;
+                height = 580.0F;
+            } else if (modal.prompt.find("DemolitionCard") != std::string::npos) {
+                width = 900.0F;
+                height = 700.0F;
             }
         }
     }

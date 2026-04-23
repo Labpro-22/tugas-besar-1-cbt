@@ -332,11 +332,21 @@ void GuiWindow::updateModalInput() {
             std::max(80.0F, (GetScreenHeight() - dRect.height) / 2.5F),
         };
         modalPositionInitialized = true;
+        modalScrollOffset = 0.0F;
+        modalScrollMax = 0.0F;
     }
 
     Rectangle dialogRect = modalDialogRect();
     const Rectangle dragRect{dialogRect.x, dialogRect.y, dialogRect.width, 42.0F};
     const Vector2 mouse = GetMousePosition();
+
+    // Mouse wheel scrolling
+    float wheel = GetMouseWheelMove();
+    if (wheel != 0 && modalScrollMax > 0) {
+        modalScrollOffset -= wheel * 30.0F;
+        if (modalScrollOffset < 0) modalScrollOffset = 0;
+        if (modalScrollOffset > modalScrollMax) modalScrollOffset = modalScrollMax;
+    }
 
     if (!modalDragging && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
         GuiWindowInternal::pointInsideRect(dragRect, mouse)) {
@@ -515,6 +525,67 @@ void GuiWindow::updateModalInput() {
             cancelLocalDialog();
         }
         return;
+    } else if (currentModal.active && currentModal.prompt.find("Tangan penuh!") != std::string::npos) {
+        // Discard Modal Clicks
+        float sideWidth = 340.0F;
+        float rightX = dialogRect.x + sideWidth;
+        float rightWidth = dialogRect.width - sideWidth;
+        
+        std::vector<std::string> cards;
+        std::stringstream ss(currentModal.prompt);
+        std::string line;
+        while (std::getline(ss, line)) {
+            if (line.find(". ") != std::string::npos) cards.push_back(line);
+        }
+
+        float cardW = 145.0F; float cardH = 220.0F; float spacing = 15.0F;
+        float totalW = cards.size() * cardW + (cards.size() - 1) * spacing;
+        float startX = rightX + (rightWidth - totalW) / 2.0F;
+        float startY = dialogRect.y + 140.0F;
+
+        for (size_t i = 0; i < cards.size(); ++i) {
+            Rectangle cr = {startX + i * (cardW + spacing), startY, cardW, cardH};
+            if (GuiWindowInternal::isButtonPressed(cr, true)) {
+                std::lock_guard<std::mutex> lock2(modalMutex);
+                modal.inputText = std::to_string(i + 1);
+                return;
+            }
+        }
+
+        Rectangle btnConfirm = {rightX + (rightWidth - 220)/2.0F, dialogRect.y + dialogRect.height - 100, 220, 55};
+        if (GuiWindowInternal::isButtonPressed(btnConfirm, !currentModal.inputText.empty())) {
+            confirmLocalDialog();
+            return;
+        }
+    } else if (currentModal.active && currentModal.prompt.find("Pilih kartu yang ingin digunakan") != std::string::npos) {
+        // Use Card Modal Clicks
+        std::vector<std::string> cards;
+        std::stringstream ss(currentModal.prompt);
+        std::string line;
+        while (std::getline(ss, line)) {
+            if (line.find(". ") != std::string::npos) cards.push_back(line);
+        }
+
+        float cardY = dialogRect.y + 130.0F; 
+        for (size_t i = 0; i < cards.size(); ++i) {
+            Rectangle itemRect = {dialogRect.x + 40, cardY, dialogRect.width - 80, 80};
+            if (GuiWindowInternal::isButtonPressed(itemRect, true)) {
+                std::lock_guard<std::mutex> lock2(modalMutex);
+                modal.inputText = std::to_string(i + 1);
+                return;
+            }
+            cardY += 95.0F;
+        }
+
+        Rectangle confirmBtn = {dialogRect.x + 40, dialogRect.y + dialogRect.height - 85, dialogRect.width - 240, 55};
+        Rectangle cancelBtn = {dialogRect.x + dialogRect.width - 180, dialogRect.y + dialogRect.height - 85, 140, 55};
+        
+        if (GuiWindowInternal::isButtonPressed(confirmBtn, !currentModal.inputText.empty())) {
+            confirmLocalDialog();
+        } else if (GuiWindowInternal::isButtonPressed(cancelBtn, true)) {
+            cancelLocalDialog();
+        }
+        return;
     } else if (currentModal.active && currentModal.prompt.find("Pilih target LassoCard") != std::string::npos) {
         // Lasso Target Clicks
         std::vector<std::string> candidates;
@@ -543,8 +614,113 @@ void GuiWindow::updateModalInput() {
             confirmLocalDialog();
         }
         return;
+    } else if (currentModal.active && currentModal.prompt.find("DemolitionCard") != std::string::npos) {
+        // Demolition Interactions
+        float sideW = 280.0F;
+        float listX = dialogRect.x + sideW + 40;
+        float listY = dialogRect.y + 110;
+        float listW = dialogRect.width - sideW - 80;
+        float listH = dialogRect.height - 210;
+
+        std::vector<std::string> targets;
+        std::stringstream ss(currentModal.prompt);
+        std::string line;
+        while (std::getline(ss, line)) {
+            if (line.find(". ") != std::string::npos && line.find(" - ") != std::string::npos) targets.push_back(line);
+        }
+
+        float itemH = 100.0F;
+        float spacing = 15.0F;
+
+        for (size_t i = 0; i < targets.size(); ++i) {
+            float y = listY + i * (itemH + spacing) - modalScrollOffset;
+            if (y + itemH < listY || y > listY + listH) continue;
+            Rectangle itemR = {listX, y, listW, itemH};
+            if (GuiWindowInternal::isButtonPressed(itemR, true)) {
+                std::lock_guard<std::mutex> lock2(modalMutex);
+                modal.inputText = std::to_string(i + 1);
+                return;
+            }
+        }
+
+        Rectangle confirmBtnDemolish = {listX, dialogRect.y + dialogRect.height - 85, listW, 60};
+        if (GuiWindowInternal::isButtonPressed(confirmBtnDemolish, !currentModal.inputText.empty())) {
+            confirmLocalDialog();
+        }
+        return;
+    } else if (currentModal.active && currentModal.prompt.find("Pilih tile tujuan teleport") != std::string::npos) {
+        // Teleport Interactions
+        Rectangle inputRect = {dialogRect.x + (dialogRect.width - 180)/2, dialogRect.y + 190, 180, 80};
+        Rectangle btnUp = {inputRect.x + inputRect.width - 30, inputRect.y + 10, 30, 30};
+        Rectangle btnDown = {inputRect.x + inputRect.width - 30, inputRect.y + 40, 30, 30};
+        
+        if (GuiWindowInternal::isButtonPressed(btnUp, true)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            int val = std::atoi(modal.inputText.c_str());
+            modal.inputText = std::to_string((val + 1) % 60);
+            return;
+        }
+        if (GuiWindowInternal::isButtonPressed(btnDown, true)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            int val = std::atoi(modal.inputText.c_str());
+            modal.inputText = std::to_string((val - 1 + 60) % 60);
+            return;
+        }
+
+        Rectangle okBtn = {dialogRect.x + 40, dialogRect.y + dialogRect.height - 90, (dialogRect.width - 100)/2, 60};
+        Rectangle cancelBtn = {dialogRect.x + dialogRect.width/2 + 10, dialogRect.y + dialogRect.height - 90, (dialogRect.width - 100)/2, 60};
+        
+        if (GuiWindowInternal::isButtonPressed(okBtn, true) || IsKeyPressed(KEY_ENTER)) confirmLocalDialog();
+        else if (GuiWindowInternal::isButtonPressed(cancelBtn, true)) cancelLocalDialog();
+        return;
+
+    } else if (currentModal.active && currentModal.prompt.find("Aksi lelang") != std::string::npos) {
+        // Auction Interactions
+        Rectangle cancelBtn = {dialogRect.x + 40, dialogRect.y + dialogRect.height - 90, (dialogRect.width - 100)/2, 70};
+        Rectangle okBtn = {dialogRect.x + dialogRect.width/2 + 10, dialogRect.y + dialogRect.height - 90, (dialogRect.width - 100)/2, 70};
+        
+        if (GuiWindowInternal::isButtonPressed(okBtn, true) || IsKeyPressed(KEY_ENTER)) confirmLocalDialog();
+        else if (GuiWindowInternal::isButtonPressed(cancelBtn, true)) cancelLocalDialog();
+        return;
+
+    } else if (currentModal.active && currentModal.title.find("Festival") != std::string::npos) {
+        // Festival Interactions
+        Rectangle cancelBtn = {dialogRect.x + dialogRect.width - 310, dialogRect.y + dialogRect.height - 85, 140, 60};
+        Rectangle okBtn = {dialogRect.x + dialogRect.width - 160, dialogRect.y + dialogRect.height - 85, 120, 60};
+        
+        if (GuiWindowInternal::isButtonPressed(okBtn, true) || IsKeyPressed(KEY_ENTER)) confirmLocalDialog();
+        else if (GuiWindowInternal::isButtonPressed(cancelBtn, true)) cancelLocalDialog();
+        return;
+
+    } else if (currentModal.active && (currentModal.title == "Pilih Opsi" || currentModal.prompt.find("Pilihan (1/") != std::string::npos)) {
+        // Choice Interactions
+        Rectangle inputRect = {dialogRect.x + 40, dialogRect.y + 210, dialogRect.width - 80, 80};
+        Rectangle btnUp = {inputRect.x + inputRect.width - 40, inputRect.y + 10, 40, 35};
+        Rectangle btnDown = {inputRect.x + inputRect.width - 40, inputRect.y + 45, 40, 35};
+        
+        if (GuiWindowInternal::isButtonPressed(btnUp, true)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            int val = std::atoi(modal.inputText.c_str());
+            if (val == 0) val = 1; // Fallback if empty
+            modal.inputText = std::to_string(val == 1 ? 2 : 1);
+            return;
+        }
+        if (GuiWindowInternal::isButtonPressed(btnDown, true)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            int val = std::atoi(modal.inputText.c_str());
+            if (val == 0) val = 2; // Fallback if empty
+            modal.inputText = std::to_string(val == 2 ? 1 : 2);
+            return;
+        }
+
+        Rectangle okBtn = {dialogRect.x + 40, dialogRect.y + dialogRect.height - 90, (dialogRect.width - 100)/2, 65};
+        Rectangle cancelBtn = {dialogRect.x + dialogRect.width/2 + 10, dialogRect.y + dialogRect.height - 90, (dialogRect.width - 100)/2, 65};
+        
+        if (GuiWindowInternal::isButtonPressed(okBtn, true) || IsKeyPressed(KEY_ENTER)) confirmLocalDialog();
+        else if (GuiWindowInternal::isButtonPressed(cancelBtn, true)) cancelLocalDialog();
+        return;
+
     } else {
-        // Fallback OK/CANCEL buttons
         const Rectangle okRect{dialogRect.x + dialogRect.width - 210.0F,
                                dialogRect.y + dialogRect.height - 58.0F, 90.0F,
                                34.0F};
