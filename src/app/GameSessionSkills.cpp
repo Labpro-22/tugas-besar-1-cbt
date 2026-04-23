@@ -107,9 +107,15 @@ void GameSession::awardSkillCardAtTurnStart() {
                   << card->getDescription() << "\n";
     }
 
+    std::string discardPrompt = "Tangan penuh! Pilih kartu untuk dibuang:\n";
+    for (std::size_t i = 0; i < player.getHand().size(); ++i) {
+        Card* c = player.getHand()[i];
+        discardPrompt += std::to_string(i + 1) + ". " + c->getType();
+        if (c->getValue() != 0) discardPrompt += " (" + std::to_string(c->getValue()) + ")";
+        discardPrompt += "\n";
+    }
     const int discardChoice = cli.getInputHandler().readChoice(
-        1, static_cast<int>(player.getHand().size()),
-        "Pilih nomor kartu yang ingin dibuang: ");
+        1, static_cast<int>(player.getHand().size()), discardPrompt);
     SkillCard* discardCard =
         static_cast<SkillCard*>(player.getHand()[static_cast<std::size_t>(discardChoice - 1)]);
     if (discardCard != nullptr) {

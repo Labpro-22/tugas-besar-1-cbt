@@ -377,6 +377,6 @@ int GuiWindow::effectiveInspectedPlayerIndex(
 }
 
 Rectangle GuiWindow::modalDialogRect() const {
-    return Rectangle{modalPosition.x, modalPosition.y, 500.0F, 260.0F};
+    return Rectangle{modalPosition.x, modalPosition.y, 500.0F, 320.0F};
 }
 

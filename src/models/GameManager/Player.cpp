@@ -7,7 +7,8 @@ Player::Player(string username, int startingCash, PlayerStatus state,
     int startPosition, vector<Card *> startHand,
     vector<Property *> startProperty, int usedAbility, bool shield,
     int discPercent, int discRemain)
-    : username(username), cash(startingCash), position(startPosition),
+    // maksimal username 8 character
+    : username(username.length() > 8 ? username.substr(0, 8) : username), cash(startingCash), position(startPosition),
         status(state), lap(1, 0), hand(startHand), properties(startProperty),
         usedAbilityThisTurn(usedAbility != 0), hasShield(shield),
         discountPercentage(discPercent), discountRemainingTurns(discRemain) {}

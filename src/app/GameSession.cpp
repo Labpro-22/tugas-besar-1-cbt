@@ -175,9 +175,13 @@ bool GameSession::initializeNewGame() {
                                playerCount, i);
             notifySnapshot();
             username = cli.getInputHandler().readPromptLine(
-                "Masukkan username pemain " + std::to_string(i + 1) + ": ",
+                "Masukkan username pemain " + std::to_string(i + 1) + " (maks 8 karakter): ",
                 "Username Pemain");
         } while (username.empty());
+
+        if (username.length() > 8) {
+            username = username.substr(0, 8);
+        }
 
         usernames.push_back(username);
     }

@@ -58,7 +58,12 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
     gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", targetListLog);
     gm->pushSnapshot();
     InputHandler input;
-    const int choice = input.readChoice(1, static_cast<int>(targets.size()), "Pilih properti untuk DemolitionCard: ");
+    std::string promptStr = "Pilih properti untuk DemolitionCard:\n";
+    for (size_t i = 0; i < targets.size(); ++i) {
+        Player* owner = targets[i]->getOwner();
+        promptStr += std::to_string(i + 1) + ". " + targets[i]->getCode() + " - " + targets[i]->getName() + " (pemilik: " + (owner ? owner->getUsername() : "-") + ")\n";
+    }
+    const int choice = input.readChoice(1, static_cast<int>(targets.size()), promptStr);
 
     Property* target = targets[static_cast<std::size_t>(choice - 1)];
     const std::string targetName = target->getName();

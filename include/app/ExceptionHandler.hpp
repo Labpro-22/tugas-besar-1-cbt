@@ -6,6 +6,8 @@
 #include <iostream>
 #include <string>
 
+#include "exception/NimonspoliExceptions.hpp"
+
 class ExceptionHandler {
 public:
     template <typename Func>
@@ -13,6 +15,8 @@ public:
         try {
             func();
             return true;
+        } catch (const NimonspoliException& e) {
+            std::cerr << "[ERROR: " << e.getErrorCode() << "] " << context << ": " << e.what() << "\n";
         } catch (const std::exception& e) {
             std::cerr << "[ERROR] " << context << ": " << e.what() << "\n";
         } catch (...) {

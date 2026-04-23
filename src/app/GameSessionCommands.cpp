@@ -454,9 +454,14 @@ void GameSession::handleUseAbility() {
     }
     std::cout << "0. Batal\n";
 
+    std::string usePrompt = "Pilih kartu yang ingin digunakan (0 untuk batal):\n";
+    for (std::size_t i = 0; i < hand.size(); ++i) {
+        usePrompt += std::to_string(i + 1) + ". " + hand[i]->getType();
+        if (hand[i]->getValue() != 0) usePrompt += " (" + std::to_string(hand[i]->getValue()) + ")";
+        usePrompt += "\n";
+    }
     int choice = cli.getInputHandler().readChoice(
-        0, static_cast<int>(hand.size()),
-        "Pilih kartu yang ingin digunakan (0 untuk batal): ");
+        0, static_cast<int>(hand.size()), usePrompt);
     if (choice == 0) {
         return;
     }

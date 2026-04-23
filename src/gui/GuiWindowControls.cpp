@@ -157,8 +157,8 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
     const Rectangle titleBarRect{dialogRect.x, dialogRect.y, dialogRect.width, 42.0F};
     const Rectangle promptRect{dialogRect.x + 18.0F, dialogRect.y + 56.0F,
                                dialogRect.width - 36.0F,
-                               isErrorModal ? 132.0F : 82.0F};
-    const Rectangle inputRect{dialogRect.x + 18.0F, dialogRect.y + 146.0F,
+                               isErrorModal ? 132.0F : 140.0F};
+    const Rectangle inputRect{dialogRect.x + 18.0F, dialogRect.y + 204.0F,
                               dialogRect.width - 36.0F, 34.0F};
     const Rectangle okRect{dialogRect.x + dialogRect.width - 210.0F,
                            dialogRect.y + dialogRect.height - 58.0F, 90.0F, 34.0F};
@@ -194,7 +194,7 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
     }
     GuiWindowInternal::drawWrappedText(font, current.prompt, promptRect, 18.0F, 1.0F,
                     isErrorModal ? Color{160, 30, 30, 255} : GuiWindowInternal::kInk,
-                    isErrorModal ? 7 : 5);
+                    isErrorModal ? 7 : 8);
 
     if (!isErrorModal && (!current.yesNo || !current.backendOwned)) {
         DrawRectangleRec(inputRect, GuiWindowInternal::kPanel);
