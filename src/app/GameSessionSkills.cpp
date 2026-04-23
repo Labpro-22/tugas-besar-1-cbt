@@ -107,7 +107,7 @@ void GameSession::awardSkillCardAtTurnStart() {
                   << card->getDescription() << "\n";
     }
 
-    std::string discardPrompt = "Tangan penuh! Pilih kartu untuk dibuang:\n";
+    std::string discardPrompt = "Tangan penuh! Kamu memiliki 4 kartu (maksimal 3), pilih salah satu untuk dibuang:\n";
     for (std::size_t i = 0; i < player.getHand().size(); ++i) {
         Card* c = player.getHand()[i];
         discardPrompt += std::to_string(i + 1) + ". " + c->getType();

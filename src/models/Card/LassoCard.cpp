@@ -66,7 +66,7 @@ void LassoCard::use(Player *p, GameManager *gm) {
     gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", targetListLog);
     gm->pushSnapshot();
     InputHandler input;
-    std::string promptStr = "Pilih target LassoCard:\n";
+    std::string promptStr = "LassoCard hanya dapat digunakan pada lawan yang berada di depanmu.\nPilih target LassoCard:\n";
     for (size_t i = 0; i < candidates.size(); ++i) {
         promptStr += std::to_string(i + 1) + ". " + candidates[i]->getUsername() + " (Tile " + std::to_string(candidates[i]->getPosition()) + ")\n";
     }

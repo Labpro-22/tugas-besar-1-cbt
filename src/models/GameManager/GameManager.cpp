@@ -245,7 +245,7 @@ void GameManager::executePurchase(Player &player, Property &prop) {
     pushSnapshot();
     InputHandler input;
     const bool shouldBuy = input.readYesNo(
-        "Apakah kamu ingin membeli properti ini? (y/n): ");
+        "[PROPERTY_PURCHASE:" + prop.getCode() + "] Apakah kamu ingin membeli properti ini? (y/n): ");
 
     if (!shouldBuy) {
       cout << "Properti ini akan masuk ke sistem lelang...\n";

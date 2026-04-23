@@ -246,7 +246,6 @@ void GuiWindow::updateFrame(const Layout& layout,
                 }
             }
         }
-
         if (currentModal.localType == LocalDialogType::ErrorMessage) {
             if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_ESCAPE) ||
                 GuiWindowInternal::isButtonPressed(errorOkRect, true)) {

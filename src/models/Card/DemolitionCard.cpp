@@ -58,7 +58,7 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
     gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", targetListLog);
     gm->pushSnapshot();
     InputHandler input;
-    std::string promptStr = "Pilih properti untuk DemolitionCard:\n";
+    std::string promptStr = "DemolitionCard akan menghancurkan properti lawan dan mengembalikannya ke Bank.\nPilih properti lawan:\n";
     for (size_t i = 0; i < targets.size(); ++i) {
         Player* owner = targets[i]->getOwner();
         promptStr += std::to_string(i + 1) + ". " + targets[i]->getCode() + " - " + targets[i]->getName() + " (pemilik: " + (owner ? owner->getUsername() : "-") + ")\n";

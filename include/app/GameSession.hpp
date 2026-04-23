@@ -44,6 +44,10 @@ public:
     bool mortgaged = false;
     int festivalMultiplier = 1;
     int festivalDuration = 0;
+    int buyPrice = 0;
+    int rentPrice = 0;
+    int buildingPrice = 0;
+    int mortgagePrice = 0;
 };
 
 class LogSnapshot {

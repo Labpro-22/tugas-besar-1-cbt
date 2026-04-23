@@ -93,6 +93,19 @@ GameSnapshot GameSession::buildSnapshot() const {
                 property.getStatus() == PropertyStatus::MORTGAGED;
             tileSnapshot.festivalMultiplier = property.getFMult();
             tileSnapshot.festivalDuration = property.getFDur();
+            tileSnapshot.buyPrice = property.getBuyPrice();
+            tileSnapshot.mortgagePrice = property.getMortgageValue();
+            if (property.getType() == "Street") {
+                const Street& street = static_cast<const Street&>(property);
+                if (!street.getRentLevels().empty()) tileSnapshot.rentPrice = street.getRentLevels()[0];
+                tileSnapshot.buildingPrice = street.getHouseCost();
+            } else if (property.getType() == "Railroad") {
+                const Railroad& rr = static_cast<const Railroad&>(property);
+                if (!rr.getRentTable().empty()) tileSnapshot.rentPrice = rr.getRentTable().begin()->second;
+            } else if (property.getType() == "Utility") {
+                const Utility& ut = static_cast<const Utility&>(property);
+                if (!ut.getMultiplierTable().empty()) tileSnapshot.rentPrice = ut.getMultiplierTable().begin()->second;
+            }
         }
 
         snapshot.tiles.push_back(tileSnapshot);
