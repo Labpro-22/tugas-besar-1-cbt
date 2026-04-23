@@ -63,10 +63,11 @@ void GameSession::handleRollDice(bool manual, int d1, int d2) {
         } else {
             std::cout << "Pilih cara keluar:\n";
             std::cout << "1. Bayar denda M" << jailFine << "\n";
-            std::cout << "2. Coba lempar dadu (harus double)\n";
+            std::cout << "2. Gunakan Kartu \"Bebas dari Penjara\"\n";
+            std::cout << "3. Coba lempar dadu (harus double)\n";
 
             const int choice = cli.getInputHandler().readChoice(
-                1, 2, "Pilihan (1/2): ");
+                1, 3, "Pilihan (1/2/3): ");
             if (choice == 1) {
                 game.executeTaxPayment(currentPlayer, jailFine, true);
                 if (currentPlayer.getStatus() == BANKRUPT) {
@@ -78,6 +79,17 @@ void GameSession::handleRollDice(bool manual, int d1, int d2) {
                 releasePlayerFromJail(currentPlayer);
                 std::cout << currentPlayer.getUsername()
                           << " keluar dari Penjara setelah membayar denda.\n";
+            } else if (choice == 2) {
+                bool hasCard = false;
+                if (!hasCard) {
+                    std::cout << "Kamu tidak memiliki kartu \"Bebas dari Penjara\".\n";
+                    std::cout << "Mencoba melempar dadu sebagai alternatif...\n";
+                } else {
+                    releasePlayerFromJail(currentPlayer);
+                    std::cout << currentPlayer.getUsername()
+                              << " menggunakan kartu dan keluar dari Penjara.\n";
+                    return;
+                }
             }
         }
     }
@@ -505,4 +517,3 @@ void GameSession::handleSave(const Command& command) {
 void GameSession::handleLoad(const Command&) const {
     std::cout << "MUAT hanya dapat dilakukan dari menu awal program.\n";
 }
-

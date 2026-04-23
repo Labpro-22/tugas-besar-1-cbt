@@ -616,11 +616,11 @@ void GuiWindow::updateModalInput() {
         return;
     } else if (currentModal.active && currentModal.prompt.find("DemolitionCard") != std::string::npos) {
         // Demolition Interactions
-        float sideW = 280.0F;
-        float listX = dialogRect.x + sideW + 40;
+        float sideW = 150.0F;
+        float listX = dialogRect.x + sideW + 20;
         float listY = dialogRect.y + 110;
-        float listW = dialogRect.width - sideW - 80;
-        float listH = dialogRect.height - 210;
+        float listW = dialogRect.width - sideW - 40;
+        float listH = dialogRect.height - 230;
 
         std::vector<std::string> targets;
         std::stringstream ss(currentModal.prompt);
@@ -629,7 +629,7 @@ void GuiWindow::updateModalInput() {
             if (line.find(". ") != std::string::npos && line.find(" - ") != std::string::npos) targets.push_back(line);
         }
 
-        float itemH = 100.0F;
+        float itemH = 125.0F;
         float spacing = 15.0F;
 
         for (size_t i = 0; i < targets.size(); ++i) {
@@ -643,7 +643,7 @@ void GuiWindow::updateModalInput() {
             }
         }
 
-        Rectangle confirmBtnDemolish = {listX, dialogRect.y + dialogRect.height - 85, listW, 60};
+        Rectangle confirmBtnDemolish = {listX, dialogRect.y + dialogRect.height - 100, listW, 80};
         if (GuiWindowInternal::isButtonPressed(confirmBtnDemolish, !currentModal.inputText.empty())) {
             confirmLocalDialog();
         }
@@ -698,18 +698,23 @@ void GuiWindow::updateModalInput() {
         Rectangle btnUp = {inputRect.x + inputRect.width - 40, inputRect.y + 10, 40, 35};
         Rectangle btnDown = {inputRect.x + inputRect.width - 40, inputRect.y + 45, 40, 35};
         
+        bool isThreeChoices = (currentModal.prompt.find("(1/2/3)") != std::string::npos);
+        int maxVal = isThreeChoices ? 3 : 2;
+
         if (GuiWindowInternal::isButtonPressed(btnUp, true)) {
             std::lock_guard<std::mutex> lock2(modalMutex);
             int val = std::atoi(modal.inputText.c_str());
-            if (val == 0) val = 1; // Fallback if empty
-            modal.inputText = std::to_string(val == 1 ? 2 : 1);
+            if (val <= 0) val = 1;
+            val = (val % maxVal) + 1;
+            modal.inputText = std::to_string(val);
             return;
         }
         if (GuiWindowInternal::isButtonPressed(btnDown, true)) {
             std::lock_guard<std::mutex> lock2(modalMutex);
             int val = std::atoi(modal.inputText.c_str());
-            if (val == 0) val = 2; // Fallback if empty
-            modal.inputText = std::to_string(val == 2 ? 1 : 2);
+            if (val <= 0) val = 1;
+            val = (val - 2 + maxVal) % maxVal + 1;
+            modal.inputText = std::to_string(val);
             return;
         }
 

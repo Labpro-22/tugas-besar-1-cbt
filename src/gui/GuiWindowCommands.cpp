@@ -416,10 +416,11 @@ Rectangle GuiWindow::modalDialogRect() const {
                 height = 340.0F;
             } else if (modal.title == "Pilih Opsi" || modal.prompt.find("Pilihan (1/") != std::string::npos) {
                 width = 480.0F;
-                height = 580.0F;
+                bool isJail = (modal.prompt.find("(1/2/3)") != std::string::npos);
+                height = isJail ? 680.0F : 550.0F;
             } else if (modal.prompt.find("DemolitionCard") != std::string::npos) {
-                width = 900.0F;
-                height = 700.0F;
+                width = 1300.0F;
+                height = 820.0F;
             }
         }
     }

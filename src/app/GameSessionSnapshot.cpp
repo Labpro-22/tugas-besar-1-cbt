@@ -55,6 +55,7 @@ GameSnapshot GameSession::buildSnapshot() const {
     snapshot.winnerCash = winnerCash;
     snapshot.winnerPropertyCount = winnerPropertyCount;
     snapshot.winnerCardCount = winnerCardCount;
+    snapshot.jailFine = configuration.getJailFine();
 
     for (const Player& player : game.getPlayers()) {
         PlayerSnapshot playerSnapshot;
@@ -254,4 +255,3 @@ std::string GameSession::buildPlayerDetailText(const Player& player) const {
 
     return oss.str();
 }
-
