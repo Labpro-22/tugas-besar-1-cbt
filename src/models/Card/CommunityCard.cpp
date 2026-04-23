@@ -32,8 +32,7 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
   }
 
   if (communityType != CommunityCardType::BIRTHDAY && p->hasShieldActive()) {
-    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "SHIELD",
-                        "ShieldCard melindungi dari efek Dana Umum");
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "SHIELD", "ShieldCard melindungi dari efek Dana Umum");
     return;
   }
 
@@ -55,8 +54,7 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
         gm->executeBankruptcy(other, p, giftAmount);
       }
     }
-    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
-                        "Dana Umum: Menerima hadiah ulang tahun M100 dari setiap pemain");
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", "Dana Umum: Menerima hadiah ulang tahun M100 dari setiap pemain");
     return;
   }
 
@@ -67,10 +65,8 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
         throw InsufficientFundsException(p->getUsername(), doctorFee, p->getCash());
       }
       p->reduceCash(doctorFee);
-      std::cout << "Kamu membayar M" << doctorFee << " ke Bank."
-                << " Sisa Uang = M" << p->getCash() << ".\n";
-      gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "PAJAK",
-                          "Dana Umum: Membayar biaya dokter M" + std::to_string(doctorFee));
+      std::cout << "Kamu membayar M" << doctorFee << " ke Bank." << " Sisa Uang = M" << p->getCash() << ".\n";
+      gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "PAJAK", "Dana Umum: Membayar biaya dokter M" + std::to_string(doctorFee));
     } catch (const InsufficientFundsException &) {
       std::cout << "Kamu tidak mampu membayar biaya dokter! (M" << doctorFee << ")\n";
       std::cout << "Uang kamu saat ini: M" << p->getCash() << "\n";
@@ -97,8 +93,7 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
         break;
       }
     }
-    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "PAJAK",
-                        "Dana Umum: Membayar campaign fee M200 ke setiap pemain");
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "PAJAK", "Dana Umum: Membayar campaign fee M200 ke setiap pemain");
     return;
   }
 

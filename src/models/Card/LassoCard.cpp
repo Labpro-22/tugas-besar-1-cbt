@@ -30,16 +30,20 @@ void LassoCard::use(Player *p, GameManager *gm) {
     }
 
     const int boardSize = gm->getBoardSize();
+    const int currentLap = p->getLapCount();
     std::vector<Player *> candidates;
     for (Player &player : gm->getPlayers()) {
         if (&player == p) {
             continue;
         }
-        if (player.getStatus() == BANKRUPT) {
+        if (player.getStatus() == BANKRUPT || player.getStatus() == JAILED) {
             continue;
         }
+        const int targetLap = player.getLapCount();
         const int distance = (player.getPosition() - p->getPosition() + boardSize) % boardSize;
-        if (distance > 0) {
+        const bool isAheadByLap = targetLap > currentLap;
+        const bool isAheadOnSameLap = targetLap == currentLap && distance > 0;
+        if (isAheadByLap || isAheadOnSameLap) {
             candidates.push_back(&player);
         }
     }
@@ -53,11 +57,8 @@ void LassoCard::use(Player *p, GameManager *gm) {
     for (size_t i = 0; i < candidates.size(); ++i) {
         const Player *target = candidates[i];
         const Tile &targetTile = gm->getBoard().getTile(target->getPosition());
-        targetListLog += " " + std::to_string(i + 1) + ". " + target->getUsername() +
-                         "(" + targetTile.getCode() + ");";
-        std::cout << (i + 1) << ". " << target->getUsername() << " ("
-                  << targetTile.getCode() << " - " << targetTile.getName()
-                  << ")\n";
+        targetListLog += " " + std::to_string(i + 1) + ". " + target->getUsername() + "(" + targetTile.getCode() + ");";
+        std::cout << (i + 1) << ". " << target->getUsername() << " (" << targetTile.getCode() << " - " << targetTile.getName() << ")\n";
     }
     gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", targetListLog);
     gm->pushSnapshot();
@@ -67,14 +68,12 @@ void LassoCard::use(Player *p, GameManager *gm) {
     Player *target = candidates[static_cast<std::size_t>(choice - 1)];
     target->setPosition(p->getPosition());
     Tile &landingTile = gm->getBoard().getTile(target->getPosition());
-    std::cout << target->getUsername() << " ditarik ke petak "
-              << landingTile.getName() << ".\n";
+    std::cout << target->getUsername() << " ditarik ke petak " << landingTile.getName() << ".\n";
 
     markAsUsed();
     p->setUsedAbility();
     p->removeCard(this);
 
-    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
-                        "LassoCard: Menarik " + target->getUsername() + " ke petak " + landingTile.getName());
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", "LassoCard: Menarik " + target->getUsername() + " ke petak " + landingTile.getName());
     landingTile.onLanded(*target, *gm);
 }

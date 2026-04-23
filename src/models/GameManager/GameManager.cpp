@@ -174,6 +174,7 @@ void GameManager::movePlayerTo(Player &player, int targetPosition,
   if (grantGoSalary &&
       !targetIsGoToJail &&
       crossesOrLandsOnGo(oldPosition, normalizedTarget)) {
+    player.incrementLap();
     executeSalary(player, getGoSalary());
   }
 }

@@ -343,11 +343,10 @@ void GuiWindow::drawTurnChangePopup(const GameSnapshot& currentSnapshot) const {
                                cardRect.width - 40.0F, 24.0F},
                      18.0F, 1.2F, gold);
 
-    const int badgeNumber = resolvedPlayerIndex + 1;
-    GuiWindowInternal::drawTextCentered(font, std::to_string(badgeNumber),
+    GuiWindowInternal::drawTextCentered(font, popupPlayerName,
                      Rectangle{cardRect.x + 20.0F, cardRect.y + 168.0F,
                                cardRect.width - 40.0F, 104.0F},
-                     150.0F, 1.0F, gold);
+                     120.0F, 1.0F, gold);
 
     DrawLineEx(Vector2{cardRect.x + 16.0F, cardRect.y + 212.0F},
                Vector2{cardRect.x + 235.0F, cardRect.y + 212.0F}, 1.0F,

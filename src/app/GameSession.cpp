@@ -214,9 +214,9 @@ void GameSession::initializePlayers(const std::vector<std::string>& usernames) {
         players.emplace_back(username, configuration.getStartingCash());
     }
 
-    std::random_device randomDevice;
-    std::mt19937 generator(randomDevice());
-    std::shuffle(players.begin(), players.end(), generator);
+//     std::random_device randomDevice;
+//     std::mt19937 generator(randomDevice());
+//     std::shuffle(players.begin(), players.end(), generator);
 }
 
 void GameSession::prepareFreshBoard() {

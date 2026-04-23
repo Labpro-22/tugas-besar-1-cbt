@@ -62,12 +62,10 @@ void DiscountCard::use(Player* p, GameManager* gm) {
     }
 
     p->applyDiscount(discountPercent, remainingDuration);
-    std::cout << "DiscountCard diaktifkan! Diskon " << discountPercent
-              << "% aktif untuk giliran ini.\n";
+    std::cout << "DiscountCard diaktifkan! Diskon " << discountPercent << "% aktif untuk giliran ini.\n";
 
     markAsUsed();
     p->setUsedAbility();
     p->removeCard(this);
-    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
-                        "DiscountCard: Diskon " + std::to_string(discountPercent) + "% aktif");
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", "DiscountCard: Diskon " + std::to_string(discountPercent) + "% aktif");
 }

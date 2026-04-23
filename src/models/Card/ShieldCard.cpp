@@ -31,12 +31,10 @@ void ShieldCard::use(Player* p, GameManager* gm) {
     }
 
     p->activateShield();
-    std::cout << "ShieldCard diaktifkan! Kamu kebal terhadap tagihan atau sanksi"
-                 " selama giliran ini.\n";
+    std::cout << "ShieldCard diaktifkan! Kamu kebal terhadap tagihan atau sanksi" " selama giliran ini.\n";
 
     markAsUsed();
     p->setUsedAbility();
     p->removeCard(this);
-    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "SHIELD",
-                        "ShieldCard aktif - kebal tagihan giliran ini");
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "SHIELD", "ShieldCard aktif - kebal tagihan giliran ini");
 }

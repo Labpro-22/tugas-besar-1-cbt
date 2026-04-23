@@ -20,6 +20,7 @@ private:
     int cash;
     int position;
     PlayerStatus status;
+    vector<int> lap;
     vector<Card *> hand;
     vector<Property *> properties;
     bool usedAbilityThisTurn;
@@ -39,6 +40,9 @@ public:
     int getPosition() const;
     PlayerStatus getStatus() const;
     void setStatus(int State);
+    vector<int> getLap() const;
+    int getLapCount() const;
+    void incrementLap();
     void addCash(int amount);
     void reduceCash(int amount);
     Player& operator+=(int amount);

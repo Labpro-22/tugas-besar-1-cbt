@@ -82,8 +82,7 @@ void Property::resetToBank() {
 /// @return The mortgage amount given to the player
 int Property::mortgage() {
     if (status != PropertyStatus::OWNED) {
-        throw PropertyMortgageException(code,
-            "Properti harus dalam status OWNED sebelum digadaikan.");
+        throw PropertyMortgageException(code, "Properti harus dalam status OWNED sebelum digadaikan.");
     }
 
     status = PropertyStatus::MORTGAGED;

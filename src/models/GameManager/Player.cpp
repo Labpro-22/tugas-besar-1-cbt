@@ -7,15 +7,15 @@ Player::Player(string username, int startingCash, PlayerStatus state,
     vector<Property *> startProperty, int usedAbility, bool shield,
     int discPercent, int discRemain)
     : username(username), cash(startingCash), position(startPosition),
-        status(state), hand(startHand), properties(startProperty),
+        status(state), lap(1, 0), hand(startHand), properties(startProperty),
         usedAbilityThisTurn(usedAbility != 0), hasShield(shield),
         discountPercentage(discPercent), discountRemainingTurns(discRemain) {}
 
 Player::Player(const Player &other)    : username(other.username), cash(other.cash), position(other.position),
-      status(other.status), hand(other.hand), properties(other.properties),
+    status(other.status), lap(other.lap), hand(other.hand), properties(other.properties),
       usedAbilityThisTurn(other.usedAbilityThisTurn), hasShield(other.hasShield),  
       discountPercentage(other.discountPercentage), discountRemainingTurns(other.discountRemainingTurns) {}
-Player::Player() : username(""), cash(0), position(0), status(ACTIVE), hand({}), properties({}), 
+Player::Player() : username(""), cash(0), position(0), status(ACTIVE), lap(1, 0), hand({}), properties({}), 
                     usedAbilityThisTurn(false), hasShield(false), discountPercentage(0), discountRemainingTurns(0) {}
 string Player::getUsername() const { return username; }
 int Player::getCash() const { return cash; }
@@ -26,6 +26,23 @@ void Player::setStatus(int State) { status = static_cast<PlayerStatus>(State); }
 void Player::setPosition(int pos) { position = pos; }
 
 void Player::setActive() { status = ACTIVE; }
+
+vector<int> Player::getLap() const { return lap; }
+
+int Player::getLapCount() const {
+    if (lap.empty()) {
+        return 0;
+    }
+    return lap.front();
+}
+
+void Player::incrementLap() {
+    if (lap.empty()) {
+        lap.push_back(1);
+        return;
+    }
+    lap.front()++;
+}
 
 void Player::addCash(int amount) { *this += amount; }
 void Player::reduceCash(int amount) { *this -= amount; }

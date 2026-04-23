@@ -44,8 +44,7 @@ void ChanceCard::execute(Player *p, GameManager *gm) {
     gm->movePlayerTo(*p, newPos, true);
     Tile &tile = gm->getBoard().getTile(newPos);
     std::cout << "Bidak dipindahkan ke " << tile.getName() << ".\n";
-    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
-                        "Kesempatan: Menuju stasiun terdekat " + tile.getName());
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", "Kesempatan: Menuju stasiun terdekat " + tile.getName());
     tile.onLanded(*p, *gm);
     break;
   }
@@ -54,8 +53,7 @@ void ChanceCard::execute(Player *p, GameManager *gm) {
     p->setPosition(newPos);
     Tile &tile = gm->getBoard().getTile(newPos);
     std::cout << "Bidak dipindahkan ke " << tile.getName() << ".\n";
-    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
-                        "Kesempatan: Mundur 3 petak ke " + tile.getName());
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", "Kesempatan: Mundur 3 petak ke " + tile.getName());
     tile.onLanded(*p, *gm);
     break;
   }

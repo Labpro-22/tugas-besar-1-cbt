@@ -52,11 +52,8 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
     for (size_t i = 0; i < targets.size(); ++i) {
         Player* owner = targets[i]->getOwner();
         const std::string ownerName = owner != nullptr ? owner->getUsername() : "-";
-        targetListLog += " " + std::to_string(i + 1) + ". " + targets[i]->getCode() +
-                         "(" + ownerName + ");";
-        std::cout << (i + 1) << ". " << targets[i]->getCode()
-            << " - " << targets[i]->getName()
-            << " (pemilik: " << ownerName << ")\n";
+        targetListLog += " " + std::to_string(i + 1) + ". " + targets[i]->getCode() + "(" + ownerName + ");";
+        std::cout << (i + 1) << ". " << targets[i]->getCode() << " - " << targets[i]->getName() << " (pemilik: " << ownerName << ")\n";
     }
     gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", targetListLog);
     gm->pushSnapshot();
@@ -69,8 +66,7 @@ void DemolitionCard::use(Player* p, GameManager* gm) {
     gm->destroyProperty(*p, *target);
     std::cout << "Properti " << targetName << " dihancurkan oleh DemolitionCard dan kembali ke Bank.\n";
 
-    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU",
-                        "DemolitionCard: Menghancurkan properti " + targetCode);
+    gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", "DemolitionCard: Menghancurkan properti " + targetCode);
     markAsUsed();
     p->setUsedAbility();
     p->removeCard(this);

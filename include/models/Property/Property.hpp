@@ -46,7 +46,6 @@ public:
     virtual std::string getType() const = 0;
     std::string getStatusString() const;
     virtual int getFMult() const;
-
     virtual int getFDur() const;
 
     virtual int getBuildingCount() const { return 0; }
