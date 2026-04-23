@@ -69,17 +69,25 @@ void Auction::pass(Player* player) {
         return;
     }
 
+    if (winnerIndex == -1 && passCount == static_cast<int>(participants.size()) - 1) {
+        cout << "Pemain lain sudah PASS. Sebagai penawar terakhir, " 
+             << player->getUsername() << " WAJIB melakukan bid (minimal " 
+             << minimumBid << ")!\n";
+        return;
+    }
+
     cout << "-- " << player->getUsername() << " memilih PASS (Mundur).\n";
     passCount++;
-    
 
-    nextParticipant();
-
-    if (passCount >= static_cast<int>(participants.size()) - 1 && winnerIndex != -1) {
+    if (winnerIndex != -1 && passCount >= static_cast<int>(participants.size()) - 1) {
         determineWinner();
     } 
+
     else if (passCount >= static_cast<int>(participants.size())) {
         determineWinner();
+    } 
+    else {
+        nextParticipant();
     }
 }
 
@@ -108,7 +116,7 @@ Player* Auction::getWinner() {
     if (!isActive && winnerIndex != -1) {
         return participants[winnerIndex];
     }
-    return participants[participants.size() - 1]; 
+    return nullptr; 
 }
 
 int Auction::getWinningBid() {
@@ -129,4 +137,8 @@ Player* Auction::getCurrentParticipant() const {
 
 int Auction::getCurrentBid() const {
     return currentBid;
+}
+
+int Auction::getMinimumBid() const {
+    return minimumBid;
 }

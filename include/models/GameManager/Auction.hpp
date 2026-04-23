@@ -30,4 +30,5 @@ class Auction{
         bool isOpen() const;
         Player* getCurrentParticipant() const;
         int getCurrentBid() const;
+        int getMinimumBid() const;
 };
