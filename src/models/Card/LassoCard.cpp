@@ -40,10 +40,13 @@ void LassoCard::use(Player *p, GameManager *gm) {
             continue;
         }
         const int targetLap = player.getLapCount();
-        const int distance = (player.getPosition() - p->getPosition() + boardSize) % boardSize;
-        const bool isAheadByLap = targetLap > currentLap;
-        const bool isAheadOnSameLap = targetLap == currentLap && distance > 0;
-        if (isAheadByLap || isAheadOnSameLap) {
+        const int targetPos = player.getPosition();
+        const int actorPos = p->getPosition();
+
+        const int targetTotalDist = targetLap * boardSize + targetPos;
+        const int actorTotalDist = currentLap * boardSize + actorPos;
+
+        if (targetTotalDist > actorTotalDist) {
             candidates.push_back(&player);
         }
     }

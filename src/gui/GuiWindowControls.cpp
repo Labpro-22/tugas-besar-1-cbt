@@ -343,7 +343,7 @@ void GuiWindow::drawTurnChangePopup(const GameSnapshot& currentSnapshot) const {
                                cardRect.width - 40.0F, 24.0F},
                      18.0F, 1.2F, gold);
 
-    GuiWindowInternal::drawTextCentered(font, popupPlayerName,
+    GuiWindowInternal::drawTextCentered(font, std::to_string(turnPopupPlayerIndex + 1),
                      Rectangle{cardRect.x + 20.0F, cardRect.y + 168.0F,
                                cardRect.width - 40.0F, 104.0F},
                      120.0F, 1.0F, gold);
@@ -463,14 +463,19 @@ void GuiWindow::drawGameOverPopup(const GameSnapshot& currentSnapshot) const {
     GuiWindowInternal::drawRectangleRoundedLinesCompat(badgeRect, 0.16F, 10, 2.0F,
                                     Color{118, 99, 22, 255});
 
-    std::string winners;                                
+    std::string winnerNumbers;
     for (std::size_t i = 0; i < currentSnapshot.winnerNames.size(); ++i) {
-        if (i > 0) {
-            winners += ", ";
+        if (i > 0) winnerNumbers += ", ";
+        int idx = -1;
+        for (std::size_t j = 0; j < currentSnapshot.players.size(); ++j) {
+            if (currentSnapshot.players[j].name == currentSnapshot.winnerNames[i]) {
+                idx = static_cast<int>(j);
+                break;
+            }
         }
-        winners += currentSnapshot.winnerNames[i];
-    }                 
-    GuiWindowInternal::drawTextCentered(font, winners, badgeRect, 48.0F, 1.0F,
+        winnerNumbers += std::to_string(idx + 1);
+    }
+    GuiWindowInternal::drawTextCentered(font, winnerNumbers, badgeRect, 48.0F, 1.0F,
                      Color{58, 48, 18, 255});
 
     GuiWindowInternal::drawTextCentered(font, "Victory Claimed",

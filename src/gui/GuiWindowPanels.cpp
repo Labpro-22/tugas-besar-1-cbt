@@ -51,10 +51,8 @@ void GuiWindow::drawHeader(const Layout& layout,
         currentSnapshot.activePlayerIndex <
             static_cast<int>(currentSnapshot.players.size())) {
         const std::string turnText =
-            "Turn " + std::to_string(currentSnapshot.currentTurn) + ": " +
-            currentSnapshot
-                .players[static_cast<std::size_t>(currentSnapshot.activePlayerIndex)]
-                .name;
+            "Turn " + std::to_string(currentSnapshot.currentTurn) + ": Player " +
+            std::to_string(currentSnapshot.activePlayerIndex + 1);
         const Rectangle turnRect{
             layout.headerRect.x + layout.headerRect.width - 346.0F,
             layout.headerRect.y + 13.0F, 240.0F, 40.0F};
