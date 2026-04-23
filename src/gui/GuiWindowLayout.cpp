@@ -337,16 +337,16 @@ void GuiWindow::updateModalInput() {
     }
 
     Rectangle dialogRect = modalDialogRect();
+    
+    // Modal Scrolling
+    float wheel = GetMouseWheelMove();
+    if (wheel != 0) {
+        std::lock_guard<std::mutex> lock(modalMutex);
+        modalScrollOffset = GuiWindowInternal::clampFloat(modalScrollOffset - wheel, 0.0F, modalScrollMax);
+    }
+
     const Rectangle dragRect{dialogRect.x, dialogRect.y, dialogRect.width, 42.0F};
     const Vector2 mouse = GetMousePosition();
-
-    // Mouse wheel scrolling
-    float wheel = GetMouseWheelMove();
-    if (wheel != 0 && modalScrollMax > 0) {
-        modalScrollOffset -= wheel * 30.0F;
-        if (modalScrollOffset < 0) modalScrollOffset = 0;
-        if (modalScrollOffset > modalScrollMax) modalScrollOffset = modalScrollMax;
-    }
 
     if (!modalDragging && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
         GuiWindowInternal::pointInsideRect(dragRect, mouse)) {
@@ -648,6 +648,50 @@ void GuiWindow::updateModalInput() {
             confirmLocalDialog();
         }
         return;
+    } else if (currentModal.active && (currentModal.title == "Konfirmasi Gadai" || currentModal.prompt.find("Konfirmasi Gadai") != std::string::npos)) {
+        // Mortgage Interactions
+        Rectangle noBtn = {dialogRect.x + 40, dialogRect.y + dialogRect.height - 100, (dialogRect.width - 100)/2, 60};
+        Rectangle yesBtn = {dialogRect.x + dialogRect.width/2 + 10, dialogRect.y + dialogRect.height - 100, (dialogRect.width - 100)/2, 60};
+        
+        if (GuiWindowInternal::isButtonPressed(yesBtn, true) || IsKeyPressed(KEY_ENTER)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            modal.response.accepted = true;
+            modal.response.value = "y";
+            modal.backendResolved = true;
+            modal.active = false;
+            modalCondition.notify_all();
+        } else if (GuiWindowInternal::isButtonPressed(noBtn, true) || IsKeyPressed(KEY_ESCAPE)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            modal.response.accepted = true;
+            modal.response.value = "n";
+            modal.backendResolved = true;
+            modal.active = false;
+            modalCondition.notify_all();
+        }
+        return;
+
+    } else if (currentModal.active && (currentModal.title == "Konfirmasi Tebus" || currentModal.prompt.find("Konfirmasi Tebus") != std::string::npos)) {
+        // Redeem Interactions
+        Rectangle noBtn = {dialogRect.x + 50, dialogRect.y + dialogRect.height - 100, (dialogRect.width - 120)/2, 60};
+        Rectangle yesBtn = {dialogRect.x + dialogRect.width/2 + 10, dialogRect.y + dialogRect.height - 100, (dialogRect.width - 120)/2, 60};
+        
+        if (GuiWindowInternal::isButtonPressed(yesBtn, true) || IsKeyPressed(KEY_ENTER)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            modal.response.accepted = true;
+            modal.response.value = "y";
+            modal.backendResolved = true;
+            modal.active = false;
+            modalCondition.notify_all();
+        } else if (GuiWindowInternal::isButtonPressed(noBtn, true) || IsKeyPressed(KEY_ESCAPE)) {
+            std::lock_guard<std::mutex> lock2(modalMutex);
+            modal.response.accepted = true;
+            modal.response.value = "n";
+            modal.backendResolved = true;
+            modal.active = false;
+            modalCondition.notify_all();
+        }
+        return;
+
     } else if (currentModal.active && currentModal.prompt.find("Pilih tile tujuan teleport") != std::string::npos) {
         // Teleport Interactions
         Rectangle inputRect = {dialogRect.x + (dialogRect.width - 180)/2, dialogRect.y + 190, 180, 80};

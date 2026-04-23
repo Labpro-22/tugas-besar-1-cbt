@@ -414,6 +414,10 @@ Rectangle GuiWindow::modalDialogRect() const {
             } else if (modal.prompt.find("Masukkan kode properti") != std::string::npos && modal.title.find("Festival") != std::string::npos) {
                 width = 500.0F;
                 height = 340.0F;
+            } else if (modal.prompt.find("Konfirmasi Gadai") != std::string::npos ||
+                       modal.prompt.find("Konfirmasi Tebus") != std::string::npos) {
+                width = 600.0F;
+                height = 650.0F;
             } else if (modal.title == "Pilih Opsi" || modal.prompt.find("Pilihan (1/") != std::string::npos) {
                 width = 480.0F;
                 bool isJail = (modal.prompt.find("(1/2/3)") != std::string::npos);

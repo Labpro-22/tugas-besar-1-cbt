@@ -88,9 +88,13 @@ void GameSession::handleRollDice(bool manual, int d1, int d2) {
                     releasePlayerFromJail(currentPlayer);
                     std::cout << currentPlayer.getUsername()
                               << " menggunakan kartu dan keluar dari Penjara.\n";
-                    return;
                 }
+            } else if (choice == 3) {
+                std::cout << "Mencoba melempar dadu untuk mendapatkan double...\n";
             }
+            
+            // Notifikasi snapshot agar GUI tahu pilihan sudah diproses
+            notifySnapshotImmediate();
         }
     }
 
@@ -122,29 +126,45 @@ void GameSession::handleRollDice(bool manual, int d1, int d2) {
 
     if (startedTurnInJail && currentPlayer.getStatus() == JAILED) {
         if (!rolledDouble) {
-            jailAttemptCounts[currentPlayer.getUsername()] = jailAttempts + 1;
-            std::cout << "Kamu gagal mendapatkan double dan tetap berada di Penjara.\n";
-            std::cout << "Percobaan keluar penjara: "
-                      << jailAttemptCounts[currentPlayer.getUsername()]
-                      << " / 3\n";
+            if (jailAttempts >= 2) {
+                // Gagal di percobaan ke-3, wajib bayar denda dan jalan
+                const int jailFine = configuration.getJailFine();
+                std::cout << "Gagal mendapatkan double di percobaan ke-3.\n";
+                std::cout << currentPlayer.getUsername()
+                          << " wajib membayar denda M" << jailFine
+                          << " dan melanjutkan perjalanan.\n";
+                game.executeTaxPayment(currentPlayer, jailFine, true);
+                if (currentPlayer.getStatus() == BANKRUPT) {
+                    turnActionTaken = true;
+                    finishTurn();
+                    return;
+                }
+                releasePlayerFromJail(currentPlayer);
+            } else {
+                jailAttemptCounts[currentPlayer.getUsername()] = jailAttempts + 1;
+                std::cout << "Kamu gagal mendapatkan double dan tetap berada di Penjara.\n";
+                std::cout << "Percobaan keluar penjara: "
+                          << jailAttemptCounts[currentPlayer.getUsername()]
+                          << " / 3\n";
+                game.getLogger().log(game.getCurrentTurn(), currentPlayer.getUsername(),
+                                     "PENJARA",
+                                     "Gagal keluar dari penjara (percobaan " +
+                                         std::to_string(
+                                             jailAttemptCounts[currentPlayer.getUsername()]) +
+                                         "/3)");
+                notifySnapshotImmediate();
+                turnActionTaken = true;
+                finishTurn();
+                return;
+            }
+        } else {
+            releasePlayerFromJail(currentPlayer);
+            releasedFromJailByDouble = true;
+            std::cout << "Double! " << currentPlayer.getUsername()
+                      << " berhasil keluar dari Penjara.\n";
             game.getLogger().log(game.getCurrentTurn(), currentPlayer.getUsername(),
-                                 "PENJARA",
-                                 "Gagal keluar dari penjara (percobaan " +
-                                     std::to_string(
-                                         jailAttemptCounts[currentPlayer.getUsername()]) +
-                                     "/3)");
-            notifySnapshotImmediate();
-            turnActionTaken = true;
-            finishTurn();
-            return;
+                                 "PENJARA", "Keluar dari penjara karena double");
         }
-
-        releasePlayerFromJail(currentPlayer);
-        releasedFromJailByDouble = true;
-        std::cout << "Double! " << currentPlayer.getUsername()
-                  << " berhasil keluar dari Penjara.\n";
-        game.getLogger().log(game.getCurrentTurn(), currentPlayer.getUsername(),
-                             "PENJARA", "Keluar dari penjara karena double");
     }
 
     if (dice.hasThreeConsecutiveDoubles()) {
@@ -249,9 +269,13 @@ void GameSession::handleMortgage() {
         return;
     }
 
+    std::string selectionPrompt = "Pilih nomor properti (0 untuk batal):\n";
+    for (size_t i = 0; i < mortgageable.size(); ++i) {
+        selectionPrompt += std::to_string(i+1) + ". [" + mortgageable[i]->getCode() + "] " + mortgageable[i]->getName() + "\n";
+    }
+
     int choice = cli.getInputHandler().readChoice(
-        0, static_cast<int>(mortgageable.size()),
-        "Pilih nomor properti (0 untuk batal): ");
+        0, static_cast<int>(mortgageable.size()), selectionPrompt);
     if (choice == 0) {
         return;
     }
@@ -265,8 +289,11 @@ void GameSession::handleMortgage() {
                          "bangunan di color group ["
                       << GameSessionUtil::colorGroupLabel(street->getColorGroup())
                       << "].\n";
-            const bool sellBuildings = cli.getInputHandler().readYesNo(
-                "Jual semua bangunan color group ini? (y/n): ");
+            
+            std::string sellPrompt = "Konfirmasi Jual Bangunan\n"
+                                     "Masih terdapat bangunan di color group [" + GameSessionUtil::colorGroupLabel(street->getColorGroup()) + "].\n"
+                                     "Jual semua bangunan color group ini? (y/n)";
+            const bool sellBuildings = cli.getInputHandler().readYesNo(sellPrompt);
             if (!sellBuildings) {
                 return;
             }
@@ -277,12 +304,22 @@ void GameSession::handleMortgage() {
                       << GameSessionUtil::colorGroupLabel(street->getColorGroup())
                       << "] terjual. Kamu menerima M" << soldValue << ".\n";
 
-            const bool continueMortgage = cli.getInputHandler().readYesNo(
-                "Lanjut menggadaikan properti ini? (y/n): ");
+            std::string continuePrompt = "Konfirmasi Gadai\n"
+                                         "Lanjut menggadaikan " + property->getName() + "? (y/n)";
+            const bool continueMortgage = cli.getInputHandler().readYesNo(continuePrompt);
             if (!continueMortgage) {
                 return;
             }
         }
+    }
+
+    // Final Mortgage Confirmation
+    std::string mortgagePrompt = "Konfirmasi Gadai\n"
+                                 "Apakah Anda yakin ingin menggadaikan aset ini?\n"
+                                 "Anda akan menerima:\nM" + std::to_string(property->getMortgageValue()) + "\n"
+                                 "Target Properti: " + property->getName();
+    if (!cli.getInputHandler().readYesNo(mortgagePrompt)) {
+        return;
     }
 
     const int received = game.executeMortgage(currentPlayer, *property);
@@ -296,6 +333,7 @@ void GameSession::handleMortgage() {
     std::cout << "Kamu menerima M" << received << " dari Bank.\n";
     std::cout << "Uang kamu sekarang: M" << currentPlayer.getCash() << "\n";
     turnActionTaken = true;
+    notifySnapshotImmediate();
 }
 
 void GameSession::handleRedeem() {
@@ -306,9 +344,13 @@ void GameSession::handleRedeem() {
         return;
     }
 
+    std::string selectionPrompt = "Pilih nomor properti (0 untuk batal):\n";
+    for (size_t i = 0; i < redeemable.size(); ++i) {
+        selectionPrompt += std::to_string(i+1) + ". [" + redeemable[i]->getCode() + "] " + redeemable[i]->getName() + "\n";
+    }
+
     int choice = cli.getInputHandler().readChoice(
-        0, static_cast<int>(redeemable.size()),
-        "Pilih nomor properti (0 untuk batal): ");
+        0, static_cast<int>(redeemable.size()), selectionPrompt);
     if (choice == 0) {
         return;
     }
@@ -321,6 +363,19 @@ void GameSession::handleRedeem() {
                   << property->getName() << ".\n";
         std::cout << "Harga tebus: M" << redeemPrice << " | Uang kamu: M"
                   << currentPlayer.getCash() << "\n";
+        return;
+    }
+
+    // Final Redeem Confirmation
+    std::string redeemPrompt = "Konfirmasi Tebus\n"
+                               "Apakah Anda yakin ingin menebus kembali aset ini?\n"
+                               "BIAYA TEBUS:\nM" + std::to_string(redeemPrice);
+    if (redeemPrice != baseRedeemPrice) {
+        redeemPrompt += " (setelah diskon)";
+    }
+    redeemPrompt += "\nTarget Properti: " + property->getName();
+
+    if (!cli.getInputHandler().readYesNo(redeemPrompt)) {
         return;
     }
 
@@ -338,6 +393,7 @@ void GameSession::handleRedeem() {
     std::cout << " ke Bank.\n";
     std::cout << "Uang kamu sekarang: M" << currentPlayer.getCash() << "\n";
     turnActionTaken = true;
+    notifySnapshotImmediate();
 }
 
 void GameSession::handleBuild() {

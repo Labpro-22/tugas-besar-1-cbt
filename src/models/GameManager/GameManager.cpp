@@ -350,7 +350,6 @@ void GameManager::executeAuction(Property &prop) {
     
     InputHandler input;
     int consecutivePass = 0;
-    int nParticipants = participants.size();
   while (auction.isOpen()) {
     Player *bidder = auction.getCurrentParticipant();
     
