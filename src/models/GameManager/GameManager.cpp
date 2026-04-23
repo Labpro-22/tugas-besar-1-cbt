@@ -58,6 +58,35 @@ bool GameManager::checkWinCondition() const {
   return (aliveCount <= 1) || (maxTurn > 0 && currentTurn > maxTurn);
 }
 
+bool GameManager::anyPropertyInGroupMortgaged(const Player &player,
+                                             ColorGroup color) const {
+  if (board == nullptr) {
+    return false;
+  }
+
+  for (int i = 0; i < board->getTileCount(); ++i) {
+    Tile &tile = board->getTile(i);
+    if (tile.getType() != "property") {
+      continue;
+    }
+
+    PropertyTile &propertyTile = static_cast<PropertyTile &>(tile);
+    Property &prop = propertyTile.getProperty();
+    if (prop.getOwner() == &player) {
+      bool isTargetGroup = false;
+      if (prop.getType() == "Street") {
+        isTargetGroup = (static_cast<Street &>(prop).getColorGroup() == color);
+      }
+
+      if (isTargetGroup && prop.getStatus() == PropertyStatus::MORTGAGED) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 Player &GameManager::getCurrentPlayer() { return players[activePlayerIndex]; }
 
 const Player &GameManager::getCurrentPlayer() const {
@@ -485,8 +514,19 @@ void GameManager::executeSalary(Player &player, int amount) {
 }
 
 int GameManager::executeMortgage(Player &player, Property &prop) {
-  if (prop.getOwner() != &player || !prop.canBeMortgaged()) {
-    return 0;
+  if (prop.getOwner() != &player) {
+    throw PropertyMortgageException(prop.getCode(), "Anda bukan pemilik properti ini.");
+  }
+  if (!prop.canBeMortgaged()) {
+    throw PropertyMortgageException(prop.getCode(), "Properti ini sedang digadaikan atau memiliki bangunan.");
+  }
+
+  // Check group building rule
+  if (prop.getType() == "Street") {
+    Street &street = static_cast<Street &>(prop);
+    if (hasBuildingsInColorGroup(player, street.getColorGroup())) {
+      throw PropertyMortgageException(prop.getCode(), "Tidak bisa menggadaikan properti jika masih ada bangunan di color group-nya.");
+    }
   }
 
   const int received = prop.mortgage();
@@ -499,14 +539,16 @@ int GameManager::executeMortgage(Player &player, Property &prop) {
 }
 
 int GameManager::executeRedeem(Player &player, Property &prop) {
-  if (prop.getOwner() != &player ||
-      prop.getStatus() != PropertyStatus::MORTGAGED) {
-    return 0;
+  if (prop.getOwner() != &player) {
+    throw PropertyRedeemException(prop.getCode(), "Anda bukan pemilik properti ini.");
+  }
+  if (prop.getStatus() != PropertyStatus::MORTGAGED) {
+    throw PropertyRedeemException(prop.getCode(), "Properti tidak sedang digadaikan.");
   }
 
   const int price = applyDiscount(player, prop.getRedeemPrice());
   if (!player.canPay(price)) {
-    return 0;
+    throw InsufficientFundsException(player.getUsername(), price, player.getCash());
   }
 
   player.reduceCash(price);
@@ -517,13 +559,16 @@ int GameManager::executeRedeem(Player &player, Property &prop) {
 }
 
 int GameManager::executeBuild(Player &player, Street &street) {
-  if (street.getOwner() != &player || !street.canBuildNext()) {
-    return 0;
+  if (street.getOwner() != &player) {
+    throw PropertyBuildException(street.getCode(), "Anda bukan pemilik properti ini.");
+  }
+  if (!street.canBuildNext()) {
+    throw PropertyBuildException(street.getCode(), "Properti sudah mencapai level maksimal.");
   }
 
   const int cost = applyDiscount(player, street.getNextBuildCost());
   if (!player.canPay(cost)) {
-    return 0;
+    throw InsufficientFundsException(player.getUsername(), cost, player.getCash());
   }
 
   player.reduceCash(cost);

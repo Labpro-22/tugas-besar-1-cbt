@@ -414,14 +414,23 @@ Rectangle GuiWindow::modalDialogRect() const {
             } else if (modal.prompt.find("Masukkan kode properti") != std::string::npos && modal.title.find("Festival") != std::string::npos) {
                 width = 500.0F;
                 height = 340.0F;
+            } else if (modal.prompt.find("BANGUN (Pilih Grup Warna)") != std::string::npos) {
+                width = 850.0F;
+                height = 800.0F;
+            } else if (modal.prompt.find("BANGUN (Pilih Petak)") != std::string::npos) {
+                width = 650.0F;
+                height = 750.0F;
+            } else if (modal.prompt.find("UPGRADE HOTEL") != std::string::npos) {
+                width = 650.0F;
+                height = 700.0F;
             } else if (modal.prompt.find("Konfirmasi Gadai") != std::string::npos ||
                        modal.prompt.find("Konfirmasi Tebus") != std::string::npos) {
                 width = 600.0F;
                 height = 650.0F;
             } else if (modal.title == "Pilih Opsi" || modal.prompt.find("Pilihan (1/") != std::string::npos) {
-                width = 480.0F;
+                width = 500.0F;
                 bool isJail = (modal.prompt.find("(1/2/3)") != std::string::npos);
-                height = isJail ? 680.0F : 550.0F;
+                height = isJail ? 680.0F : 620.0F;
             } else if (modal.prompt.find("DemolitionCard") != std::string::npos) {
                 width = 1300.0F;
                 height = 820.0F;

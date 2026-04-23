@@ -34,6 +34,10 @@ void GameSession::handlePrintBoard() {
 }
 
 void GameSession::handleRollDice(bool manual, int d1, int d2) {
+    if (diceRolledThisTurn && !dice.checkDouble()) {
+        throw InvalidTurnStateException("Kamu sudah melempar dadu pada giliran ini!");
+    }
+
     Player& currentPlayer = game.getCurrentPlayer();
     const bool startedTurnInJail = currentPlayer.getStatus() == JAILED;
     int jailAttempts = 0;
@@ -80,14 +84,21 @@ void GameSession::handleRollDice(bool manual, int d1, int d2) {
                 std::cout << currentPlayer.getUsername()
                           << " keluar dari Penjara setelah membayar denda.\n";
             } else if (choice == 2) {
-                bool hasCard = false;
-                if (!hasCard) {
+                Card* jailCard = nullptr;
+                for (Card* card : currentPlayer.getHand()) {
+                    if (card->getDescription().find("Bebas dari Penjara") != std::string::npos) {
+                        jailCard = card;
+                        break;
+                    }
+                }
+
+                if (jailCard == nullptr) {
                     std::cout << "Kamu tidak memiliki kartu \"Bebas dari Penjara\".\n";
                     std::cout << "Mencoba melempar dadu sebagai alternatif...\n";
                 } else {
+                    currentPlayer.removeCard(static_cast<SkillCard*>(jailCard));
                     releasePlayerFromJail(currentPlayer);
-                    std::cout << currentPlayer.getUsername()
-                              << " menggunakan kartu dan keluar dari Penjara.\n";
+                    std::cout << currentPlayer.getUsername() << " menggunakan kartu dan keluar dari Penjara.\n";
                 }
             } else if (choice == 3) {
                 std::cout << "Mencoba melempar dadu untuk mendapatkan double...\n";
@@ -100,8 +111,7 @@ void GameSession::handleRollDice(bool manual, int d1, int d2) {
 
     if (manual) {
         if (d1 < 1 || d1 > 6 || d2 < 1 || d2 > 6) {
-            cli.showError("Nilai dadu harus di antara 1 sampai 6.");
-            return;
+            throw InvalidDiceValueException(d1, d2);
         }
 
         dice.setValues(d1, d2);
@@ -238,9 +248,7 @@ void GameSession::handlePrintDeed() {
 
     Property* property = queries.findPropertyByCode(code);
     if (property == nullptr) {
-        std::cout << "Petak \"" << code
-                  << "\" tidak ditemukan atau bukan properti.\n";
-        return;
+        throw PropertyNotFoundException(code);
     }
 
     cli.getPropertyView().showDeed(property);
@@ -266,7 +274,7 @@ void GameSession::handleMortgage() {
     std::vector<Property*> mortgageable = queries.getMortgageableProperties();
     cli.getPropertyView().showMortgageOptions(mortgageable);
     if (mortgageable.empty()) {
-        return;
+        throw PropertyOwnershipException("-", "Kamu tidak memiliki aset yang dapat digadaikan.");
     }
 
     std::string selectionPrompt = "Pilih nomor properti (0 untuk batal):\n";
@@ -323,11 +331,6 @@ void GameSession::handleMortgage() {
     }
 
     const int received = game.executeMortgage(currentPlayer, *property);
-    if (received <= 0) {
-        std::cout << property->getName()
-                  << " belum memenuhi syarat untuk digadaikan.\n";
-        return;
-    }
 
     std::cout << property->getName() << " berhasil digadaikan.\n";
     std::cout << "Kamu menerima M" << received << " dari Bank.\n";
@@ -341,7 +344,7 @@ void GameSession::handleRedeem() {
     std::vector<Property*> redeemable = queries.getRedeemableProperties();
     cli.getPropertyView().showRedeemOptions(redeemable);
     if (redeemable.empty()) {
-        return;
+        throw PropertyRedeemException("-", "Kamu tidak memiliki aset yang sedang digadaikan.");
     }
 
     std::string selectionPrompt = "Pilih nomor properti (0 untuk batal):\n";
@@ -380,15 +383,11 @@ void GameSession::handleRedeem() {
     }
 
     const int paid = game.executeRedeem(currentPlayer, *property);
-    if (paid <= 0) {
-        std::cout << "Properti gagal ditebus.\n";
-        return;
-    }
 
     std::cout << property->getName() << " berhasil ditebus!\n";
     std::cout << "Kamu membayar M" << baseRedeemPrice;
-    if (redeemPrice != baseRedeemPrice) {
-        std::cout << " -> M" << redeemPrice << " setelah diskon";
+    if (paid != baseRedeemPrice) {
+        std::cout << " -> M" << paid << " setelah diskon";
     }
     std::cout << " ke Bank.\n";
     std::cout << "Uang kamu sekarang: M" << currentPlayer.getCash() << "\n";
@@ -398,64 +397,55 @@ void GameSession::handleRedeem() {
 
 void GameSession::handleBuild() {
     Player& currentPlayer = game.getCurrentPlayer();
-    std::map<std::string, std::vector<Property*>> buildableGroups;
     std::map<std::string, std::vector<Street*>> groupedStreets;
 
     for (Street* street : queries.getBuildableStreets()) {
-        if (street == nullptr) {
-            continue;
-        }
-
-        const std::string label =
-            GameSessionUtil::colorGroupLabel(street->getColorGroup());
-        buildableGroups[label].push_back(street);
-        groupedStreets[label].push_back(street);
+        if (street == nullptr) continue;
+        groupedStreets[GameSessionUtil::colorGroupLabel(street->getColorGroup())].push_back(street);
     }
 
-    cli.getPropertyView().showBuildOptions(buildableGroups);
-    if (buildableGroups.empty()) {
-        return;
+    if (groupedStreets.empty()) {
+        throw PropertyBuildException("-", "Tidak ada color group yang memenuhi syarat untuk dibangun.");
     }
 
     std::vector<std::string> orderedGroups;
-    for (const auto& entry : buildableGroups) {
-        orderedGroups.push_back(entry.first);
+    for (const auto& entry : groupedStreets) orderedGroups.push_back(entry.first);
+
+    // Color Group Selection
+    std::string groupPrompt = "BANGUN (Pilih Grup Warna)\n"
+                              "Uang Kamu Saat Ini: M" + std::to_string(currentPlayer.getCash()) + "\n";
+    for (size_t i = 0; i < orderedGroups.size(); ++i) {
+        groupPrompt += std::to_string(i+1) + ". [" + orderedGroups[i] + "]\n";
+        for (Street* s : groupedStreets[orderedGroups[i]]) {
+            groupPrompt += "   - " + s->getName() + " (" + s->getCode() + "): " + 
+                           s->getBuildingLabel() + " (Harga: M" + std::to_string(s->getNextBuildCost()) + ")\n";
+        }
     }
 
     int groupChoice = cli.getInputHandler().readChoice(
-        0, static_cast<int>(orderedGroups.size()),
-        "Pilih nomor color group (0 untuk batal): ");
-    if (groupChoice == 0) {
-        return;
-    }
+        0, static_cast<int>(orderedGroups.size()), groupPrompt);
+    if (groupChoice == 0) return;
 
-    std::vector<Street*>& streets =
-        groupedStreets[orderedGroups[static_cast<std::size_t>(groupChoice - 1)]];
+    std::vector<Street*>& streets = groupedStreets[orderedGroups[static_cast<std::size_t>(groupChoice - 1)]];
     std::vector<Street*> eligible = game.getEligibleBuildTargets(streets);
-    std::cout << "Color group ["
-              << orderedGroups[static_cast<std::size_t>(groupChoice - 1)] << "]:\n";
-    for (Street* street : streets) {
-        const bool canBuild =
-            std::find(eligible.begin(), eligible.end(), street) != eligible.end();
-
-        std::cout << "- " << street->getName() << " (" << street->getCode()
-                  << ") : " << street->getBuildingLabel();
-        if (canBuild) {
-            std::cout << " <- dapat dibangun";
-        }
-        std::cout << "\n";
-    }
-
+    
     if (eligible.empty()) {
         std::cout << "Tidak ada petak yang bisa dibangun saat ini.\n";
         return;
     }
 
-    int propertyChoice = cli.getInputHandler().readChoice(
-        0, static_cast<int>(eligible.size()), "Pilih petak (0 untuk batal): ");
-    if (propertyChoice == 0) {
-        return;
+    // Property Selection
+    std::string propertyPrompt = "BANGUN (Pilih Petak)\n"
+                                 "Color Group [" + orderedGroups[static_cast<std::size_t>(groupChoice - 1)] + "]\n";
+    for (size_t i = 0; i < eligible.size(); ++i) {
+        propertyPrompt += std::to_string(i+1) + ". " + eligible[i]->getName() + " (" + 
+                          eligible[i]->getCode() + "): " + eligible[i]->getBuildingLabel() + 
+                          " (Biaya: M" + std::to_string(eligible[i]->getNextBuildCost()) + ")\n";
     }
+
+    int propertyChoice = cli.getInputHandler().readChoice(
+        0, static_cast<int>(eligible.size()), propertyPrompt);
+    if (propertyChoice == 0) return;
 
     Street* target = eligible[static_cast<std::size_t>(propertyChoice - 1)];
     const bool hotelUpgrade = target->isNextBuildHotel();
@@ -468,29 +458,22 @@ void GameSession::handleBuild() {
         return;
     }
 
-    const int paid = game.executeBuild(currentPlayer, *target);
-    if (paid <= 0) {
-        std::cout << "Pembangunan gagal dijalankan.\n";
-        return;
+    // Optional (upgrade to hotel)
+    if (hotelUpgrade) {
+        std::string confirmPrompt = "UPGRADE HOTEL\n"
+                                    "Seluruh color group [" + orderedGroups[static_cast<std::size_t>(groupChoice - 1)] + "] sudah memiliki 4 rumah.\n"
+                                    "Upgrade " + target->getName() + " ke Hotel?\n"
+                                    "Biaya: M" + std::to_string(cost);
+        if (!cli.getInputHandler().readYesNo(confirmPrompt)) return;
     }
 
-    if (hotelUpgrade) {
-        std::cout << target->getName() << " di-upgrade ke Hotel! Biaya: M"
-                  << baseCost;
-        if (cost != baseCost) {
-            std::cout << " -> M" << cost << " setelah diskon";
-        }
-        std::cout << "\n";
-    } else {
-        std::cout << "Kamu membangun 1 rumah di " << target->getName()
-                  << ". Biaya: M" << baseCost;
-        if (cost != baseCost) {
-            std::cout << " -> M" << cost << " setelah diskon";
-        }
-        std::cout << "\n";
-    }
+    const int paid = game.executeBuild(currentPlayer, *target);
+
+    std::cout << (hotelUpgrade ? target->getName() + " di-upgrade ke Hotel!" : "Kamu membangun 1 rumah di " + target->getName())
+              << ". Biaya: M" << paid << "\n";
     std::cout << "Uang tersisa: M" << currentPlayer.getCash() << "\n";
     turnActionTaken = true;
+    notifySnapshotImmediate();
 }
 
 void GameSession::handleUseAbility() {
@@ -498,21 +481,16 @@ void GameSession::handleUseAbility() {
     std::vector<Card*>& hand = currentPlayer.getHand();
 
     if (hand.empty()) {
-        std::cout << "Kamu tidak memiliki kartu kemampuan.\n";
-        return;
+        throw CardException("Kamu tidak memiliki kartu kemampuan.");
     }
     if (currentPlayer.getStatus() == JAILED) {
-        std::cout << "Kartu kemampuan tidak dapat digunakan saat berada di Penjara.\n";
-        return;
+        throw AbilityTimingException("Kartu kemampuan tidak dapat digunakan saat berada di Penjara.");
     }
     if (diceRolledThisTurn) {
-        std::cout << "Kartu kemampuan hanya bisa digunakan SEBELUM melempar dadu.\n";
-        return;
+        throw AbilityTimingException("Kartu kemampuan hanya bisa digunakan SEBELUM melempar dadu.");
     }
     if (!currentPlayer.canUseAbility()) {
-        std::cout
-            << "Kamu sudah menggunakan kartu kemampuan pada giliran ini!\n";
-        return;
+        throw AbilityAlreadyUsedException();
     }
 
     std::cout << "Daftar Kartu Kemampuan Spesial Anda:\n";
@@ -554,8 +532,7 @@ void GameSession::handleUseAbility() {
 
 void GameSession::handleSave(const Command& command) {
     if (turnActionTaken) {
-        std::cout << "SIMPAN hanya dapat dipanggil di awal giliran.\n";
-        return;
+        throw SaveGameException("SIMPAN hanya dapat dipanggil di awal giliran (sebelum ada aksi).");
     }
 
     if (saveToFile(command.args[0])) {
@@ -567,9 +544,9 @@ void GameSession::handleSave(const Command& command) {
         return;
     }
 
-    std::cout << "Gagal menyimpan file! Pastikan direktori dapat ditulis.\n";
+    throw SaveGameException("Gagal menyimpan file! Pastikan direktori dapat ditulis.");
 }
 
 void GameSession::handleLoad(const Command&) const {
-    std::cout << "MUAT hanya dapat dilakukan dari menu awal program.\n";
+    throw CommandNotAllowedException("MUAT", "MUAT hanya dapat dilakukan dari menu awal program.");
 }

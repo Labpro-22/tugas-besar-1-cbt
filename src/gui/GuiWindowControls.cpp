@@ -686,17 +686,32 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
         if (nl != std::string::npos) firstLine = firstLine.substr(0, nl);
         DrawTextEx(font, firstLine.c_str(), {dialogRect.x + 45, dialogRect.y + 130}, 16, 1, GRAY);
 
-        bool isTax = (current.prompt.find("pajak") != std::string::npos || current.prompt.find("Pajak") != std::string::npos);
+        bool isTax = (current.prompt.find("pajak") != std::string::npos || 
+                      current.prompt.find("Pajak") != std::string::npos ||
+                      current.prompt.find("Pilihan (1/2)") != std::string::npos);
+        
+        if (!isTax && !currentSnapshot.logs.empty()) {
+            for (int i = static_cast<int>(currentSnapshot.logs.size()) - 1; 
+                 i >= std::max(0, static_cast<int>(currentSnapshot.logs.size()) - 2); --i) {
+                if (currentSnapshot.logs[i].actionType == "PAJAK") {
+                    isTax = true;
+                    break;
+                }
+            }
+        }
+        
         bool isJail = (current.prompt.find("(1/2/3)") != std::string::npos);
         
         std::string topLabel = "JUMLAH ASET / UNIT";
-        std::string subLabel = "Aktualisasi Investasi Jangka Panjang";
+        std::string subLabel = "";
         if (isTax) {
             topLabel = "OPSI PEMBAYARAN PAJAK";
-            subLabel = "Pilih metode pembayaran pajak yang sesuai";
+            subLabel = "Metode Pengurangan Saldo Kas";
         } else if (isJail) {
             topLabel = "OPSI KELUAR PENJARA";
-            subLabel = "Pilih cara untuk keluar dari penjara";
+            subLabel = "Ketentuan dan Prosedur Keamanan";
+        } else {
+            subLabel = "Status Aset & Investasi Saat Ini";
         }
 
         DrawTextEx(font, topLabel.c_str(), {dialogRect.x + 45, dialogRect.y + 185}, 14, 2, {60, 60, 60, 255});
@@ -707,23 +722,24 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
         DrawTriangle({inputRect.x + inputRect.width - 35, inputRect.y + 35}, {inputRect.x + inputRect.width - 25, inputRect.y + 35}, {inputRect.x + inputRect.width - 30, inputRect.y + 25}, GRAY);
         DrawTriangle({inputRect.x + inputRect.width - 35, inputRect.y + 55}, {inputRect.x + inputRect.width - 30, inputRect.y + 65}, {inputRect.x + inputRect.width - 25, inputRect.y + 55}, GRAY);
 
-        DrawTextEx(font, subLabel.c_str(), {dialogRect.x + 45, dialogRect.y + 300}, 12, 1, LIGHTGRAY);
+        DrawTextEx(font, subLabel.c_str(), {dialogRect.x + 45, dialogRect.y + 310}, 12, 1, {160, 160, 160, 255});
 
-        float infoBoxHeight = isJail ? 240.0F : 100.0F;
-        Rectangle infoBox = {dialogRect.x + 40, dialogRect.y + 340, dialogRect.width - 80, infoBoxHeight};
-        DrawRectangleRec(infoBox, {230, 235, 230, 255});
+        float infoBoxHeight = isJail ? 200.0F : 120.0F;
+        // Label at 310, infoBox at 335
+        Rectangle infoBox = {dialogRect.x + 40, dialogRect.y + 335, dialogRect.width - 80, infoBoxHeight};
+        DrawRectangleRec(infoBox, {232, 235, 232, 255});
         DrawRectangle(infoBox.x, infoBox.y, 4, infoBox.height, GuiWindowInternal::kGold);
-        DrawCircle(infoBox.x + 35, infoBox.y + 50, 14, {120, 100, 0, 255});
-        GuiWindowInternal::drawTextCentered(font, "i", {infoBox.x + 21, infoBox.y + 36, 28, 28}, 16.0F, 1.0F, WHITE);
+        DrawCircle(infoBox.x + 35, infoBox.y + 45, 14, {120, 100, 0, 255});
+        GuiWindowInternal::drawTextCentered(font, "i", {infoBox.x + 21, infoBox.y + 31, 28, 28}, 16.0F, 1.0F, WHITE);
         
         std::string infoText = current.prompt;
         if (isTax) {
             infoText = "1. Membayar pajak flat M150\n"
                        "2. Membayar pajak sebesar 10%% dari kekayaan total";
         } else if (isJail) {
-            infoText = "1. Membayar denda ke Bank sebesar M" + std::to_string(currentSnapshot.jailFine) + " sebelum melempar dadu.\n"
-                       "2. Menggunakan kartu \"Bebas dari Penjara\" (jika punya).\n"
-                       "3. Mencoba melempar dadu dan harus mendapatkan angka double. Jika gagal, pemain tidak bergerak untuk giliran tersebut. Batas giliran percobaan adalah 3 giliran. Pada giliran ke-4, wajib membayar denda.";
+            infoText = "1. Membayar denda ke Bank sebesar M" + std::to_string(currentSnapshot.jailFine) + ".\n"
+                       "2. Menggunakan kartu \"Bebas dari Penjara\".\n"
+                       "3. Mencoba melempar dadu (Wajib Double). Gagal 3x = Bayar denda.";
         } else if (!isTax && !currentSnapshot.logs.empty()) {
             for (int i = static_cast<int>(currentSnapshot.logs.size()) - 1; 
                  i >= std::max(0, static_cast<int>(currentSnapshot.logs.size()) - 3); --i) {
@@ -733,9 +749,9 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
                 }
             }
         }
-
+        
         const std::vector<std::string> allLines = GuiWindowInternal::wrapText(font, infoText, 16.0F, 1.1F, infoBox.width - 90, 1000);
-        const int visibleLinesCount = static_cast<int>(infoBox.height - 30) / 20; // Approx line height
+        const int visibleLinesCount = static_cast<int>(infoBox.height - 30) / 22; 
         
         {
             std::lock_guard<std::mutex> lock(modalMutex);
@@ -763,6 +779,276 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
         // Pagination dots
         DrawCircle(dialogRect.x + dialogRect.width/2 - 10, dialogRect.y + dialogRect.height - 20, 4, DARKGRAY);
         DrawCircle(dialogRect.x + dialogRect.width/2 + 10, dialogRect.y + dialogRect.height - 20, 4, LIGHTGRAY);
+
+    } else if (current.active && current.prompt.find("BANGUN (Pilih Grup Warna)") != std::string::npos) {
+        // BANGUN (Pilih Grup Warna) - Card Based Layout
+        DrawRectangleRec(dialogRect, {245, 243, 235, 255}); // Paper background
+        
+        // Header
+        Rectangle header = {dialogRect.x, dialogRect.y, dialogRect.width, 70};
+        DrawRectangleRec(header, {255, 254, 250, 255});
+        DrawRectangle(header.x, header.y + header.height - 1, header.width, 1, {220, 215, 205, 255});
+        
+        Rectangle iconRect = {header.x + 25, header.y + 20, 30, 30};
+        DrawRectangleRec(iconRect, {80, 20, 20, 255});
+        DrawRectangle(iconRect.x + 5, iconRect.y + 15, 20, 10, WHITE); // Simple building icon
+        DrawRectangle(iconRect.x + 10, iconRect.y + 5, 10, 10, WHITE);
+        
+        DrawTextEx(font, "BANGUN (Pilih Grup Warna)", {header.x + 75, header.y + 25}, 22, 1, {80, 20, 20, 255});
+        DrawTextEx(font, "X", {header.x + header.width - 40, header.y + 25}, 20, 1, DARKGRAY);
+
+        // Subheader (Cash)
+        Rectangle subheader = {dialogRect.x, dialogRect.y + 70, dialogRect.width, 50};
+        DrawRectangleRec(subheader, {120, 10, 10, 255});
+        
+        std::string cashStr = "M0";
+        size_t cashPos = current.prompt.find("Saat Ini: ");
+        if (cashPos != std::string::npos) {
+            size_t end = current.prompt.find("\n", cashPos);
+            cashStr = current.prompt.substr(cashPos + 10, end - (cashPos + 10));
+        }
+        DrawTextEx(font, "Saldo Kas Estate", {subheader.x + 25, subheader.y + 15}, 16, 1, {200, 100, 100, 255});
+        std::string cashLabel = "Uang Kamu Saat Ini: " + cashStr;
+        Vector2 cashSize = MeasureTextEx(font, cashLabel.c_str(), 18, 1);
+        DrawTextEx(font, cashLabel.c_str(), {subheader.x + subheader.width - cashSize.x - 25, subheader.y + 15}, 18, 1, {255, 150, 150, 255});
+
+        // Content Area - Scrollable
+        Rectangle contentArea = {dialogRect.x, dialogRect.y + 120, dialogRect.width, dialogRect.height - 190};
+        
+        // Gradient Background
+        for(int i=0; i<contentArea.height; i++) {
+            float t = (float)i/contentArea.height;
+            Color grad = {(unsigned char)(180 + t*50), (unsigned char)(180 + t*40), (unsigned char)(100 + t*40), 255};
+            DrawRectangle(contentArea.x, contentArea.y + i, contentArea.width, 1, grad);
+        }
+
+        // Parsing groups (Simple regex-like manual parsing)
+        std::vector<std::string> lines = GuiWindowInternal::splitLines(current.prompt);
+        float cardY = contentArea.y + 30 - modalScrollOffset * 30;
+        
+        for (size_t i = 0; i < lines.size(); ++i) {
+            std::string line = lines[i];
+            if (line.find("[") != std::string::npos && line.find("]") != std::string::npos) {
+                // Group Header
+                size_t start = line.find("[");
+                size_t end = line.find("]");
+                std::string groupName = line.substr(start, end - start + 1);
+                Color groupCol = GuiWindowInternal::colorFromKey(groupName.substr(1, 2));
+                
+                if (cardY + 100 > contentArea.y && cardY < contentArea.y + contentArea.height) {
+                    DrawCircle(contentArea.x + 45, cardY + 15, 18, groupCol);
+                    DrawRectangleLinesEx({contentArea.x + 30, cardY, 30, 30}, 1.0F, WHITE);
+                    DrawTextEx(font, groupName.c_str(), {contentArea.x + 80, cardY + 5}, 20, 1, {60, 60, 60, 255});
+                    DrawRectangle(contentArea.x + 190, cardY + 15, contentArea.width - 230, 1, {255, 255, 255, 100});
+                }
+                cardY += 45;
+
+                // Property Cards in this group
+                float startX = contentArea.x + 40;
+                while (i + 1 < lines.size() && lines[i + 1].find("   - ") != std::string::npos) {
+                    i++;
+                    std::string pLine = lines[i];
+                    //   - Jakarta (JKT): 1 rumah (Harga: M200)
+                    size_t pNameEnd = pLine.find(" (");
+                    std::string pName = pLine.substr(5, pNameEnd - 5);
+                    size_t pStatusStart = pLine.find(": ");
+                    size_t pStatusEnd = pLine.find(" (Harga");
+                    std::string pStatus = pLine.substr(pStatusStart + 2, pStatusEnd - (pStatusStart + 2));
+                    size_t pCostStart = pLine.find("Harga: ");
+                    std::string pCost = pLine.substr(pCostStart + 7, pLine.find(")", pCostStart) - (pCostStart + 7));
+
+                    Rectangle pCard = {startX, cardY, 280, 130};
+                    if (pCard.y + pCard.height > contentArea.y && pCard.y < contentArea.y + contentArea.height) {
+                        DrawRectangleRec(pCard, WHITE);
+                        DrawRectangle(pCard.x, pCard.y, 4, pCard.height, groupCol);
+                        DrawRectangleLinesEx(pCard, 1.0F, {220, 220, 220, 255});
+                        
+                        DrawTextEx(font, "KAPITAL", {pCard.x + 20, pCard.y + 20}, 12, 1, LIGHTGRAY);
+                        DrawTextEx(font, pName.c_str(), {pCard.x + 20, pCard.y + 40}, 18, 1, {60, 60, 60, 255});
+                        DrawTextEx(font, pStatus.c_str(), {pCard.x + 20, pCard.y + 85}, 16, 1, GRAY);
+                        DrawTextEx(font, pCost.c_str(), {pCard.x + pCard.width - 80, pCard.y + 85}, 18, 1, {120, 20, 20, 255});
+                        
+                        // House icon
+                        DrawRectangle(pCard.x + pCard.width - 45, pCard.y + 20, 20, 15, GuiWindowInternal::kGold);
+                        DrawTriangle({pCard.x + pCard.width - 47, pCard.y + 20}, {pCard.x + pCard.width - 23, pCard.y + 20}, {pCard.x + pCard.width - 35, pCard.y + 10}, GuiWindowInternal::kGold);
+                    }
+                    startX += 300;
+                    if (startX + 280 > contentArea.x + contentArea.width) {
+                        startX = contentArea.x + 40;
+                        cardY += 150;
+                    }
+                }
+                if (startX != contentArea.x + 40) cardY += 150;
+                cardY += 20;
+            }
+        }
+        modalScrollMax = (cardY - contentArea.y) / 30.0F;
+
+        // Footer Buttons
+        Rectangle footer = {dialogRect.x, dialogRect.y + dialogRect.height - 80, dialogRect.width, 80};
+        DrawRectangleRec(footer, {255, 254, 250, 255});
+        DrawRectangle(footer.x, footer.y, footer.width, 1, {220, 215, 205, 255});
+        
+        Rectangle batalBtn = {footer.x + footer.width - 320, footer.y + 15, 140, 50};
+        Rectangle okBtn = {footer.x + footer.width - 160, footer.y + 15, 130, 50};
+        
+        DrawRectangleLinesEx(batalBtn, 1.5F, {120, 20, 20, 255});
+        GuiWindowInternal::drawTextCentered(font, "BATAL", batalBtn, 18, 1, {120, 20, 20, 255});
+        
+        DrawRectangleRec(okBtn, {80, 10, 10, 255});
+        GuiWindowInternal::drawTextCentered(font, "OK", okBtn, 18, 1, WHITE);
+        DrawCircle(okBtn.x + 25, okBtn.y + 25, 6, GuiWindowInternal::kGold);
+
+    } else if (current.active && current.prompt.find("BANGUN (Pilih Petak)") != std::string::npos) {
+        // BANGUN (Pilih Petak)
+        DrawRectangleRec(dialogRect, WHITE);
+        DrawRectangleLinesEx(dialogRect, 2.0F, {80, 20, 20, 255});
+        
+        // Header
+        Rectangle header = {dialogRect.x, dialogRect.y, dialogRect.width, 60};
+        DrawRectangleRec(header, {120, 10, 10, 255});
+        DrawTextEx(font, "BANGUN (PILIH PETAK)", {header.x + 25, header.y + 18}, 22, 1, WHITE);
+        DrawTextEx(font, "X", {header.x + header.width - 35, header.y + 18}, 18, 1, {255, 200, 200, 255});
+
+        // Group Indicator
+        Rectangle groupBar = {dialogRect.x, dialogRect.y + 60, dialogRect.width, 45};
+        DrawRectangleRec(groupBar, {0, 50, 100, 255}); // Blue header bar
+        
+        std::string groupName = "Color Group";
+        size_t groupStart = current.prompt.find("[");
+        size_t groupEnd = current.prompt.find("]");
+        if (groupStart != std::string::npos) groupName = current.prompt.substr(groupStart, groupEnd - groupStart + 1);
+        DrawRectangle(groupBar.x + 25, groupBar.y + 18, 12, 12, WHITE);
+        DrawTextEx(font, ("Color Group " + groupName).c_str(), {groupBar.x + 50, groupBar.y + 12}, 18, 1, WHITE);
+
+        // Instruction
+        DrawTextEx(font, "Select a property in the District to commission new\ndevelopments.", {dialogRect.x + 25, dialogRect.y + 125}, 16, 1, GRAY);
+
+        // List Area
+        float itemY = dialogRect.y + 190;
+        std::vector<std::string> lines = GuiWindowInternal::splitLines(current.prompt);
+        int selection = std::atoi(current.inputText.c_str());
+        
+        int idx = 1;
+        for (const auto& line : lines) {
+            if (line.find(". ") != std::string::npos) {
+                // 1. Jakarta (JKT): 1 rumah (Biaya: M200)
+                size_t nameStart = line.find(". ") + 2;
+                size_t nameEnd = line.find(" (");
+                std::string pName = line.substr(nameStart, nameEnd - nameStart);
+                size_t codeStart = line.find("(") + 1;
+                std::string pCode = line.substr(codeStart, 3);
+                size_t statusStart = line.find("): ") + 3;
+                size_t statusEnd = line.find(" (Biaya");
+                std::string pStatus = line.substr(statusStart, statusEnd - statusStart);
+                size_t costStart = line.find("Biaya: ") + 7;
+                std::string pCost = line.substr(costStart, line.find(")", costStart) - costStart);
+
+                Rectangle itemRect = {dialogRect.x + 25, itemY, dialogRect.width - 50, 90};
+                bool isSelected = (selection == idx);
+                
+                DrawRectangleRec(itemRect, isSelected ? Color{250, 240, 240, 255} : Color{255, 254, 252, 255});
+                DrawRectangleLinesEx(itemRect, 2.0F, isSelected ? Color{120, 20, 20, 255} : Color{230, 225, 220, 255});
+                
+                // Icon
+                Rectangle pIcon = {itemRect.x + 15, itemRect.y + 15, 60, 60};
+                DrawRectangleRec(pIcon, {0, 40, 80, 255});
+                DrawTextEx(font, pCode.c_str(), {pIcon.x + 15, pIcon.y + 22}, 16, 1, WHITE);
+                
+                DrawTextEx(font, pName.c_str(), {itemRect.x + 90, itemRect.y + 18}, 18, 1, {100, 20, 20, 255});
+                DrawTextEx(font, (pStatus + " (dapat dibangun)").c_str(), {itemRect.x + 90, itemRect.y + 45}, 14, 1, GRAY);
+                
+                // Radio button
+                DrawCircle(itemRect.x + itemRect.width - 35, itemRect.y + 45, 12, LIGHTGRAY);
+                DrawCircle(itemRect.x + itemRect.width - 35, itemRect.y + 45, 10, WHITE);
+                if (isSelected) DrawCircle(itemRect.x + itemRect.width - 35, itemRect.y + 45, 6, {120, 20, 20, 255});
+
+                itemY += 105;
+                idx++;
+            }
+        }
+
+        // Investment Cost
+        DrawRectangle(dialogRect.x + 25, itemY + 20, dialogRect.width - 50, 1, {230, 225, 220, 255});
+        DrawTextEx(font, "INVESTMENT COST", {dialogRect.x + 25, itemY + 45}, 14, 1, LIGHTGRAY);
+        DrawTextEx(font, "M200", {dialogRect.x + dialogRect.width - 150, itemY + 42}, 24, 1, {100, 20, 20, 255});
+        DrawTextEx(font, "/ unit", {dialogRect.x + dialogRect.width - 75, itemY + 48}, 14, 1, GRAY);
+
+        // Buttons
+        Rectangle batalBtn = {dialogRect.x + dialogRect.width - 300, dialogRect.y + dialogRect.height - 80, 120, 50};
+        Rectangle okBtn = {dialogRect.x + dialogRect.width - 160, dialogRect.y + dialogRect.height - 80, 130, 50};
+        
+        DrawRectangleLinesEx(batalBtn, 1.5F, DARKGRAY);
+        GuiWindowInternal::drawTextCentered(font, "BATAL", batalBtn, 18, 1, BLACK);
+        DrawRectangleRec(okBtn, {60, 10, 10, 255});
+        GuiWindowInternal::drawTextCentered(font, "OK", okBtn, 18, 1, WHITE);
+
+    } else if (current.active && current.prompt.find("UPGRADE HOTEL") != std::string::npos) {
+        // Upgrade Hotel
+        DrawRectangleRec(dialogRect, {252, 249, 240, 255});
+        
+        Rectangle topBar = {dialogRect.x, dialogRect.y, dialogRect.width, 50};
+        DrawRectangleRec(topBar, {100, 10, 10, 255});
+        GuiWindowInternal::drawTextCentered(font, "UPGRADE HOTEL", topBar, 22, 1.5, WHITE);
+
+        // Graphic Area
+        Rectangle graphicArea = {dialogRect.x + 50, dialogRect.y + 80, dialogRect.width - 100, 180};
+        GuiWindowInternal::drawRectangleRoundedLinesCompat(graphicArea, 0.1, 8, 1.0, {210, 200, 180, 255});
+        
+        // 4 Houses + Hotel Icon
+        for (int i = 0; i < 4; ++i) {
+            float hx = graphicArea.x + graphicArea.width/2 - 100 + i*45;
+            DrawRectangle(hx, graphicArea.y + 40, 30, 20, {120, 20, 20, 255});
+            DrawTriangle({hx-2, graphicArea.y + 40}, {hx+32, graphicArea.y + 40}, {hx+15, graphicArea.y + 25}, {120, 20, 20, 255});
+        }
+        DrawRectangle(graphicArea.x + graphicArea.width/2 + 85, graphicArea.y + 35, 35, 30, {220, 200, 150, 255}); // Hotel
+        
+        std::string infoText = "Seluruh color group [BIRU TUA] sudah memiliki 4 rumah. Siap di-upgrade ke hotel!";
+        size_t groupStart = current.prompt.find("[");
+        size_t groupEnd = current.prompt.find("]");
+        if (groupStart != std::string::npos) {
+            infoText = "Seluruh color group " + current.prompt.substr(groupStart, groupEnd - groupStart + 1) + " sudah memiliki 4 rumah. Siap di-upgrade ke hotel!";
+        }
+        GuiWindowInternal::drawWrappedText(font, infoText, {graphicArea.x + 30, graphicArea.y + 100, graphicArea.width - 60, 60}, 16, 1, GRAY, 3);
+
+        // Confirmation Box
+        Rectangle confirmBox = {dialogRect.x + 100, dialogRect.y + 300, dialogRect.width - 200, 160};
+        DrawRectangleLinesEx(confirmBox, 2.0F, {50, 80, 150, 255});
+        DrawRectangle(confirmBox.x + confirmBox.width/2 - 70, confirmBox.y - 12, 140, 24, {0, 50, 100, 255});
+        GuiWindowInternal::drawTextCentered(font, "PROPERTY DEVELOPMENT", {confirmBox.x, confirmBox.y - 12, confirmBox.width, 24}, 12, 1, WHITE);
+        
+        std::string pName = "Property";
+        size_t upgradePos = current.prompt.find("Upgrade ");
+        size_t toPos = current.prompt.find(" ke Hotel");
+        if (upgradePos != std::string::npos) pName = current.prompt.substr(upgradePos + 8, toPos - (upgradePos + 8));
+        
+        GuiWindowInternal::drawTextCentered(font, ("Upgrade " + pName + " ke Hotel?").c_str(), {confirmBox.x, confirmBox.y + 40, confirmBox.width, 40}, 24, 1.2, {60, 60, 60, 255});
+        DrawRectangle(confirmBox.x + 80, confirmBox.y + 85, confirmBox.width - 160, 1, LIGHTGRAY);
+        
+        std::string costStr = "M200";
+        size_t costPos = current.prompt.find("Biaya: ");
+        if (costPos != std::string::npos) costStr = current.prompt.substr(costPos + 7);
+        
+        std::string costLabel = "Biaya: " + costStr;
+        GuiWindowInternal::drawTextCentered(font, costLabel.c_str(), {confirmBox.x, confirmBox.y + 105, confirmBox.width, 40}, 28, 1, GuiWindowInternal::kGold);
+
+        // Buttons
+        Rectangle yaBtn = {dialogRect.x + 60, dialogRect.y + 520, 250, 80};
+        Rectangle tidakBtn = {dialogRect.x + dialogRect.width - 310, dialogRect.y + 520, 250, 80};
+        
+        DrawRectangleRec(yaBtn, {120, 10, 10, 255});
+        DrawCircle(yaBtn.x + 80, yaBtn.y + 40, 8, WHITE);
+        DrawTextEx(font, "YA", {yaBtn.x + 110, yaBtn.y + 28}, 24, 1.5, WHITE);
+        
+        DrawRectangleLinesEx(tidakBtn, 2.0F, {120, 10, 10, 255});
+        DrawCircle(tidakBtn.x + 60, tidakBtn.y + 40, 8, {120, 10, 10, 255});
+        DrawTextEx(font, "TIDAK", {tidakBtn.x + 90, tidakBtn.y + 28}, 24, 1.5, {120, 10, 10, 255});
+
+        // Bottom Bar
+        Rectangle bottomBar = {dialogRect.x, dialogRect.y + dialogRect.height - 40, dialogRect.width, 40};
+        DrawRectangleRec(bottomBar, {245, 240, 230, 255});
+        DrawRectangle(bottomBar.x, bottomBar.y, bottomBar.width, 1, LIGHTGRAY);
+        DrawTextEx(font, "CURRENT BALANCE: M1,500", {bottomBar.x + 20, bottomBar.y + 12}, 12, 1, GRAY);
 
     } else if (current.active && (current.title == "Konfirmasi Gadai" || current.prompt.find("Konfirmasi Gadai") != std::string::npos)) {
         // Konfirmasi Gadai
@@ -891,10 +1177,16 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
             DrawTextEx(font, current.inputText.empty() ? " " : current.inputText.c_str(), {inputRect.x + 8, inputRect.y + 8}, 18, 1, GuiWindowInternal::kInk);
         }
 
-        Rectangle okRect{dialogRect.x + dialogRect.width - 210.0F, dialogRect.y + dialogRect.height - 58.0F, 90.0F, 34.0F};
-        Rectangle cancelRect{dialogRect.x + dialogRect.width - 110.0F, dialogRect.y + dialogRect.height - 58.0F, 90.0F, 34.0F};
-        GuiWindowInternal::drawButton(font, okRect, current.yesNo && current.backendOwned ? "YA" : "OK", true, true);
-        GuiWindowInternal::drawButton(font, cancelRect, current.yesNo && current.backendOwned ? "TIDAK" : "BATAL", true, false);
+        if (isErrorModal) {
+            Rectangle errorOkRect{dialogRect.x + (dialogRect.width - 120.0F) / 2.0F, 
+                                  dialogRect.y + dialogRect.height - 58.0F, 120.0F, 34.0F};
+            GuiWindowInternal::drawButton(font, errorOkRect, "OK", true, true);
+        } else {
+            Rectangle okRect{dialogRect.x + dialogRect.width - 210.0F, dialogRect.y + dialogRect.height - 58.0F, 90.0F, 34.0F};
+            Rectangle cancelRect{dialogRect.x + dialogRect.width - 110.0F, dialogRect.y + dialogRect.height - 58.0F, 90.0F, 34.0F};
+            GuiWindowInternal::drawButton(font, okRect, (current.yesNo && current.backendOwned) ? "YA" : "OK", true, true);
+            GuiWindowInternal::drawButton(font, cancelRect, (current.yesNo && current.backendOwned) ? "TIDAK" : "BATAL", true, false);
+        }
     }
 }
 

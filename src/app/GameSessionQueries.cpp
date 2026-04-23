@@ -96,6 +96,9 @@ std::vector<Street*> GameSessionQueries::getBuildableStreets() const {
         if (!game.ownsFullColorGroup(currentPlayer, street->getColorGroup())) {
             continue;
         }
+        if (game.anyPropertyInGroupMortgaged(currentPlayer, street->getColorGroup())) {
+            continue;
+        }
         result.push_back(street);
     }
     return result;

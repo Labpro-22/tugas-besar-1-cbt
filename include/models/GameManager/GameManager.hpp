@@ -72,6 +72,7 @@ public:
   int executeBuild(Player &player, Street &street);
   std::vector<Street *> getEligibleBuildTargets(const std::vector<Street *> &streets) const;
   bool ownsFullColorGroup(const Player &player, ColorGroup color) const;
+  bool anyPropertyInGroupMortgaged(const Player &player, ColorGroup color) const;
   int sellBuildingsInColorGroup(Player &player, ColorGroup color);
   bool hasBuildingsInColorGroup(const Player &player, ColorGroup color) const;
   void destroyProperty(Player &actor, Property &prop);
