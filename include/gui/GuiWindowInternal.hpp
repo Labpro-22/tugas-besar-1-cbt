@@ -84,14 +84,15 @@ public:
     static std::string buildTransactionLogText(const GameSnapshot& currentSnapshot);
     static std::string truncateText(const Font& font, const std::string& text,
                                     float fontSize, float spacing, float maxWidth);
-    static std::vector<std::string> wrapText(const Font& font,
-                                             const std::string& text,
-                                             float fontSize, float spacing,
-                                             float maxWidth, int maxLines = 1000);
+    static std::vector<std::string> wrapText(const Font& font, const std::string& text,
+                                             const float fontSize, const float spacing,
+                                             const float maxWidth, const int maxLines = 1000,
+                                             const int startLine = 0);
     static void drawWrappedText(const Font& font, const std::string& text,
-                                const Rectangle& rect, float fontSize,
-                                float spacing, Color color,
-                                int maxLines = 1000);
+                                 const Rectangle& rect, const float fontSize,
+                                 const float spacing, const Color color,
+                                 const int maxLines = 1000,
+                                 const int startLine = 0);
     static void drawTextCentered(const Font& font, const std::string& text,
                                  const Rectangle& rect, float fontSize,
                                  float spacing, Color color);

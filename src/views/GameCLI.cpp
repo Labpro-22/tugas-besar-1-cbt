@@ -64,7 +64,8 @@ void GameCLI::showMessage(const std::string& msg) const {
 }
 
 void GameCLI::showError(const std::string& err) const {
-    std::cerr << "Error: " << err << '\n';
+    std::string fullError = "Error: " + err + "\n";
+    std::cerr << fullError;
 }
 
 void GameCLI::showWinner(const std::vector<Player*>& winners) const {

@@ -291,105 +291,113 @@ void GameSession::startTurn(bool drawSkillCard) {
 }
 
 void GameSession::handleCommand(const Command& command) {
-    const bool handled = ExceptionHandler::guard(
-        "GameSession::handleCommand(" + command.name + ")", [&]() {
-            if (command.name == "EXIT") {
-                running = false;
+    try {
+        if (command.name == "EXIT") {
+            running = false;
+            return;
+        }
+        if (command.name == "NEW_GAME") {
+            if (gameStarted && !game.isGameOver()) {
+                cli.showError("NEW GAME hanya tersedia setelah permainan selesai.");
                 return;
             }
-            if (command.name == "NEW_GAME") {
-                if (gameStarted && !game.isGameOver()) {
-                    cli.showError("NEW GAME hanya tersedia setelah permainan selesai.");
-                    return;
-                }
-                std::cout << "Memulai permainan baru...\n";
-                initializeNewGame();
+            std::cout << "Memulai permainan baru...\n";
+            initializeNewGame();
+            printWelcome();
+            return;
+        }
+        if (command.name == "LOAD_GAME") {
+            if (gameStarted && !game.isGameOver()) {
+                cli.showError("LOAD GAME hanya tersedia setelah permainan selesai.");
+                return;
+            }
+            const std::string filename =
+                command.args.empty()
+                    ? cli.getInputHandler().readToken("Masukkan nama file save: ")
+                    : command.args[0];
+            if (initializeLoadedGame(filename)) {
+                std::cout << "Permainan berhasil dimuat dari: " << filename
+                            << "\n";
                 printWelcome();
-                return;
+            } else {
+                cli.showError("Gagal memuat file save.");
             }
-            if (command.name == "LOAD_GAME") {
-                if (gameStarted && !game.isGameOver()) {
-                    cli.showError("LOAD GAME hanya tersedia setelah permainan selesai.");
-                    return;
-                }
-                const std::string filename =
-                    command.args.empty()
-                        ? cli.getInputHandler().readToken("Masukkan nama file save: ")
-                        : command.args[0];
-                if (initializeLoadedGame(filename)) {
-                    std::cout << "Permainan berhasil dimuat dari: " << filename
-                              << "\n";
-                    printWelcome();
-                } else {
-                    cli.showError("Gagal memuat file save.");
-                }
-                return;
-            }
+            return;
+        }
 
-            if (!gameStarted) {
-                cli.showError("Permainan belum dimulai.");
-                return;
-            }
-            if (game.isGameOver()) {
-                cli.showError("Permainan sudah selesai. Pilih NEW GAME, LOAD GAME, "
-                              "atau EXIT.");
-                return;
-            }
+        if (!gameStarted) {
+            cli.showError("Permainan belum dimulai.");
+            return;
+        }
+        if (game.isGameOver()) {
+            cli.showError("Permainan sudah selesai. Pilih NEW GAME, LOAD GAME, "
+                            "atau EXIT.");
+            return;
+        }
 
-            if (command.name == "CETAK_PAPAN") {
-                handlePrintBoard();
-                return;
-            }
-            if (command.name == "LEMPAR_DADU") {
-                handleRollDice(false);
-                return;
-            }
-            if (command.name == "ATUR_DADU") {
-                handleRollDice(true, std::stoi(command.args[0]),
-                               std::stoi(command.args[1]));
-                return;
-            }
-            if (command.name == "CETAK_AKTA") {
-                handlePrintDeed();
-                return;
-            }
-            if (command.name == "CETAK_PROPERTI") {
-                handlePrintProperties();
-                return;
-            }
-            if (command.name == "CETAK_LOG") {
-                handlePrintLogs(command);
-                return;
-            }
-            if (command.name == "GADAI") {
-                handleMortgage();
-                return;
-            }
-            if (command.name == "TEBUS") {
-                handleRedeem();
-                return;
-            }
-            if (command.name == "BANGUN") {
-                handleBuild();
-                return;
-            }
-            if (command.name == "GUNAKAN_KEMAMPUAN") {
-                handleUseAbility();
-                return;
-            }
-            if (command.name == "SIMPAN") {
-                handleSave(command);
-                return;
-            }
-            if (command.name == "MUAT") {
-                handleLoad(command);
-                return;
-            }
+        if (command.name == "CETAK_PAPAN") {
+            handlePrintBoard();
+            return;
+        }
+        if (command.name == "LEMPAR_DADU") {
+            handleRollDice(false);
+            return;
+        }
+        if (command.name == "ATUR_DADU") {
+            handleRollDice(true, std::stoi(command.args[0]),
+                            std::stoi(command.args[1]));
+            return;
+        }
+        if (command.name == "CETAK_AKTA") {
+            handlePrintDeed();
+            return;
+        }
+        if (command.name == "CETAK_PROPERTI") {
+            handlePrintProperties();
+            return;
+        }
+        if (command.name == "CETAK_LOG") {
+            handlePrintLogs(command);
+            return;
+        }
+        if (command.name == "GADAI") {
+            handleMortgage();
+            return;
+        }
+        if (command.name == "TEBUS") {
+            handleRedeem();
+            return;
+        }
+        if (command.name == "BANGUN") {
+            handleBuild();
+            return;
+        }
+        if (command.name == "GUNAKAN_KEMAMPUAN") {
+            handleUseAbility();
+            return;
+        }
+        if (command.name == "SIMPAN") {
+            handleSave(command);
+            return;
+        }
+        if (command.name == "MUAT") {
+            handleLoad(command);
+            return;
+        }
 
-            cli.showError("Command belum didukung di sesi GUI ini.");
-        });
-    if (!handled) {
-        notifySnapshot();
+        cli.showError("Command belum didukung di sesi GUI ini.");
+    } catch (const NimonspoliException& e) {
+        if (gameStarted && !game.isGameOver()) {
+            game.getLogger().log(game.getCurrentTurn(), 
+                                 game.getCurrentPlayer().getUsername(), 
+                                 "ERROR", 
+                                 std::string(e.what()));
+        }
+        cli.showError(e.what());
+    } catch (const std::exception& e) {
+        cli.showError(e.what());
+    } catch (...) {
+        cli.showError("Terjadi kesalahan internal yang tidak diketahui.");
     }
     if (gameStarted && !game.isGameOver()) {
         if (game.getCurrentPlayer().getStatus() == BANKRUPT) {

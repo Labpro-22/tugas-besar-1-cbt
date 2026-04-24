@@ -232,14 +232,16 @@ std::vector<std::string> GuiWindowInternal::wrapText(const Font& font,
                                                      const std::string& text,
                                                      const float fontSize,
                                                      const float spacing,
-                                                     const float maxWidth,
-                                                     const int maxLines) {
+                                                      const float maxWidth,
+                                                      const int maxLines,
+                                                      const int startLine) {
     std::vector<std::string> wrapped;
     if (maxWidth <= 0.0F) {
         wrapped.push_back(text);
         return wrapped;
     }
 
+    std::vector<std::string> allLines;
     for (const std::string& rawLine : splitLines(text)) {
         std::istringstream iss(rawLine);
         std::string word;
@@ -254,33 +256,27 @@ std::vector<std::string> GuiWindowInternal::wrapText(const Font& font,
                 continue;
             }
 
-            wrapped.push_back(current);
-            if (static_cast<int>(wrapped.size()) >= maxLines) {
-                wrapped.back() =
-                    truncateText(font, wrapped.back(), fontSize, spacing, maxWidth);
-                return wrapped;
-            }
+            allLines.push_back(current);
             current = word;
         }
 
         if (!current.empty()) {
-            wrapped.push_back(current);
-            if (static_cast<int>(wrapped.size()) >= maxLines) {
-                wrapped.back() =
-                    truncateText(font, wrapped.back(), fontSize, spacing, maxWidth);
-                return wrapped;
-            }
+            allLines.push_back(current);
         } else if (rawLine.empty()) {
-            wrapped.push_back("");
+            allLines.push_back("");
         }
     }
 
-    if (wrapped.empty()) {
-        wrapped.push_back("");
+    if (allLines.empty()) {
+        allLines.push_back("");
     }
 
-    if (static_cast<int>(wrapped.size()) > maxLines) {
-        wrapped.resize(static_cast<std::size_t>(maxLines));
+    const int effectiveStart = clampInt(startLine, 0, std::max(0, static_cast<int>(allLines.size()) - 1));
+    for (int i = effectiveStart; i < static_cast<int>(allLines.size()) && static_cast<int>(wrapped.size()) < maxLines; ++i) {
+        wrapped.push_back(allLines[i]);
+    }
+
+    if (static_cast<int>(allLines.size()) > effectiveStart + maxLines) {
         wrapped.back() =
             truncateText(font, wrapped.back(), fontSize, spacing, maxWidth);
     }
@@ -293,9 +289,10 @@ void GuiWindowInternal::drawWrappedText(const Font& font,
                                         const Rectangle& rect,
                                         const float fontSize,
                                         const float spacing, const Color color,
-                                        const int maxLines) {
+                                        const int maxLines,
+                                        const int startLine) {
     const std::vector<std::string> lines =
-        wrapText(font, text, fontSize, spacing, rect.width, maxLines);
+        wrapText(font, text, fontSize, spacing, rect.width, maxLines, startLine);
     const float lineHeight = fontSize + 4.0F;
     float y = rect.y;
 

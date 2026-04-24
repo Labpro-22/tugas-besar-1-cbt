@@ -175,7 +175,7 @@ int InputHandler::readChoice(int min, int max, const std::string& prompt) {
     while (true) {
         std::string line;
         InputPromptResponse response;
-        if (tryPrompt({InputPromptKind::Choice, "Pilih Opsi", prompt, "", min, max},
+        if (tryPrompt({InputPromptKind::Choice, "Pilih Opsi", prompt, std::to_string(min), min, max},
                       response)) {
             if (!response.accepted) {
                 if (out != nullptr) {
