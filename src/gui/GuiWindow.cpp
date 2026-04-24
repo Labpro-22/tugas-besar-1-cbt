@@ -110,6 +110,7 @@ int GuiWindow::run() {
     drawTurnChangePopup(currentSnapshot);
     drawGameOverPopup(currentSnapshot);
     logPopup.drawOverlay();
+    deedPopup.drawOverlay(georgiaFont);
     EndDrawing();
   }
 

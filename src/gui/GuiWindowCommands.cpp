@@ -144,7 +144,8 @@ void GuiWindow::executeStartedCommand(const int specIndex) {
                     "Masukkan dua nilai dadu 1-6.\nContoh: 2 5");
     return;
   case StartedQuickAction::PrintDeed:
-    submitInputLine("CETAK_AKTA");
+    openLocalDialog(LocalDialogType::PrintDeed, "Cetak Akta",
+                    "Masukkan ID atau nama properti yang valid.\nContoh: J1");
     return;
   case StartedQuickAction::Mortgage:
     submitInputLine("GADAI");
@@ -245,6 +246,45 @@ void GuiWindow::confirmLocalDialog() {
     }
     logPopup.loadFromSnapshot(currentSnap, n);
     logPopup.open();
+    break;
+  }
+  case LocalDialogType::PrintDeed: {
+    if (value.empty()) {
+      std::lock_guard<std::mutex> lock(modalMutex);
+      modal.errorText = "ID / nama properti tidak boleh kosong.";
+      return;
+    }
+
+    GameSnapshot currentSnap;
+    {
+      std::lock_guard<std::mutex> lock(snapshotMutex);
+      currentSnap = snapshot;
+    }
+
+    const TileSnapshot *targetTile = nullptr;
+    std::string q = lowercaseText(value);
+    for (const auto &tile : currentSnap.tiles) {
+      if (lowercaseText(tile.code) == q || lowercaseText(tile.name) == q) {
+        targetTile = &tile;
+        break;
+      }
+    }
+
+    if (targetTile == nullptr) {
+      std::lock_guard<std::mutex> lock(modalMutex);
+      modal.errorText = "Properti dengan parameter tsb tidak ditemukan.";
+      return;
+    }
+
+    if (targetTile->type != "Street" && targetTile->type != "Railroad" &&
+        targetTile->type != "Utility" && targetTile->type != "property") {
+      std::lock_guard<std::mutex> lock(modalMutex);
+      modal.errorText = "Petak tersebut tidak memiliki Akta Kepemilikan.";
+      return;
+    }
+
+    deedPopup.loadFromTile(*targetTile);
+    deedPopup.open();
     break;
   }
   case LocalDialogType::SetDice: {

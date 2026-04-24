@@ -13,8 +13,10 @@
 #include <raylib.h>
 
 #include "../app/GameSession.hpp"
+#include "DeedPopup.hpp"
 #include "LogPopup.hpp"
 #include "StdStreamBridge.hpp"
+
 
 class GuiWindow {
 public:
@@ -32,6 +34,7 @@ private:
     SaveFile,
     LoadFile,
     ErrorMessage,
+    PrintDeed,
   };
 
   class ModalState {
@@ -111,6 +114,7 @@ private:
   mutable float modalScrollOffset;
   mutable float modalScrollMax;
   LogPopup logPopup;
+  DeedPopup deedPopup;
 
   static bool shouldShowErrorPopup(const std::string &text);
   static std::string lowercaseText(std::string text);
