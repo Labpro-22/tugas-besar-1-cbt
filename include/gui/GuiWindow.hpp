@@ -13,150 +13,162 @@
 #include <raylib.h>
 
 #include "../app/GameSession.hpp"
+#include "BoardPopup.hpp"
+#include "DeedPopup.hpp"
+#include "LedgerPopup.hpp"
+#include "LogPopup.hpp"
 #include "StdStreamBridge.hpp"
 
 class GuiWindow {
 public:
-    GuiWindow();
-    ~GuiWindow();
+  GuiWindow();
+  ~GuiWindow();
 
-    int run();
+  int run();
 
 private:
-    enum class LocalDialogType {
-        None,
-        ManualCommand,
-        LogCount,
-        SetDice,
-        SaveFile,
-        LoadFile,
-        ErrorMessage,
-    };
+  enum class LocalDialogType {
+    None,
+    ManualCommand,
+    LogCount,
+    SetDice,
+    SaveFile,
+    LoadFile,
+    ErrorMessage,
+    PrintDeed,
+  };
 
-    class ModalState {
-    public:
-        bool active = false;
-        bool backendOwned = false;
-        bool yesNo = false;
-        bool backendResolved = false;
-        LocalDialogType localType = LocalDialogType::None;
-        InputPromptRequest request;
-        InputPromptResponse response;
-        std::string title;
-        std::string prompt;
-        std::string inputText;
-        std::string errorText;
-    };
+  class ModalState {
+  public:
+    bool active = false;
+    bool backendOwned = false;
+    bool yesNo = false;
+    bool backendResolved = false;
+    LocalDialogType localType = LocalDialogType::None;
+    InputPromptRequest request;
+    InputPromptResponse response;
+    std::string title;
+    std::string prompt;
+    std::string inputText;
+    std::string errorText;
+  };
 
-    class Layout {
-    public:
-        Rectangle headerRect{};
-        Rectangle leftPanelRect{};
-        Rectangle rightPanelRect{};
-        Rectangle boardRect{};
-        Rectangle commandRect{};
-        Rectangle rosterRect{};
-        Rectangle logRect{};
-        Rectangle statusRect{};
-        Rectangle rollButtonRect{};
-        Rectangle manualButtonRect{};
-        Rectangle scrollLeftRect{};
-        Rectangle scrollRightRect{};
-        std::array<Rectangle, 6> quickButtonRects{};
-    };
+  class Layout {
+  public:
+    Rectangle headerRect{};
+    Rectangle leftPanelRect{};
+    Rectangle rightPanelRect{};
+    Rectangle boardRect{};
+    Rectangle commandRect{};
+    Rectangle rosterRect{};
+    Rectangle logRect{};
+    Rectangle statusRect{};
+    Rectangle rollButtonRect{};
+    Rectangle manualButtonRect{};
+    Rectangle scrollLeftRect{};
+    Rectangle scrollRightRect{};
+    std::array<Rectangle, 6> quickButtonRects{};
+  };
 
-    QueueInputBuffer inputBuffer;
-    CallbackOutputBuffer outputBuffer;
-    std::unique_ptr<StdStreamRedirector> streamRedirector;
-    GameSession backendSession;
-    std::thread sessionThread;
+  QueueInputBuffer inputBuffer;
+  CallbackOutputBuffer outputBuffer;
+  std::unique_ptr<StdStreamRedirector> streamRedirector;
+  GameSession backendSession;
+  std::thread sessionThread;
 
-    mutable std::mutex snapshotMutex;
-    GameSnapshot snapshot;
-    bool hasSnapshot;
+  mutable std::mutex snapshotMutex;
+  GameSnapshot snapshot;
+  bool hasSnapshot;
 
-    mutable std::mutex outputMutex;
-    std::string outputText;
+  mutable std::mutex outputMutex;
+  std::string outputText;
 
-    mutable std::mutex modalMutex;
-    std::condition_variable modalCondition;
-    ModalState modal;
-    mutable std::mutex pendingErrorMutex;
-    std::vector<std::string> pendingErrorPopups;
+  mutable std::mutex modalMutex;
+  std::condition_variable modalCondition;
+  ModalState modal;
+  mutable std::mutex pendingErrorMutex;
+  std::vector<std::string> pendingErrorPopups;
 
-    bool shuttingDown;
-    std::atomic_bool exitRequested;
-    int inspectedPlayerIndex;
-    int commandScrollColumn;
-    int commandScrollMaxColumn;
-    int logScrollLine;
-    bool logAutoScroll;
-    bool logScrollbarDragging;
-    float logScrollbarGrabOffset;
-    std::array<int, 6> visibleCommandIndices;
-    std::array<std::string, 6> quickButtonLabels;
-    std::array<bool, 6> quickButtonEnabled;
-    bool manualEnabled;
-    bool gameOverPopupDismissed;
-    int lastAnnouncedActivePlayerIndex;
-    int turnPopupPlayerIndex;
-    std::string turnPopupPlayerName;
-    float turnPopupTimer;
-    Font georgiaFont;
-    Vector2 modalPosition;
-    Vector2 modalDragOffset;
-    bool modalDragging;
-    bool modalPositionInitialized;
-    mutable float modalScrollOffset;
-    mutable float modalScrollMax;
+  bool shuttingDown;
+  std::atomic_bool exitRequested;
+  int inspectedPlayerIndex;
+  int commandScrollColumn;
+  int commandScrollMaxColumn;
+  int logScrollLine;
+  bool logAutoScroll;
+  bool logScrollbarDragging;
+  float logScrollbarGrabOffset;
+  std::array<int, 6> visibleCommandIndices;
+  std::array<std::string, 6> quickButtonLabels;
+  std::array<bool, 6> quickButtonEnabled;
+  bool manualEnabled;
+  bool gameOverPopupDismissed;
+  int lastAnnouncedActivePlayerIndex;
+  int turnPopupPlayerIndex;
+  std::string turnPopupPlayerName;
+  float turnPopupTimer;
+  Font georgiaFont;
+  Vector2 modalPosition;
+  Vector2 modalDragOffset;
+  bool modalDragging;
+  bool modalPositionInitialized;
+  mutable float modalScrollOffset;
+  mutable float modalScrollMax;
+  LogPopup logPopup;
+  DeedPopup deedPopup;
+  LedgerPopup ledgerPopup;
+  BoardPopup boardPopup;
 
-    static bool shouldShowErrorPopup(const std::string& text);
-    static std::string lowercaseText(std::string text);
-    static bool promptExplicitlyAllowsCancel(const InputPromptRequest& request);
-    static bool isStartupExitChoice(const InputPromptRequest& request,
-                                    const InputPromptResponse& response);
-    static bool shouldUseInlineStartupMenu(const InputPromptRequest& request);
+  static bool shouldShowErrorPopup(const std::string &text);
+  static std::string lowercaseText(std::string text);
+  static bool promptExplicitlyAllowsCancel(const InputPromptRequest &request);
+  static bool isStartupExitChoice(const InputPromptRequest &request,
+                                  const InputPromptResponse &response);
+  static bool shouldUseInlineStartupMenu(const InputPromptRequest &request);
 
-    void startSession();
-    void stopSession();
-    void submitInputLine(const std::string& line);
-    void appendOutput(const std::string& text);
-    void queueErrorPopupIfNeeded(const std::string& text);
-    void openPendingErrorPopup();
-    void applySnapshot(const GameSnapshot& nextSnapshot);
-    void updateQuickButtons(const GameSnapshot& currentSnapshot);
-    void executeStartedCommand(int specIndex);
-    void openLocalDialog(LocalDialogType type, const std::string& title,
-                         const std::string& prompt,
-                         const std::string& initialText = "");
-    void confirmLocalDialog();
-    void cancelLocalDialog();
-    InputPromptResponse requestBackendPrompt(const InputPromptRequest& request);
-    std::string currentStatusText(const GameSnapshot& currentSnapshot) const;
-    int effectiveInspectedPlayerIndex(const GameSnapshot& currentSnapshot) const;
-    Rectangle modalDialogRect() const;
+  void startSession();
+  void stopSession();
+  void submitInputLine(const std::string &line);
+  void appendOutput(const std::string &text);
+  void queueErrorPopupIfNeeded(const std::string &text);
+  void openPendingErrorPopup();
+  void applySnapshot(const GameSnapshot &nextSnapshot);
+  void updateQuickButtons(const GameSnapshot &currentSnapshot);
+  void executeStartedCommand(int specIndex);
+  void openLocalDialog(LocalDialogType type, const std::string &title,
+                       const std::string &prompt,
+                       const std::string &initialText = "");
+  void confirmLocalDialog();
+  void cancelLocalDialog();
+  InputPromptResponse requestBackendPrompt(const InputPromptRequest &request);
+  std::string currentStatusText(const GameSnapshot &currentSnapshot) const;
+  int effectiveInspectedPlayerIndex(const GameSnapshot &currentSnapshot) const;
+  Rectangle modalDialogRect() const;
 
-    Layout computeLayout(int screenWidth, int screenHeight,
-                         const GameSnapshot& currentSnapshot) const;
-    void updateFrame(const Layout& layout, const GameSnapshot& currentSnapshot);
-    void updateModalInput();
-    void drawFrame(const Layout& layout, const GameSnapshot& currentSnapshot);
-    void drawHeader(const Layout& layout, const GameSnapshot& currentSnapshot);
-    void drawPanel(const Rectangle& rect, const std::string& title,
-                   const std::string& subtitle) const;
-    void drawStatusPanel(const Layout& layout,
-                         const GameSnapshot& currentSnapshot) const;
-    void drawRoster(const Layout& layout, const GameSnapshot& currentSnapshot) const;
-    void drawBoard(const Layout& layout, const GameSnapshot& currentSnapshot) const;
-    void drawActionBar(const Layout& layout, const GameSnapshot& currentSnapshot) const;
-    void drawLogPanel(const Layout& layout, const GameSnapshot& currentSnapshot);
-    void drawTurnChangePopup(const GameSnapshot& currentSnapshot) const;
-    void drawGameOverPopup(const GameSnapshot& currentSnapshot) const;
-    Rectangle gameOverPopupCardRect() const;
-    Rectangle gameOverPopupExitButtonRect() const;
-    Rectangle gameOverPopupNewGameButtonRect() const;
-    Rectangle gameOverPopupCloseButtonRect() const;
-    void drawModal(const GameSnapshot& currentSnapshot) const;
+  Layout computeLayout(int screenWidth, int screenHeight,
+                       const GameSnapshot &currentSnapshot) const;
+  void updateFrame(const Layout &layout, const GameSnapshot &currentSnapshot);
+  void updateModalInput();
+  void drawFrame(const Layout &layout, const GameSnapshot &currentSnapshot);
+  void drawHeader(const Layout &layout, const GameSnapshot &currentSnapshot);
+  void drawPanel(const Rectangle &rect, const std::string &title,
+                 const std::string &subtitle) const;
+  void drawStatusPanel(const Layout &layout,
+                       const GameSnapshot &currentSnapshot) const;
+  void drawRoster(const Layout &layout,
+                  const GameSnapshot &currentSnapshot) const;
+  void drawBoard(const Layout &layout,
+                 const GameSnapshot &currentSnapshot) const;
+  void drawActionBar(const Layout &layout,
+                     const GameSnapshot &currentSnapshot) const;
+  void drawLogPanel(const Layout &layout, const GameSnapshot &currentSnapshot);
+  void drawTurnChangePopup(const GameSnapshot &currentSnapshot) const;
+  void drawGameOverPopup(const GameSnapshot &currentSnapshot) const;
+  Rectangle gameOverPopupCardRect() const;
+  Rectangle gameOverPopupExitButtonRect() const;
+  Rectangle gameOverPopupNewGameButtonRect() const;
+  Rectangle gameOverPopupCloseButtonRect() const;
+  void drawModal(const GameSnapshot &currentSnapshot) const;
 };
 
 #endif
