@@ -112,6 +112,7 @@ int GuiWindow::run() {
     logPopup.drawOverlay();
     deedPopup.drawOverlay(georgiaFont);
     ledgerPopup.drawOverlay(georgiaFont);
+    boardPopup.drawOverlay(currentSnapshot, georgiaFont);
     EndDrawing();
   }
 

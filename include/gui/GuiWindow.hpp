@@ -13,6 +13,7 @@
 #include <raylib.h>
 
 #include "../app/GameSession.hpp"
+#include "BoardPopup.hpp"
 #include "DeedPopup.hpp"
 #include "LedgerPopup.hpp"
 #include "LogPopup.hpp"
@@ -116,6 +117,7 @@ private:
   LogPopup logPopup;
   DeedPopup deedPopup;
   LedgerPopup ledgerPopup;
+  BoardPopup boardPopup;
 
   static bool shouldShowErrorPopup(const std::string &text);
   static std::string lowercaseText(std::string text);

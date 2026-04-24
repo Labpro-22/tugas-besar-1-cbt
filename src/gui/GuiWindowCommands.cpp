@@ -126,7 +126,7 @@ void GuiWindow::executeStartedCommand(const int specIndex) {
           .action;
   switch (action) {
   case StartedQuickAction::PrintBoard:
-    submitInputLine("CETAK_PAPAN");
+    boardPopup.open();
     return;
   case StartedQuickAction::PrintProperties:
     ledgerPopup.loadFromSnapshot(snapshot);
