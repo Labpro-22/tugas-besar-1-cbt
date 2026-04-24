@@ -548,8 +548,9 @@ int GameManager::executeMortgage(Player &player, Property &prop) {
   if (!prop.canBeMortgaged()) {
     throw PropertyMortgageException(prop.getCode(), "Properti ini sedang digadaikan atau memiliki bangunan.");
   }
-
+  
   // Check group building rule
+
   if (prop.getType() == "Street") {
     Street &street = static_cast<Street &>(prop);
     if (hasBuildingsInColorGroup(player, street.getColorGroup())) {
