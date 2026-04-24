@@ -129,7 +129,8 @@ void GuiWindow::executeStartedCommand(const int specIndex) {
     submitInputLine("CETAK_PAPAN");
     return;
   case StartedQuickAction::PrintProperties:
-    submitInputLine("CETAK_PROPERTI");
+    ledgerPopup.loadFromSnapshot(snapshot);
+    ledgerPopup.open();
     return;
   case StartedQuickAction::RollDice:
     submitInputLine("LEMPAR_DADU");

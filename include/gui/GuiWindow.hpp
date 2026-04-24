@@ -14,9 +14,9 @@
 
 #include "../app/GameSession.hpp"
 #include "DeedPopup.hpp"
+#include "LedgerPopup.hpp"
 #include "LogPopup.hpp"
 #include "StdStreamBridge.hpp"
-
 
 class GuiWindow {
 public:
@@ -115,6 +115,7 @@ private:
   mutable float modalScrollMax;
   LogPopup logPopup;
   DeedPopup deedPopup;
+  LedgerPopup ledgerPopup;
 
   static bool shouldShowErrorPopup(const std::string &text);
   static std::string lowercaseText(std::string text);
