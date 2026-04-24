@@ -92,6 +92,7 @@ bool BankruptcyHandler::initiateLiquidation() {
 }
 
 void BankruptcyHandler::declareBankrupt() {
+    debtor.setStatus(BANKRUPT);
     if (creditor != nullptr) {
         transferAssets();
     } else {

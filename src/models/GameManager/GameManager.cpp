@@ -105,11 +105,23 @@ void GameManager::advanceToNextPlayer() {
   if (players.empty()) {
     return;
   }
-
+  int aliveCount = 0;
+  for (const Player& p : players) {
+    if (p.getStatus() != BANKRUPT) {
+      aliveCount++;
+    }
+  }
+  if (aliveCount <= 1) {
+    return;
+  }
+  int startIdx = activePlayerIndex;
   do {
     activePlayerIndex = (activePlayerIndex + 1) % players.size();
     if (activePlayerIndex == 0) {
       currentTurn++;
+    }
+    if (activePlayerIndex == startIdx && players[activePlayerIndex].getStatus() == BANKRUPT) {
+        break;
     }
   } while (players[activePlayerIndex].getStatus() == BANKRUPT);
 }
@@ -318,7 +330,7 @@ void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop,
                      owner.getUsername() + " (" + prop.getCode() +
                      ") setelah likuidasi");
     } else {
-      executeBankruptcy(payer, &owner, effectiveAmount);
+      executeBankruptcy(&payer, &owner, effectiveAmount);
     }
   }
 }
@@ -356,13 +368,15 @@ void GameManager::executeAuction(Property &prop) {
     
     bool mustBid = (consecutivePass == (int)participants.size() - 1 && auction.getWinningBid() == 0);
     if (mustBid && bidder->getCash() < auction.getMinimumBid()) {
-      cout << "\n[KRITIS] " << bidder->getUsername() << " wajib bid tapi uang tidak cukup (M" 
-           << bidder->getCash() << " < M" << auction.getMinimumBid() << ")." << endl;
-      cout << bidder->getUsername() << " dinyatakan BANGKRUT dari permainan!" << endl;
+      cout << "\n[KRITIS] " << bidder->getUsername() << " wajib bid tapi uang tidak cukup." << endl;
+      executeBankruptcy(bidder, nullptr, auction.getMinimumBid()); 
       
-      bidder->setStatus(BANKRUPT); 
       auction.pass(bidder);        
-      continue; 
+      break; 
+    }
+    if (bidder->getStatus() == BANKRUPT) {
+            auction.pass(bidder);
+            continue;
     }
     cout << "\nGiliran: " << bidder->getUsername() << " | Bid Tertinggi: M" << auction.getCurrentBid() << "\n";
     
@@ -387,6 +401,16 @@ void GameManager::executeAuction(Property &prop) {
       logger.log(currentTurn, bidder->getUsername(), "BID", prop.getCode() + " lelang");
       int amount;
       if (ss >> amount) {
+        if (amount > bidder->getCash()) {
+          cout << "[!] Uang tidak cukup! Saldo Anda: M" << bidder->getCash() 
+               << ". Silakan masukkan jumlah BID yang sesuai.\n";
+          continue;
+        }
+        if (amount < auction.getMinimumBid() || amount <= auction.getWinningBid()) {
+          cout << "[!] Bid terlalu rendah! Minimal Bid: M" 
+               << max(auction.getMinimumBid(), auction.getWinningBid() + 1) << ".\n";
+          continue; 
+        }
         if (auction.submitBid(bidder, amount)) {
           consecutivePass = 0;
         }
@@ -411,21 +435,25 @@ void GameManager::executeAuction(Property &prop) {
   }
 }
 
-void GameManager::executeBankruptcy(Player &debtor, Player *creditor,
+void GameManager::executeBankruptcy(Player *debtor, Player *creditor,
                                     int amount) {
-  cout << debtor.getUsername() << " tidak dapat membayar kewajiban M" << amount
+  cout << debtor->getUsername() << " tidak dapat membayar kewajiban M" << amount
        << ".\n";
-  BankruptcyHandler bh(debtor, creditor, amount);
+  BankruptcyHandler bh(*debtor, creditor, amount);
   bh.declareBankrupt();
+  if (activePlayerIndex < players.size() && 
+      players[activePlayerIndex].getStatus() == BANKRUPT) {
+    advanceToNextPlayer();
+  }
   if (creditor) {
-    cout << debtor.getUsername() << " dinyatakan BANGKRUT!\n";
+    cout << debtor->getUsername() << " dinyatakan BANGKRUT!\n";
     cout << "Kreditor: " << creditor->getUsername() << "\n";
-    logger.log(currentTurn, debtor.getUsername(), "BANGKRUT",
+    logger.log(currentTurn, debtor->getUsername(), "BANGKRUT",
                "Aset disita oleh " + creditor->getUsername());
   } else {
-    cout << debtor.getUsername() << " dinyatakan BANGKRUT!\n";
+    cout << debtor->getUsername() << " dinyatakan BANGKRUT!\n";
     cout << "Kreditor: Bank\n";
-    logger.log(currentTurn, debtor.getUsername(), "BANGKRUT", "Bangkrut ke Bank");
+    logger.log(currentTurn, debtor->getUsername(), "BANGKRUT", "Bangkrut ke Bank");
   }
 }
 

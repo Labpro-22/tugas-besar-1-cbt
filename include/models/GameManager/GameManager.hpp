@@ -63,7 +63,7 @@ public:
   void executePurchase(Player &player, Property &prop);
   void executeRentPayer(Player &, Player &owner, Property &prop, int amount);
   void executeAuction(Property &prop);
-  void executeBankruptcy(Player &debtor, Player *creditor, int amount);
+  void executeBankruptcy(Player *debtor, Player *creditor, int amount);
   void executeFestival(Player &player, string propCode);
   void executeTaxPayment(Player &player, int amount, bool toBank);
   void executeSalary(Player &player, int amount);

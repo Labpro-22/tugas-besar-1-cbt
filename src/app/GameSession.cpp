@@ -276,6 +276,13 @@ void GameSession::printStartupMenu() const {
 }
 
 void GameSession::startTurn(bool drawSkillCard) {
+    Player& currentPlayer = game.getCurrentPlayer();
+    
+    if (currentPlayer.getStatus() == BANKRUPT) {
+        std::cerr << "ERROR: Current player is bankrupt! Skipping turn.\n";
+        finishTurn();
+        return;
+    }
     game.processTurn();
     diceRolledThisTurn = false;
     if (drawSkillCard) {
@@ -384,10 +391,32 @@ void GameSession::handleCommand(const Command& command) {
     if (!handled) {
         notifySnapshot();
     }
+    if (gameStarted && !game.isGameOver()) {
+        if (game.getCurrentPlayer().getStatus() == BANKRUPT) {
+            cout << "\n[SYSTEM] " << game.getCurrentPlayer().getUsername() 
+                 << " bangkrut saat proses lelang/aksi. Mengalihkan giliran...\n";
+            
+            game.advanceToNextPlayer();
+            this->diceRolledThisTurn = false;
+            this->turnActionTaken = false;
+            
+            notifySnapshot(); 
+        }
+    }
 }
 
 void GameSession::finishTurn() {
     if (game.isGameOver()) {
+        int winningPlayerIdx = -1;
+        for (size_t i = 0; i < game.getPlayers().size(); i++) {
+            if (game.getPlayers()[i].getStatus() != BANKRUPT) {
+                winningPlayerIdx = i;
+                break;
+            }
+        }
+        if (winningPlayerIdx != -1) {
+            game.setActivePlayerIndex(winningPlayerIdx);
+        }
         return;
     }
 

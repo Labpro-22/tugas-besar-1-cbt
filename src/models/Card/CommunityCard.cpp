@@ -51,7 +51,7 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
         other.reduceCash(giftAmount);
         p->addCash(giftAmount);
       } catch (const InsufficientFundsException &) {
-        gm->executeBankruptcy(other, p, giftAmount);
+        gm->executeBankruptcy(&other, p, giftAmount);
       }
     }
     gm->getLogger().log(gm->getCurrentTurn(), p->getUsername(), "KARTU", "Dana Umum: Menerima hadiah ulang tahun M100 dari setiap pemain");
@@ -70,7 +70,7 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
     } catch (const InsufficientFundsException &) {
       std::cout << "Kamu tidak mampu membayar biaya dokter! (M" << doctorFee << ")\n";
       std::cout << "Uang kamu saat ini: M" << p->getCash() << "\n";
-      gm->executeBankruptcy(*p, nullptr, doctorFee);
+      gm->executeBankruptcy(p, nullptr, doctorFee);
     }
     return;
   }
@@ -89,7 +89,7 @@ void CommunityCard::execute(Player *p, GameManager *gm) {
         p->reduceCash(campaignFee);
         other.addCash(campaignFee);
       } catch (const InsufficientFundsException &) {
-        gm->executeBankruptcy(*p, &other, campaignFee);
+        gm->executeBankruptcy(p, &other, campaignFee);
         break;
       }
     }
