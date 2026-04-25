@@ -1,5 +1,6 @@
 #pragma once
 
+#include "data/config/ActionConfig.hpp"
 #include "data/config/BoardTileConfig.hpp"
 #include "data/config/MiscConfig.hpp"
 #include "data/config/PropertyConfig.hpp"
@@ -16,6 +17,7 @@ class Configuration {
 private:
     std::string configDir;
     std::vector<BoardTileConfig> boardLayout;
+    std::map<int, ActionConfig> actionConfigs;
     std::map<std::string, PropertyConfig> propertyConfigs;
     std::map<int, RailroadRentConfig> railroadRentTable;
     std::map<int, UtilityMultiplierConfig> utilityMultiplierTable;
@@ -25,7 +27,7 @@ private:
     bool loaded;
     std::string lastError;
 
-    void loadBoardLayout(const std::string& path);
+    void generateBoardLayout();
     void validateBoardLayout();
     void validatePropertyConfig(const PropertyConfig& config) const;
     void setLastError(const std::string& message);
@@ -38,6 +40,7 @@ public:
     explicit Configuration(const std::string& dir);
 
     void loadAllConfigs();
+    void loadActionConfigs(const std::string& path);
     void loadPropertyConfigs(const std::string& path);
     void loadRailroadConfigs(const std::string& path);
     void loadUtilityConfigs(const std::string& path);
@@ -49,6 +52,7 @@ public:
 
     const std::string& getConfigDir() const;
     const std::vector<BoardTileConfig>& getBoardLayout() const;
+    const std::map<int, ActionConfig>& getActionConfigs() const;
     const std::map<int, RailroadRentConfig>& getRailroadRentConfigs() const;
     const std::map<int, UtilityMultiplierConfig>& getUtilityMultiplierConfigs() const;
     std::map<int, int> getRailroadRentTable() const;
@@ -57,6 +61,9 @@ public:
     PropertyConfig* getPropertyConfig(const std::string& code);
     const PropertyConfig* getPropertyConfig(const std::string& code) const;
     std::vector<PropertyConfig> getAllPropertyConfigs() const;
+    ActionConfig* getActionConfig(int id);
+    const ActionConfig* getActionConfig(int id) const;
+    std::vector<ActionConfig> getAllActionConfigs() const;
 
     int getRailroadRent(int count) const;
     int getUtilityMultiplier(int count) const;
