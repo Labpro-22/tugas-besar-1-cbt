@@ -125,6 +125,7 @@ void GameSession::handleRollDice(bool manual, int d1, int d2) {
 
     const int total = dice.getTotal();
     const bool rolledDouble = dice.checkDouble();
+    game.setLastDiceTotal(total);
 
     game.getLogger().log(
         game.getCurrentTurn(), currentPlayer.getUsername(), "DADU",
@@ -483,9 +484,7 @@ void GameSession::handleUseAbility() {
     if (hand.empty()) {
         throw CardException("Kamu tidak memiliki kartu kemampuan.");
     }
-    if (currentPlayer.getStatus() == JAILED) {
-        throw AbilityTimingException("Kartu kemampuan tidak dapat digunakan saat berada di Penjara.");
-    }
+
     if (diceRolledThisTurn) {
         throw AbilityTimingException("Kartu kemampuan hanya bisa digunakan SEBELUM melempar dadu.");
     }

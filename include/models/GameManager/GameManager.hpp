@@ -24,6 +24,7 @@ private:
   int currentTurn;
   int maxTurn;
   int activePlayerIndex;
+  int lastDiceTotal;
   vector<Player> players;
   vector<int> turnOrder;
   Board *board;
@@ -88,4 +89,6 @@ public:
   int getGoSalary() const;
   int getJailPosition() const;
   int getBoardSize() const;
+  void setLastDiceTotal(int total);
+  int getLastDiceTotal() const;
 };

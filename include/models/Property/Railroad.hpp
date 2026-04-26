@@ -35,6 +35,10 @@ class Railroad : public Property {
         std::string getType() const override {
             return "Railroad";
         }
+
+        // harga tebus = 2x harga gadai
+        int getRedeemPrice() const override { return getMortgageValue() * 2; }
+
         // Getter methods for rentTable
         std::map<int, int> getRentTable() const {
             return rentTable;

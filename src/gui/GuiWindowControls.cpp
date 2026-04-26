@@ -1012,25 +1012,33 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
         GuiWindowInternal::drawWrappedText(font, infoText, {graphicArea.x + 30, graphicArea.y + 100, graphicArea.width - 60, 60}, 16, 1, GRAY, 3);
 
         // Confirmation Box
-        Rectangle confirmBox = {dialogRect.x + 100, dialogRect.y + 300, dialogRect.width - 200, 160};
+        Rectangle confirmBox = {dialogRect.x + 80, dialogRect.y + 285, dialogRect.width - 160, 190};
         DrawRectangleLinesEx(confirmBox, 2.0F, {50, 80, 150, 255});
-        DrawRectangle(confirmBox.x + confirmBox.width/2 - 70, confirmBox.y - 12, 140, 24, {0, 50, 100, 255});
+        DrawRectangle(confirmBox.x + confirmBox.width/2 - 115, confirmBox.y - 12, 230, 24, {0, 50, 100, 255});
         GuiWindowInternal::drawTextCentered(font, "PROPERTY DEVELOPMENT", {confirmBox.x, confirmBox.y - 12, confirmBox.width, 24}, 12, 1, WHITE);
         
         std::string pName = "Property";
         size_t upgradePos = current.prompt.find("Upgrade ");
         size_t toPos = current.prompt.find(" ke Hotel");
         if (upgradePos != std::string::npos) pName = current.prompt.substr(upgradePos + 8, toPos - (upgradePos + 8));
+
+        std::string targetLabel = pName;
+        for (const auto& tile : currentSnapshot.tiles) {
+            if (tile.name == pName && !tile.code.empty()) {
+                targetLabel = tile.code;
+                break;
+            }
+        }
         
-        GuiWindowInternal::drawTextCentered(font, ("Upgrade " + pName + " ke Hotel?").c_str(), {confirmBox.x, confirmBox.y + 40, confirmBox.width, 40}, 24, 1.2, {60, 60, 60, 255});
-        DrawRectangle(confirmBox.x + 80, confirmBox.y + 85, confirmBox.width - 160, 1, LIGHTGRAY);
+        GuiWindowInternal::drawTextCentered(font, ("Upgrade " + targetLabel + " ke Hotel?").c_str(), {confirmBox.x, confirmBox.y + 52, confirmBox.width, 40}, 24, 1.2, {60, 60, 60, 255});
+        DrawRectangle(confirmBox.x + 90, confirmBox.y + 110, confirmBox.width - 180, 1, LIGHTGRAY);
         
         std::string costStr = "M200";
         size_t costPos = current.prompt.find("Biaya: ");
         if (costPos != std::string::npos) costStr = current.prompt.substr(costPos + 7);
         
         std::string costLabel = "Biaya: " + costStr;
-        GuiWindowInternal::drawTextCentered(font, costLabel.c_str(), {confirmBox.x, confirmBox.y + 105, confirmBox.width, 40}, 28, 1, GuiWindowInternal::kGold);
+        GuiWindowInternal::drawTextCentered(font, costLabel.c_str(), {confirmBox.x, confirmBox.y + 130, confirmBox.width, 42}, 28, 1, GuiWindowInternal::kGold);
 
         // Buttons
         Rectangle yaBtn = {dialogRect.x + 60, dialogRect.y + 520, 250, 80};
@@ -1048,11 +1056,28 @@ void GuiWindow::drawModal(const GameSnapshot& currentSnapshot) const {
         Rectangle bottomBar = {dialogRect.x, dialogRect.y + dialogRect.height - 40, dialogRect.width, 40};
         DrawRectangleRec(bottomBar, {245, 240, 230, 255});
         DrawRectangle(bottomBar.x, bottomBar.y, bottomBar.width, 1, LIGHTGRAY);
-        DrawTextEx(font, "CURRENT BALANCE: M1,500", {bottomBar.x + 20, bottomBar.y + 12}, 12, 1, GRAY);
+
+        auto formatMoney = [](int amount) {
+            std::string s = std::to_string(amount);
+            for (int i = static_cast<int>(s.size()) - 3; i > 0; i -= 3) {
+                s.insert(static_cast<std::size_t>(i), ".");
+            }
+            return std::string("M") + s;
+        };
+
+        int activeCash = 0;
+        if (currentSnapshot.activePlayerIndex >= 0 &&
+            currentSnapshot.activePlayerIndex <
+                static_cast<int>(currentSnapshot.players.size())) {
+            activeCash = currentSnapshot.players[static_cast<std::size_t>(currentSnapshot.activePlayerIndex)].cash;
+        }
+
+        const std::string balanceText = "CURRENT BALANCE: " + formatMoney(activeCash);
+        DrawTextEx(font, balanceText.c_str(), {bottomBar.x + 20, bottomBar.y + 12}, 12, 1, GRAY);
 
     } else if (current.active && (current.title == "Konfirmasi Gadai" || current.prompt.find("Konfirmasi Gadai") != std::string::npos)) {
         // Konfirmasi Gadai
-        DrawRectangleRec(dialogRect, {252, 248, 242, 255}); // Cream background
+        DrawRectangleRec(dialogRect, {252, 248, 242, 255}); // bg cream
         DrawRectangleLinesEx(dialogRect, 2.0F, {120, 10, 10, 255});
 
         // Icon Header

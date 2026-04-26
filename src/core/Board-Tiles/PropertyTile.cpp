@@ -3,6 +3,7 @@
 #include "models/GameManager/Player.hpp"
 #include "models/Property/Property.hpp"
 #include "exception/NimonspoliExceptions.hpp"
+#include <algorithm>
 
 PropertyTile::PropertyTile(const std::string &code, const std::string &name,
                            int pos, Property *prop)
@@ -85,6 +86,10 @@ void PropertyTile::onLanded(Player &player, GameManager &game) {
         }
 
         int rentDue = prop.getPropertyDetail();
+        if (prop.getType() == "Utility") {
+            const int diceTotal = std::max(1, game.getLastDiceTotal());
+            rentDue *= diceTotal;
+        }
         if (prop.getFMult() > 1) {
                 rentDue *= prop.getFMult();
         }

@@ -13,9 +13,13 @@ std::string GuiWindow::lowercaseText(std::string text) {
 
 bool GuiWindow::promptExplicitlyAllowsCancel(
     const InputPromptRequest &request) {
-  if (request.kind != InputPromptKind::Choice || request.minValue > 0 ||
-      request.maxValue < 0) {
+  if (request.kind != InputPromptKind::Choice || request.maxValue < 0) {
     return false;
+  }
+
+  // Jika minValue == 0, pilihan 0 valid sebagai cancel
+  if (request.minValue == 0) {
+    return true;
   }
 
   std::string prompt = lowercaseText(request.prompt);
@@ -483,13 +487,17 @@ Rectangle GuiWindow::modalDialogRect() const {
         width = 500.0F;
         height = 340.0F;
       } else if (modal.prompt.find("BANGUN (Pilih Grup Warna)") !=
-                 std::string::npos) {
+                     std::string::npos &&
+                 modal.title != "Pilih Opsi" &&
+                 modal.prompt.find("Pilihan (1/") == std::string::npos) {
         width = 850.0F;
-        height = 800.0F;
+        height = 620.0F;
       } else if (modal.prompt.find("BANGUN (Pilih Petak)") !=
-                 std::string::npos) {
-        width = 650.0F;
-        height = 750.0F;
+                     std::string::npos &&
+                 modal.title != "Pilih Opsi" &&
+                 modal.prompt.find("Pilihan (1/") == std::string::npos) {
+        width = 600.0F;
+        height = 500.0F;
       } else if (modal.prompt.find("UPGRADE HOTEL") != std::string::npos) {
         width = 650.0F;
         height = 700.0F;

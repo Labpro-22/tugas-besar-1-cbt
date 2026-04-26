@@ -33,7 +33,12 @@ bool BankruptcyHandler::sellToBank(Property *prop) {
         mortgageableProperties.erase(itM);
     }
 
-    int sellValue = prop->getBuyPrice() + prop->getBuildingSellValue();
+    int sellValue = 0;
+    if (prop->getType() == "Railroad" || prop->getType() == "Utility") {
+        sellValue = prop->getMortgageValue();
+    } else {
+        sellValue = prop->getBuyPrice() + prop->getBuildingSellValue();
+    }
     debtor.addCash(sellValue);
     debtor.removeProperty(prop);
     prop->setOwner(nullptr);
@@ -63,7 +68,11 @@ int BankruptcyHandler::calculateMaxLiquidation() {
     int total = debtor.getCash();
     for (Property *prop : sellableProperties) {
         if (prop == nullptr) continue;
-        total += prop->getBuyPrice() + prop->getBuildingSellValue();
+        if (prop->getType() == "Railroad" || prop->getType() == "Utility") {
+            total += prop->getMortgageValue();
+        } else {
+            total += prop->getBuyPrice() + prop->getBuildingSellValue();
+        }
     }
     return total;
 }

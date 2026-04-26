@@ -44,4 +44,7 @@ class Utility : public Property {
         std::string getType() const override {
             return "Utility";
         }
+
+        // harga tebus = 2x harga gadai
+        int getRedeemPrice() const override { return getMortgageValue() * 2; }
 };

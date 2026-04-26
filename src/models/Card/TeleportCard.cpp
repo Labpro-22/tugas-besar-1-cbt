@@ -30,6 +30,11 @@ void TeleportCard::use(Player *p, GameManager *gm) {
     throw AbilityAlreadyUsedException();
   }
 
+  // Pemain tidak dapat berpindah saat di penjara
+  if (p->isJailed()) {
+    throw AbilityTimingException("TeleportCard tidak dapat digunakan saat berada di Penjara.");
+  }
+
   int boardSize = gm->getBoardSize();
   if (boardSize <= 0) {
     throw InternalGameException("TeleportCard digunakan saat ukuran board tidak valid.");

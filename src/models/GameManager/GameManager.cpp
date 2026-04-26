@@ -19,8 +19,7 @@
 
 using namespace std;
 
-GameManager::GameManager()
-    : currentTurn(0), maxTurn(0), activePlayerIndex(0), board(nullptr) {}
+GameManager::GameManager() : currentTurn(0), maxTurn(0), activePlayerIndex(0), lastDiceTotal(0), board(nullptr) {}
 
 void GameManager::startNewGame() {
   currentTurn = 1;
@@ -58,8 +57,7 @@ bool GameManager::checkWinCondition() const {
   return (aliveCount <= 1) || (maxTurn > 0 && currentTurn > maxTurn);
 }
 
-bool GameManager::anyPropertyInGroupMortgaged(const Player &player,
-                                             ColorGroup color) const {
+bool GameManager::anyPropertyInGroupMortgaged(const Player &player, ColorGroup color) const {
   if (board == nullptr) {
     return false;
   }
@@ -191,8 +189,7 @@ void GameManager::moveCurrentPlayer(int steps) {
   movePlayerTo(player, newPos, true);
 }
 
-void GameManager::movePlayerTo(Player &player, int targetPosition,
-                               bool grantGoSalary) {
+void GameManager::movePlayerTo(Player &player, int targetPosition, bool grantGoSalary) {
   const int boardSize = getBoardSize();
   if (boardSize <= 0) {
     throw InvalidBoardPositionException(targetPosition, boardSize);
@@ -307,13 +304,11 @@ void GameManager::executePurchase(Player &player, Property &prop) {
 
   cout << prop.getName() << " kini menjadi milikmu!\n";
   cout << "Uang tersisa: M" << player.getCash() << "\n";
-  logger.log(currentTurn, player.getUsername(), "BELI",
-             "Beli " + prop.getName() + " (" + prop.getCode() + ") seharga M" +
-                 to_string(price) + ". Uang tersisa: M" + to_string(player.getCash()));
+  logger.log(currentTurn, player.getUsername(), "BELI", "Beli " + prop.getName() + " (" + prop.getCode() + ") seharga M" +
+            to_string(price) + ". Uang tersisa: M" + to_string(player.getCash()));
 }
 
-void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop,
-                                   int amount) {
+void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop, int amount) {
   cout << "Kamu mendarat di " << prop.getName() << " (" << prop.getCode()
        << "), milik " << owner.getUsername() << "!\n";
 
@@ -463,14 +458,15 @@ void GameManager::executeAuction(Property &prop) {
   }
 }
 
-void GameManager::executeBankruptcy(Player *debtor, Player *creditor,
-                                    int amount) {
+void GameManager::executeBankruptcy(Player *debtor, Player *creditor, int amount) {
   cout << debtor->getUsername() << " tidak dapat membayar kewajiban M" << amount
        << ".\n";
   BankruptcyHandler bh(*debtor, creditor, amount);
   bh.declareBankrupt();
-  if (activePlayerIndex < players.size() && 
-      players[activePlayerIndex].getStatus() == BANKRUPT) {
+  if (activePlayerIndex >= 0 &&
+      static_cast<std::size_t>(activePlayerIndex) < players.size() &&
+      players[static_cast<std::size_t>(activePlayerIndex)].getStatus() ==
+          BANKRUPT) {
     advanceToNextPlayer();
   }
   if (creditor) {
@@ -790,4 +786,12 @@ int GameManager::getBoardSize() const {
     return board->getTileCount();
   }
   return 40;
+}
+
+void GameManager::setLastDiceTotal(int total) {
+  lastDiceTotal = std::max(0, total);
+}
+
+int GameManager::getLastDiceTotal() const {
+  return lastDiceTotal;
 }

@@ -35,6 +35,11 @@ void MoveCard::use(Player *p, GameManager *gm) {
     throw AbilityAlreadyUsedException();
   }
 
+  // Pemain tidak dapat bergerak saat di penjara 
+  if (p->isJailed()) {
+    throw AbilityTimingException("MoveCard tidak dapat digunakan saat berada di Penjara.");
+  }
+
   int boardSize = gm->getBoardSize();
   if (boardSize <= 0) {
     throw InternalGameException("MoveCard digunakan saat ukuran board tidak valid.");
