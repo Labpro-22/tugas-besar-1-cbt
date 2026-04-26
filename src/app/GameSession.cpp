@@ -71,15 +71,15 @@ void GameSession::run() {
                                            : error.what();
             std::cerr << "Error: " << detail << "\n";
             std::cout << "Gagal membaca file konfigurasi pada folder config/.\n";
-            std::cout << "Pastikan property.txt, railroad.txt, utility.txt, tax.txt, "
-                         "special.txt, misc.txt, dan board.txt tersedia dan valid.\n";
+            std::cout << "Pastikan aksi.txt, property.txt, railroad.txt, utility.txt, "
+                         "tax.txt, special.txt, dan misc.txt tersedia dan valid.\n";
             notifySnapshot();
             return;
         } catch (const std::exception& error) {
             std::cerr << "Error: " << error.what() << "\n";
             std::cout << "Gagal membaca file konfigurasi pada folder config/.\n";
-            std::cout << "Pastikan property.txt, railroad.txt, utility.txt, tax.txt, "
-                         "special.txt, misc.txt, dan board.txt tersedia dan valid.\n";
+            std::cout << "Pastikan aksi.txt, property.txt, railroad.txt, utility.txt, "
+                         "tax.txt, special.txt, dan misc.txt tersedia dan valid.\n";
             notifySnapshot();
             return;
         }

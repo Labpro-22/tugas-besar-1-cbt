@@ -32,6 +32,7 @@ void Configuration::loadAllConfigs() {
     reset();
 
     try {
+        loadActionConfigs(configPath(configDir, "aksi.txt").string());
         loadPropertyConfigs(configPath(configDir, "property.txt").string());
         loadRailroadConfigs(configPath(configDir, "railroad.txt").string());
         loadUtilityConfigs(configPath(configDir, "utility.txt").string());
@@ -39,15 +40,7 @@ void Configuration::loadAllConfigs() {
         loadSpecialConfig(configPath(configDir, "special.txt").string());
         loadMiscConfig(configPath(configDir, "misc.txt").string());
 
-        const std::filesystem::path boardPath = configPath(configDir, "board.txt");
-        const std::filesystem::path fallbackBoardPath =
-            configPath(configDir, "board_layout.txt");
-        if (std::filesystem::exists(boardPath)) {
-            loadBoardLayout(boardPath.string());
-        } else {
-            loadBoardLayout(fallbackBoardPath.string());
-        }
-
+        generateBoardLayout();
         validateBoardLayout();
 
         loaded = true;
@@ -60,6 +53,46 @@ void Configuration::loadAllConfigs() {
         const ConfigurationException wrapped("Kesalahan konfigurasi. " +
                                              std::string(error.what()));
         loaded = false;
+        setLastError(wrapped.what());
+        throw wrapped;
+    }
+}
+
+void Configuration::loadActionConfigs(const std::string& path) {
+    try {
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            throw MissingConfigurationFileException(path);
+        }
+
+        actionConfigs.clear();
+        std::string line;
+        int lineNumber = 0;
+        while (std::getline(file, line)) {
+            lineNumber++;
+            const char firstChar = firstNonWhitespaceChar(line);
+            if (firstChar == '\0' || firstChar == '#' ||
+                !std::isdigit(static_cast<unsigned char>(firstChar))) {
+                continue;
+            }
+            ActionConfig action;
+            action.loadFromLine(line);
+
+            actionConfigs[action.id] = action;
+        }
+
+        if (actionConfigs.empty()) {
+            throw InvalidConfigurationFormatException(
+                filenameOf(path), "Tidak ada aksi valid.");
+        }
+
+        lastError.clear();
+    } catch (const NimonspoliException& error) {
+        setLastError(error.what());
+        throw;
+    } catch (const std::exception& error) {
+        const InvalidConfigurationFormatException wrapped(filenameOf(path),
+                                                          error.what());
         setLastError(wrapped.what());
         throw wrapped;
     }
@@ -301,6 +334,10 @@ const std::vector<BoardTileConfig>& Configuration::getBoardLayout() const {
     return boardLayout;
 }
 
+const std::map<int, ActionConfig>& Configuration::getActionConfigs() const {
+    return actionConfigs;
+}
+
 const std::map<int, RailroadRentConfig>&
 Configuration::getRailroadRentConfigs() const {
     return railroadRentTable;
@@ -348,6 +385,31 @@ std::vector<PropertyConfig> Configuration::getAllPropertyConfigs() const {
     result.reserve(propertyConfigs.size());
     for (const auto& [_, property] : propertyConfigs) {
         result.push_back(property);
+    }
+    return result;
+}
+
+ActionConfig* Configuration::getActionConfig(int id) {
+    auto it = actionConfigs.find(id);
+    if (it == actionConfigs.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+const ActionConfig* Configuration::getActionConfig(int id) const {
+    auto it = actionConfigs.find(id);
+    if (it == actionConfigs.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+std::vector<ActionConfig> Configuration::getAllActionConfigs() const {
+    std::vector<ActionConfig> result;
+    result.reserve(actionConfigs.size());
+    for (const auto& [_, action] : actionConfigs) {
+        result.push_back(action);
     }
     return result;
 }
@@ -408,6 +470,7 @@ int Configuration::getStartingCash() const { return miscConfig.startingCash; }
 
 void Configuration::reset() {
     boardLayout.clear();
+    actionConfigs.clear();
     propertyConfigs.clear();
     railroadRentTable.clear();
     utilityMultiplierTable.clear();
@@ -418,33 +481,10 @@ void Configuration::reset() {
     lastError.clear();
 }
 
-void Configuration::loadBoardLayout(const std::string& path) {
+void Configuration::generateBoardLayout() {
     try {
-        std::ifstream file(path);
-        if (!file.is_open()) {
-            throw MissingConfigurationFileException(path);
-        }
-
-        boardLayout.clear();
-        std::string line;
-        int lineNumber = 0;
-        while (std::getline(file, line)) {
-            lineNumber++;
-            const char firstChar = firstNonWhitespaceChar(line);
-            if (firstChar == '\0' || firstChar == '#') {
-                continue;
-            }
-
-            BoardTileConfig tile;
-            tile.loadFromLine(line);
-
-            boardLayout.push_back(tile);
-        }
-
-        if (boardLayout.empty()) {
-            throw InvalidBoardConfigurationException(
-                "File papan tidak berisi petak valid.");
-        }
+        boardLayout =
+            BoardTileConfig::loadFromConfigs(actionConfigs, getAllPropertyConfigs());
 
         lastError.clear();
     } catch (const NimonspoliException& error) {
