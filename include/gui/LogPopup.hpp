@@ -36,6 +36,11 @@ private:
   std::vector<LogEntry> logs;
   bool showPopup;
   float scrollOffset;
+  float horizontalScrollOffset;
+  bool scrollbarDragging;
+  bool scrollbarDraggingH;
+  float scrollbarGrabOffset;
+  float scrollbarGrabOffsetH;
 
   static const Color MAROON_COLOR;
   static const Color BEIGE_COLOR;

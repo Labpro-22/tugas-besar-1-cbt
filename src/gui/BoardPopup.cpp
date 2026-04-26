@@ -80,8 +80,12 @@ void BoardPopup::drawOverlay(const GameSnapshot &currentSnapshot, Font font) {
   DrawRectangleLinesEx(
       Rectangle{header.x, header.y + header.height - 4, header.width, 4}, 4.0f,
       primaryColor);
-  DrawTextEx(font, "[-] Peta Papan Nimonspoli",
-             Vector2{header.x + 20, header.y + 20}, 24, 1, primaryColor);
+  const char *headerTitle = "[-] Peta Papan Nimonspoli";
+  Vector2 titleSize = MeasureTextEx(font, headerTitle, 24, 1);
+  DrawTextEx(font, headerTitle,
+             Vector2{header.x + (header.width - titleSize.x) / 2.0f,
+                     header.y + (header.height - titleSize.y) / 2.0f},
+             24, 1, primaryColor);
 
   Rectangle closeBtn = {modal.x + modal.width - 56, header.y + 12, 40, 40};
   if (drawCloseButton(closeBtn, "X", surfaceColor, primaryColor, primaryColor,
@@ -230,8 +234,10 @@ void BoardPopup::drawOverlay(const GameSnapshot &currentSnapshot, Font font) {
         GuiWindowInternal::kWhitePanel);
   }
 
-  DrawTextEx(font, "NIMONSPOLI",
-             Vector2{centerField.x + centerField.width / 2.0F - 60.0F,
-                     centerField.y + centerField.height / 2.0F - 60.0F},
-             36.0F, 2.0F, GuiWindowInternal::kAccentDark);
+  const char *centerTitle = "NIMONSPOLI";
+  Vector2 centerTitleSize = MeasureTextEx(font, centerTitle, 36, 2);
+  DrawTextEx(font, centerTitle,
+             Vector2{centerField.x + (centerField.width - centerTitleSize.x) / 2.0F,
+                     centerField.y + (centerField.height - centerTitleSize.y) / 2.0F},
+             36, 2, GuiWindowInternal::kAccentDark);
 }
