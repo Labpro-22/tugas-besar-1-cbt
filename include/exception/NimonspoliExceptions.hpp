@@ -32,6 +32,11 @@ public:
                                    const std::string& errorCode = "INVALID_INPUT");
 };
 
+class InvalidChoiceException final : public InvalidInputException {
+public:
+    InvalidChoiceException(int minimum, int maximum);
+};
+
 class InvalidDiceValueException final : public InvalidInputException {
 public:
     InvalidDiceValueException(int die1, int die2);
@@ -41,6 +46,22 @@ class CommandException : public NimonspoliException {
 public:
     explicit CommandException(const std::string& message,
                               const std::string& errorCode = "COMMAND_ERROR");
+};
+
+class UnknownCommandException final : public CommandException {
+public:
+    explicit UnknownCommandException(const std::string& command);
+};
+
+class InvalidCommandFormatException final : public CommandException {
+public:
+    explicit InvalidCommandFormatException(const std::string& command);
+};
+
+class MissingCommandArgumentException final : public CommandException {
+public:
+    MissingCommandArgumentException(const std::string& command,
+                                    const std::string& expectedArgument);
 };
 
 class CommandNotAllowedException final : public CommandException {
@@ -84,15 +105,51 @@ public:
     explicit SaveGameException(const std::string& filename);
 };
 
+class LoadGameException final : public PersistenceException {
+public:
+    LoadGameException(const std::string& filename, const std::string& reason);
+};
+
 class GameStateException : public NimonspoliException {
 public:
     explicit GameStateException(const std::string& message,
                                 const std::string& errorCode = "GAME_STATE_ERROR");
 };
 
+class GameNotStartedException final : public GameStateException {
+public:
+    GameNotStartedException();
+};
+
+class GameAlreadyFinishedException final : public GameStateException {
+public:
+    GameAlreadyFinishedException();
+};
+
 class InvalidTurnStateException final : public GameStateException {
 public:
     explicit InvalidTurnStateException(const std::string& reason);
+};
+
+class InvalidPlayerCountException final : public GameStateException {
+public:
+    InvalidPlayerCountException(int playerCount);
+};
+
+class PlayerNotFoundException final : public GameStateException {
+public:
+    explicit PlayerNotFoundException(const std::string& username);
+};
+
+class InvalidPlayerStateException final : public GameStateException {
+public:
+    InvalidPlayerStateException(const std::string& username,
+                                const std::string& reason);
+};
+
+class JailRuleException final : public GameStateException {
+public:
+    explicit JailRuleException(const std::string& reason);
 };
 
 class BoardException : public NimonspoliException {
@@ -173,9 +230,56 @@ public:
                                int available);
 };
 
+class RentPaymentException final : public EconomyException {
+public:
+    RentPaymentException(const std::string& username, int amount);
+};
+
 class TaxPaymentException final : public EconomyException {
 public:
     TaxPaymentException(const std::string& username, int amount);
+};
+
+class JailFinePaymentException final : public EconomyException {
+public:
+    JailFinePaymentException(const std::string& username, int amount);
+};
+
+class BankruptcyException final : public EconomyException {
+public:
+    BankruptcyException(const std::string& username, int debt);
+};
+
+class AuctionException : public NimonspoliException {
+public:
+    explicit AuctionException(const std::string& message,
+                              const std::string& errorCode = "AUCTION_ERROR");
+};
+
+class NoAuctionParticipantException final : public AuctionException {
+public:
+    NoAuctionParticipantException();
+};
+
+class InvalidBidException final : public AuctionException {
+public:
+    InvalidBidException(const std::string& username, int bid, int minimumBid);
+};
+
+class AuctionTurnException final : public AuctionException {
+public:
+    AuctionTurnException(const std::string& username,
+                         const std::string& expectedUsername);
+};
+
+class AuctionStateException final : public AuctionException {
+public:
+    explicit AuctionStateException(const std::string& reason);
+};
+
+class AuctionFailedException final : public AuctionException {
+public:
+    explicit AuctionFailedException(const std::string& reason);
 };
 
 class CardException : public NimonspoliException {

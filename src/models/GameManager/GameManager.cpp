@@ -1,14 +1,14 @@
 #include "models/GameManager/GameManager.hpp"
-#include "exception/NimonspoliExceptions.hpp"
 #include "core/Board-Tiles/Board.hpp"
 #include "core/Board-Tiles/PropertyTile.hpp"
 #include "core/Board-Tiles/Tile.hpp"
-#include "views/InputHandler.hpp"
+#include "exception/NimonspoliExceptions.hpp"
 #include "models/Command.hpp"
 #include "models/GameManager/Auction.hpp"
 #include "models/GameManager/BankruptcyHandler.hpp"
 #include "models/Property/Property.hpp"
 #include "models/Property/Street.hpp"
+#include "views/InputHandler.hpp"
 #include <algorithm>
 #include <cctype>
 #include <exception>
@@ -19,7 +19,9 @@
 
 using namespace std;
 
-GameManager::GameManager() : currentTurn(0), maxTurn(0), activePlayerIndex(0), lastDiceTotal(0), board(nullptr) {}
+GameManager::GameManager()
+    : currentTurn(0), maxTurn(0), activePlayerIndex(0), lastDiceTotal(0),
+      board(nullptr) {}
 
 void GameManager::startNewGame() {
   currentTurn = 1;
@@ -57,7 +59,8 @@ bool GameManager::checkWinCondition() const {
   return (aliveCount <= 1) || (maxTurn > 0 && currentTurn > maxTurn);
 }
 
-bool GameManager::anyPropertyInGroupMortgaged(const Player &player, ColorGroup color) const {
+bool GameManager::anyPropertyInGroupMortgaged(const Player &player,
+                                              ColorGroup color) const {
   if (board == nullptr) {
     return false;
   }
@@ -133,7 +136,7 @@ void GameManager::advanceToNextPlayer() {
     return;
   }
   int aliveCount = 0;
-  for (const Player& p : players) {
+  for (const Player &p : players) {
     if (p.getStatus() != BANKRUPT) {
       aliveCount++;
     }
@@ -147,8 +150,9 @@ void GameManager::advanceToNextPlayer() {
     if (activePlayerIndex == 0) {
       currentTurn++;
     }
-    if (activePlayerIndex == startIdx && players[activePlayerIndex].getStatus() == BANKRUPT) {
-        break;
+    if (activePlayerIndex == startIdx &&
+        players[activePlayerIndex].getStatus() == BANKRUPT) {
+      break;
     }
   } while (players[activePlayerIndex].getStatus() == BANKRUPT);
 }
@@ -166,7 +170,8 @@ Player &GameManager::getWinner() {
   }
 
   if (winnerIndex < 0) {
-    throw InvalidTurnStateException("Tidak ada pemenang - semua pemain telah bangkrut");
+    throw InvalidTurnStateException(
+        "Tidak ada pemenang - semua pemain telah bangkrut");
   }
 
   return players[winnerIndex];
@@ -189,7 +194,8 @@ void GameManager::moveCurrentPlayer(int steps) {
   movePlayerTo(player, newPos, true);
 }
 
-void GameManager::movePlayerTo(Player &player, int targetPosition, bool grantGoSalary) {
+void GameManager::movePlayerTo(Player &player, int targetPosition,
+                               bool grantGoSalary) {
   const int boardSize = getBoardSize();
   if (boardSize <= 0) {
     throw InvalidBoardPositionException(targetPosition, boardSize);
@@ -209,8 +215,7 @@ void GameManager::movePlayerTo(Player &player, int targetPosition, bool grantGoS
   const bool targetIsGoToJail =
       board != nullptr &&
       board->getTile(normalizedTarget).getType() == "go_to_jail";
-  if (grantGoSalary &&
-      !targetIsGoToJail &&
+  if (grantGoSalary && !targetIsGoToJail &&
       crossesOrLandsOnGo(oldPosition, normalizedTarget)) {
     player.incrementLap();
     executeSalary(player, getGoSalary());
@@ -252,17 +257,16 @@ void GameManager::executePurchase(Player &player, Property &prop) {
        << ")!\n";
 
   if (prop.getOwner() != nullptr || prop.getStatus() != PropertyStatus::BANK) {
-    cout << "Properti ini sudah tidak tersedia untuk dibeli.\n";
-    return;
+    throw PropertyUnavailableException(prop.getCode());
   }
 
-  const bool automaticPurchase = prop.getType() == "Railroad" ;
+  const bool automaticPurchase = prop.getType() == "Railroad";
 
   if (!player.canPay(price)) {
     try {
       player.ensureCanPay(price);
     } catch (const std::exception &e) {
-      cout << e.what() << "\n";
+      cout << "Error: " << e.what() << "\n";
     }
     cout << "Uang kamu saat ini: M" << player.getCash() << "\n";
     cout << "Properti ini akan masuk ke sistem lelang...\n";
@@ -281,8 +285,9 @@ void GameManager::executePurchase(Player &player, Property &prop) {
     cout << "Uang tersisa jika dibeli: M" << (player.getCash() - price) << "\n";
     pushSnapshot();
     InputHandler input;
-    const bool shouldBuy = input.readYesNo(
-        "[PROPERTY_PURCHASE:" + prop.getCode() + "] Apakah kamu ingin membeli properti ini? (y/n): ");
+    const bool shouldBuy =
+        input.readYesNo("[PROPERTY_PURCHASE:" + prop.getCode() +
+                        "] Apakah kamu ingin membeli properti ini? (y/n): ");
 
     if (!shouldBuy) {
       cout << "Properti ini akan masuk ke sistem lelang...\n";
@@ -303,11 +308,14 @@ void GameManager::executePurchase(Player &player, Property &prop) {
 
   cout << prop.getName() << " kini menjadi milikmu!\n";
   cout << "Uang tersisa: M" << player.getCash() << "\n";
-  logger.log(currentTurn, player.getUsername(), "BELI", "Beli " + prop.getName() + " (" + prop.getCode() + ") seharga M" +
-            to_string(price) + ". Uang tersisa: M" + to_string(player.getCash()));
+  logger.log(currentTurn, player.getUsername(), "BELI",
+             "Beli " + prop.getName() + " (" + prop.getCode() + ") seharga M" +
+                 to_string(price) + ". Uang tersisa: M" +
+                 to_string(player.getCash()));
 }
 
-void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop, int amount) {
+void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop,
+                                   int amount) {
   cout << "Kamu mendarat di " << prop.getName() << " (" << prop.getCode()
        << "), milik " << owner.getUsername() << "!\n";
 
@@ -335,13 +343,14 @@ void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop,
     }
     cout << "Uang kamu     : M" << payerBefore << " -> M" << payer.getCash()
          << "\n";
-    cout << "Uang " << owner.getUsername() << " : M" << ownerBefore
-         << " -> M" << owner.getCash() << "\n";
+    cout << "Uang " << owner.getUsername() << " : M" << ownerBefore << " -> M"
+         << owner.getCash() << "\n";
     logger.log(currentTurn, payer.getUsername(), "SEWA",
-               "Bayar M" + to_string(effectiveAmount) + " ke " + owner.getUsername() +
-                   " (" + prop.getCode() + ")");
+               "Bayar M" + to_string(effectiveAmount) + " ke " +
+                   owner.getUsername() + " (" + prop.getCode() + ")");
   } catch (const std::exception &e) {
-    cout << "Kamu tidak mampu membayar sewa penuh! (M" << effectiveAmount << ")\n";
+    cout << "Error: Kamu tidak mampu membayar sewa penuh! (M" << effectiveAmount
+         << ")\n";
     cout << e.what() << "\n";
     cout << "Uang kamu saat ini: M" << payer.getCash() << "\n";
     BankruptcyHandler bh(&payer, &owner, effectiveAmount);
@@ -359,94 +368,106 @@ void GameManager::executeRentPayer(Player &payer, Player &owner, Property &prop,
 }
 
 void GameManager::executeAuction(Property &prop) {
-    cout << "Properti " << prop.getName() << " (" << prop.getCode() << ") akan dilelang!\n";
-    logger.log(currentTurn, getCurrentPlayer().getUsername(), "LELANG", prop.getCode() + " masuk lelang");
+  cout << "Properti " << prop.getName() << " (" << prop.getCode()
+       << ") akan dilelang!\n";
+  logger.log(currentTurn, getCurrentPlayer().getUsername(), "LELANG",
+             prop.getCode() + " masuk lelang");
 
-    if (players.empty() || prop.getOwner() != nullptr || prop.getStatus() != PropertyStatus::BANK) {
-        cout << "Lelang tidak dapat dimulai untuk properti ini.\n";
-        return;
-    }
+  if (players.empty() || prop.getOwner() != nullptr ||
+      prop.getStatus() != PropertyStatus::BANK) {
+    throw AuctionFailedException(
+        "Properti sudah tidak tersedia atau tidak ada pemain.");
+  }
 
-    vector<Player *> participants;
-    int nPlayers = players.size();
-    for (int i = 1; i < nPlayers; ++i) {
-      int targetIdx = (activePlayerIndex + i) % nPlayers;
-      if (players[targetIdx].getStatus() != BANKRUPT) {
-        participants.push_back(&players[targetIdx]);
-      }
+  vector<Player *> participants;
+  int nPlayers = players.size();
+  for (int i = 1; i < nPlayers; ++i) {
+    int targetIdx = (activePlayerIndex + i) % nPlayers;
+    if (players[targetIdx].getStatus() != BANKRUPT) {
+      participants.push_back(&players[targetIdx]);
     }
-    participants.push_back(&players[activePlayerIndex]);
-    if (participants.empty()) {
-        cout << "Tidak ada peserta lelang.\n";
-        return;
-    }
-    Auction auction(&prop, participants);
-    auction.start();
-    
-    InputHandler input;
-    int consecutivePass = 0;
+  }
+  participants.push_back(&players[activePlayerIndex]);
+  if (participants.empty()) {
+    cout << "Tidak ada peserta lelang.\n";
+    return;
+  }
+  Auction auction(&prop, participants);
+  auction.start();
+
+  InputHandler input;
+  int consecutivePass = 0;
   while (auction.isOpen()) {
     Player *bidder = auction.getCurrentParticipant();
-    
-    bool mustBid = (consecutivePass == (int)participants.size() - 1 && auction.getWinningBid() == 0);
+
+    bool mustBid = (consecutivePass == (int)participants.size() - 1 &&
+                    auction.getWinningBid() == 0);
     if (mustBid && bidder->getCash() < auction.getMinimumBid()) {
-      cout << "\n[KRITIS] " << bidder->getUsername() << " wajib bid tapi uang tidak cukup." << endl;
+      cout << "\n[KRITIS] " << bidder->getUsername()
+           << " wajib bid tapi uang tidak cukup." << endl;
       BankruptcyHandler bh(bidder, nullptr, auction.getMinimumBid());
       if (bh.initiateLiquidation()) {
-          cout << bidder->getUsername() << " berhasil melikuidasi aset! Sekarang memiliki dana cukup.\n";
-          continue;
+        cout << bidder->getUsername()
+             << " berhasil melikuidasi aset! Sekarang memiliki dana cukup.\n";
+        continue;
       } else {
-          executeBankruptcy(bidder, nullptr, auction.getMinimumBid()); 
-          auction.pass(bidder);        
-          break; 
+        executeBankruptcy(bidder, nullptr, auction.getMinimumBid());
+        auction.pass(bidder);
+        break;
       }
     }
     if (bidder->getStatus() == BANKRUPT) {
-            auction.pass(bidder);
-            continue;
+      auction.pass(bidder);
+      continue;
     }
-    cout << "\nGiliran: " << bidder->getUsername() << " | Bid Tertinggi: M" << auction.getCurrentBid() << "\n";
+    cout << "\nGiliran: " << bidder->getUsername() << " | Bid Tertinggi: M"
+         << auction.getCurrentBid() << "\n";
     string prompt = "";
     prompt += "Properti: " + prop.getName() + " (" + prop.getCode() + ")\n";
     prompt += "Giliran " + bidder->getUsername() + " | ";
 
     if (auction.getCurrentBid() != 0) {
-        prompt += "Tertinggi: "  + to_string(auction.getCurrentBid());
+      prompt += "Tertinggi: " + to_string(auction.getCurrentBid());
     } else {
-        prompt += "Tertinggi: " + to_string(auction.getMinimumBid());
+      prompt += "Tertinggi: " + to_string(auction.getMinimumBid());
     }
     prompt += " | Uang Anda: " + to_string(bidder->getCash());
     prompt += "\n";
-    prompt += mustBid ? "Aksi (WAJIB BID <jumlah>): " : "Aksi (PASS / BID <jumlah>): ";
+    prompt += mustBid ? "Aksi (WAJIB BID <jumlah>): "
+                      : "Aksi (PASS / BID <jumlah>): ";
     string line = input.readPromptLine(prompt, "Lelang");
-    
+
     stringstream ss(line);
     string command;
     ss >> command;
     std::transform(command.begin(), command.end(), command.begin(), ::toupper);
 
     if (command == "PASS") {
-      logger.log(currentTurn, bidder->getUsername(), "PASS", prop.getCode() + " lelang");
+      logger.log(currentTurn, bidder->getUsername(), "PASS",
+                 prop.getCode() + " lelang");
       if (mustBid) {
-        cout << "[!] Anda adalah penawar terakhir dan belum ada bid. Anda WAJIB membeli properti ini!\n";
+        cout << "[!] Anda adalah penawar terakhir dan belum ada bid. Anda "
+                "WAJIB membeli properti ini!\n";
         continue;
       }
       auction.pass(bidder);
       consecutivePass++;
-    } 
-    else if (command == "BID") {
-      logger.log(currentTurn, bidder->getUsername(), "BID", prop.getCode() + " lelang");
+    } else if (command == "BID") {
+      logger.log(currentTurn, bidder->getUsername(), "BID",
+                 prop.getCode() + " lelang");
       int amount;
       if (ss >> amount) {
         if (amount > bidder->getCash()) {
-          cout << "[!] Uang tidak cukup! Saldo Anda: M" << bidder->getCash() 
+          cout << "[!] Uang tidak cukup! Saldo Anda: M" << bidder->getCash()
                << ". Silakan masukkan jumlah BID yang sesuai.\n";
           continue;
         }
-        if (amount < auction.getMinimumBid() || amount <= auction.getWinningBid()) {
-          cout << "[!] Bid terlalu rendah! Minimal Bid: M" 
-               << max(auction.getMinimumBid(), auction.getWinningBid() + 1) << ".\n";
-          continue; 
+        if (amount < auction.getMinimumBid() ||
+            amount <= auction.getWinningBid()) {
+          cout << "[!] Bid terlalu rendah! Minimal Bid: M"
+               << max(auction.getMinimumBid(), auction.getWinningBid() + 1)
+               << ".\n";
+          continue;
         }
         if (auction.submitBid(bidder, amount, mustBid)) {
           consecutivePass = 0;
@@ -464,34 +485,41 @@ void GameManager::executeAuction(Property &prop) {
     winner->addProperty(&prop);
     prop.setOwner(winner);
     prop.setStatusStr("OWNED");
-    
-    cout << "\n[PENGUMUMAN] " << winner->getUsername() << " menang lelang seharga M" << price << "!\n";
-    logger.log(currentTurn, winner->getUsername(), "LELANG", "Beli " + prop.getCode());
-  }else {
-    cout << "\nLelang dibatalkan atau berakhir tanpa pemenang karena pemain terakhir bangkrut.\n";
+
+    cout << "\n[PENGUMUMAN] " << winner->getUsername()
+         << " menang lelang seharga M" << price << "!\n";
+    logger.log(currentTurn, winner->getUsername(), "LELANG",
+               "Beli " + prop.getCode());
+  } else {
+    cout << "\nLelang dibatalkan atau berakhir tanpa pemenang karena pemain "
+            "terakhir bangkrut.\n";
   }
 }
 
-void GameManager::executeBankruptcy(Player *debtor, Player *creditor, int amount) {
+void GameManager::executeBankruptcy(Player *debtor, Player *creditor,
+                                    int amount) {
   cout << debtor->getUsername() << " tidak dapat membayar kewajiban M" << amount
        << ".\n";
   BankruptcyHandler bh(debtor, creditor, amount);
-  vector<Property*> sitaan = bh.declareBankrupt();
+  vector<Property *> sitaan = bh.declareBankrupt();
   if (creditor) {
     cout << debtor->getUsername() << " dinyatakan BANGKRUT!\n";
     cout << "Kreditor: " << creditor->getUsername() << "\n";
-    logger.log(currentTurn, debtor->getUsername(), "BANGKRUT", "Aset disita oleh " + creditor->getUsername());
+    logger.log(currentTurn, debtor->getUsername(), "BANGKRUT",
+               "Aset disita oleh " + creditor->getUsername());
   } else {
     cout << debtor->getUsername() << " dinyatakan BANGKRUT!\n";
     cout << "Kreditor: Bank\n";
-    logger.log(currentTurn, debtor->getUsername(), "BANGKRUT", "Bangkrut ke Bank");
+    logger.log(currentTurn, debtor->getUsername(), "BANGKRUT",
+               "Bangkrut ke Bank");
     if (!sitaan.empty()) {
-        cout << "\n[INFO] " << sitaan.size() << " aset milik " 
-             << debtor->getUsername() << " disita oleh Bank dan akan dilelang!\n" << endl;
-             
-        for (Property* prop : sitaan) {
-            executeAuction(*prop); 
-        }
+      cout << "\n[INFO] " << sitaan.size() << " aset milik "
+           << debtor->getUsername() << " disita oleh Bank dan akan dilelang!\n"
+           << endl;
+
+      for (Property *prop : sitaan) {
+        executeAuction(*prop);
+      }
     }
   }
   if (activePlayerIndex >= 0 &&
@@ -534,12 +562,13 @@ void GameManager::executeTaxPayment(Player &player, int amount, bool toBank) {
     logger.log(currentTurn, player.getUsername(), "PAJAK",
                "Membayar pajak M" + to_string(effectiveAmount));
   } catch (const std::exception &e) {
-    cout << e.what() << "\n";
+    cout << "Error: " << e.what() << "\n";
     BankruptcyHandler bh(&player, nullptr, effectiveAmount);
     if (bh.initiateLiquidation()) {
       player.reduceCash(effectiveAmount);
       logger.log(currentTurn, player.getUsername(), "PAJAK",
-                 "Pajak M" + to_string(effectiveAmount) + " dibayar setelah likuidasi");
+                 "Pajak M" + to_string(effectiveAmount) +
+                     " dibayar setelah likuidasi");
     } else {
       bh.declareBankrupt();
       logger.log(currentTurn, player.getUsername(), "BANGKRUT",
@@ -559,18 +588,23 @@ void GameManager::executeSalary(Player &player, int amount) {
 
 int GameManager::executeMortgage(Player &player, Property &prop) {
   if (prop.getOwner() != &player) {
-    throw PropertyMortgageException(prop.getCode(), "Anda bukan pemilik properti ini.");
+    throw PropertyMortgageException(prop.getCode(),
+                                    "Anda bukan pemilik properti ini.");
   }
   if (!prop.canBeMortgaged()) {
-    throw PropertyMortgageException(prop.getCode(), "Properti ini sedang digadaikan atau memiliki bangunan.");
+    throw PropertyMortgageException(
+        prop.getCode(),
+        "Properti ini sedang digadaikan atau memiliki bangunan.");
   }
-  
+
   // Check group building rule
 
   if (prop.getType() == "Street") {
     Street &street = static_cast<Street &>(prop);
     if (hasBuildingsInColorGroup(player, street.getColorGroup())) {
-      throw PropertyMortgageException(prop.getCode(), "Tidak bisa menggadaikan properti jika masih ada bangunan di color group-nya.");
+      throw PropertyMortgageException(prop.getCode(),
+                                      "Tidak bisa menggadaikan properti jika "
+                                      "masih ada bangunan di color group-nya.");
     }
   }
 
@@ -585,15 +619,18 @@ int GameManager::executeMortgage(Player &player, Property &prop) {
 
 int GameManager::executeRedeem(Player &player, Property &prop) {
   if (prop.getOwner() != &player) {
-    throw PropertyRedeemException(prop.getCode(), "Anda bukan pemilik properti ini.");
+    throw PropertyRedeemException(prop.getCode(),
+                                  "Anda bukan pemilik properti ini.");
   }
   if (prop.getStatus() != PropertyStatus::MORTGAGED) {
-    throw PropertyRedeemException(prop.getCode(), "Properti tidak sedang digadaikan.");
+    throw PropertyRedeemException(prop.getCode(),
+                                  "Properti tidak sedang digadaikan.");
   }
 
   const int price = applyDiscount(player, prop.getRedeemPrice());
   if (!player.canPay(price)) {
-    throw InsufficientFundsException(player.getUsername(), price, player.getCash());
+    throw InsufficientFundsException(player.getUsername(), price,
+                                     player.getCash());
   }
 
   player.reduceCash(price);
@@ -605,15 +642,18 @@ int GameManager::executeRedeem(Player &player, Property &prop) {
 
 int GameManager::executeBuild(Player &player, Street &street) {
   if (street.getOwner() != &player) {
-    throw PropertyBuildException(street.getCode(), "Anda bukan pemilik properti ini.");
+    throw PropertyBuildException(street.getCode(),
+                                 "Anda bukan pemilik properti ini.");
   }
   if (!street.canBuildNext()) {
-    throw PropertyBuildException(street.getCode(), "Properti sudah mencapai level maksimal.");
+    throw PropertyBuildException(street.getCode(),
+                                 "Properti sudah mencapai level maksimal.");
   }
 
   const int cost = applyDiscount(player, street.getNextBuildCost());
   if (!player.canPay(cost)) {
-    throw InsufficientFundsException(player.getUsername(), cost, player.getCash());
+    throw InsufficientFundsException(player.getUsername(), cost,
+                                     player.getCash());
   }
 
   player.reduceCash(cost);
@@ -654,12 +694,11 @@ std::vector<Street *> GameManager::getEligibleBuildTargets(
     }
 
     const bool canBuild =
-        allReadyForHotel
-            ? street->getBuildingCount() ==
-                  static_cast<int>(BuildingLevel::FOUR_HOUSE)
-            : street->getBuildingCount() == minimumBuilding &&
-                  street->getBuildingCount() <
-                      static_cast<int>(BuildingLevel::FOUR_HOUSE);
+        allReadyForHotel ? street->getBuildingCount() ==
+                               static_cast<int>(BuildingLevel::FOUR_HOUSE)
+                         : street->getBuildingCount() == minimumBuilding &&
+                               street->getBuildingCount() <
+                                   static_cast<int>(BuildingLevel::FOUR_HOUSE);
     if (canBuild) {
       eligible.push_back(street);
     }
@@ -779,8 +818,7 @@ void GameManager::goToJail(Player &player) {
   player.setPosition(getJailPosition());
   player.setStatus(JAILED);
   cout << player.getUsername() << " dikirim ke Penjara.\n";
-  logger.log(currentTurn, player.getUsername(), "PENJARA",
-             "Masuk penjara");
+  logger.log(currentTurn, player.getUsername(), "PENJARA", "Masuk penjara");
 }
 
 Board &GameManager::getBoard() { return *board; }
@@ -812,6 +850,4 @@ void GameManager::setLastDiceTotal(int total) {
   lastDiceTotal = std::max(0, total);
 }
 
-int GameManager::getLastDiceTotal() const {
-  return lastDiceTotal;
-}
+int GameManager::getLastDiceTotal() const { return lastDiceTotal; }

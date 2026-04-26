@@ -38,6 +38,12 @@ InvalidInputException::InvalidInputException(const std::string& message,
                                              const std::string& errorCode)
     : InputException(message, errorCode) {}
 
+InvalidChoiceException::InvalidChoiceException(int minimum, int maximum)
+    : InvalidInputException("Pilihan harus berada di antara " +
+                            std::to_string(minimum) + " dan " +
+                            std::to_string(maximum) + ".",
+                            "INVALID_CHOICE") {}
+
 InvalidDiceValueException::InvalidDiceValueException(int die1, int die2)
     : InvalidInputException("Nilai dadu tidak valid: " + std::to_string(die1) +
                             " dan " + std::to_string(die2) +
@@ -47,6 +53,24 @@ InvalidDiceValueException::InvalidDiceValueException(int die1, int die2)
 CommandException::CommandException(const std::string& message,
                                    const std::string& errorCode)
     : NimonspoliException(message, errorCode) {}
+
+UnknownCommandException::UnknownCommandException(const std::string& command)
+    : CommandException("Command " + quoted(namedOrFallback(command, "<kosong>")) +
+                           " tidak dikenali.",
+                       "UNKNOWN_COMMAND") {}
+
+InvalidCommandFormatException::InvalidCommandFormatException(
+    const std::string& command)
+    : CommandException("Format command " +
+                           quoted(namedOrFallback(command, "<kosong>")) +
+                           " tidak valid.",
+                       "INVALID_COMMAND_FORMAT") {}
+
+MissingCommandArgumentException::MissingCommandArgumentException(
+    const std::string& command, const std::string& expectedArgument)
+    : CommandException("Command " + quoted(namedOrFallback(command, "<kosong>")) +
+                           " membutuhkan argumen " + expectedArgument + ".",
+                       "MISSING_COMMAND_ARGUMENT") {}
 
 CommandNotAllowedException::CommandNotAllowedException(
     const std::string& command, const std::string& reason)
@@ -87,13 +111,49 @@ SaveGameException::SaveGameException(const std::string& filename)
                                ".",
                            "SAVE_GAME_FAILED") {}
 
+LoadGameException::LoadGameException(const std::string& filename,
+                                     const std::string& reason)
+    : PersistenceException("Gagal memuat permainan dari " +
+                               quoted(namedOrFallback(filename, "<kosong>")) +
+                               ". " + reason,
+                           "LOAD_GAME_FAILED") {}
+
 GameStateException::GameStateException(const std::string& message,
                                        const std::string& errorCode)
     : NimonspoliException(message, errorCode) {}
 
+GameNotStartedException::GameNotStartedException()
+    : GameStateException("Permainan belum dimulai.", "GAME_NOT_STARTED") {}
+
+GameAlreadyFinishedException::GameAlreadyFinishedException()
+    : GameStateException("Permainan sudah selesai.", "GAME_ALREADY_FINISHED") {}
+
 InvalidTurnStateException::InvalidTurnStateException(const std::string& reason)
     : GameStateException("State giliran tidak valid. " + reason,
                          "INVALID_TURN_STATE") {}
+
+InvalidPlayerCountException::InvalidPlayerCountException(int playerCount)
+    : GameStateException("Jumlah pemain tidak valid: " +
+                             std::to_string(playerCount) +
+                             ". Jumlah pemain harus 2 sampai 4.",
+                         "INVALID_PLAYER_COUNT") {}
+
+PlayerNotFoundException::PlayerNotFoundException(const std::string& username)
+    : GameStateException("Pemain " +
+                             quoted(namedOrFallback(username, "<kosong>")) +
+                             " tidak ditemukan.",
+                         "PLAYER_NOT_FOUND") {}
+
+InvalidPlayerStateException::InvalidPlayerStateException(
+    const std::string& username, const std::string& reason)
+    : GameStateException("State pemain " +
+                             quoted(namedOrFallback(username, "<kosong>")) +
+                             " tidak valid. " + reason,
+                         "INVALID_PLAYER_STATE") {}
+
+JailRuleException::JailRuleException(const std::string& reason)
+    : GameStateException("Aturan penjara tidak dapat dipenuhi. " + reason,
+                         "JAIL_RULE_ERROR") {}
 
 BoardException::BoardException(const std::string& message,
                                const std::string& errorCode)
@@ -183,11 +243,63 @@ InsufficientFundsException::InsufficientFundsException(
                            ", tersedia " + money(available) + ".",
                        "INSUFFICIENT_FUNDS") {}
 
+RentPaymentException::RentPaymentException(const std::string& username,
+                                           int amount)
+    : EconomyException("Pemain " +
+                           quoted(namedOrFallback(username, "<pemain>")) +
+                           " tidak mampu membayar sewa " + money(amount) + ".",
+                       "RENT_PAYMENT_FAILED") {}
+
 TaxPaymentException::TaxPaymentException(const std::string& username, int amount)
     : EconomyException("Pemain " +
                            quoted(namedOrFallback(username, "<pemain>")) +
                            " tidak mampu membayar pajak " + money(amount) + ".",
                        "TAX_PAYMENT_FAILED") {}
+
+JailFinePaymentException::JailFinePaymentException(const std::string& username,
+                                                   int amount)
+    : EconomyException("Pemain " +
+                           quoted(namedOrFallback(username, "<pemain>")) +
+                           " tidak mampu membayar denda penjara " +
+                           money(amount) + ".",
+                       "JAIL_FINE_PAYMENT_FAILED") {}
+
+BankruptcyException::BankruptcyException(const std::string& username, int debt)
+    : EconomyException("Pemain " +
+                           quoted(namedOrFallback(username, "<pemain>")) +
+                           " bangkrut dengan kewajiban " + money(debt) + ".",
+                       "BANKRUPTCY") {}
+
+AuctionException::AuctionException(const std::string& message,
+                                   const std::string& errorCode)
+    : NimonspoliException(message, errorCode) {}
+
+NoAuctionParticipantException::NoAuctionParticipantException()
+    : AuctionException("Tidak ada peserta lelang.", "NO_AUCTION_PARTICIPANT") {}
+
+InvalidBidException::InvalidBidException(const std::string& username, int bid,
+                                         int minimumBid)
+    : AuctionException("Tawaran " + money(bid) + " dari " +
+                           quoted(namedOrFallback(username, "<pemain>")) +
+                           " tidak valid. Minimal harus lebih besar dari " +
+                           money(minimumBid) + ".",
+                       "INVALID_BID") {}
+
+AuctionTurnException::AuctionTurnException(const std::string& username,
+                                           const std::string& expectedUsername)
+    : AuctionException("Belum giliran " +
+                           quoted(namedOrFallback(username, "<pemain>")) +
+                           " untuk menawar. Giliran saat ini: " +
+                           quoted(namedOrFallback(expectedUsername, "<pemain>")) +
+                           ".",
+                       "AUCTION_TURN_ERROR") {}
+
+AuctionStateException::AuctionStateException(const std::string& reason)
+    : AuctionException("State lelang tidak valid. " + reason,
+                       "AUCTION_STATE_ERROR") {}
+
+AuctionFailedException::AuctionFailedException(const std::string& reason)
+    : AuctionException("Lelang gagal. " + reason, "AUCTION_FAILED") {}
 
 CardException::CardException(const std::string& message,
                              const std::string& errorCode)
