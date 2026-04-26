@@ -1,8 +1,8 @@
 # Nimonspoli
 
-**IF2010 Pemrograman Berorientasi Objek**  
+**IF2010 Pemrograman Berorientasi Objek**
 
-## Contributors
+## Kontributor
 
 **Kelompok CapekBanget**
 
@@ -16,45 +16,67 @@
 
 ---
 
-##  Overview
+## Ringkasan
 
-Nimonspoli, sebuah permainan strategi yang membuat para pemainnya dapat membeli properti, membayar sewa, mengikuti lelang, hingga mengelola kekayaan sambil berkeliling papan permainan.
+Nimonspoli adalah permainan strategi yang memungkinkan pemain membeli properti, membayar sewa, mengikuti lelang, hingga mengelola kekayaan sambil berkeliling papan permainan.
 
-##  Project Structure
+## Struktur Proyek
 
-```
-IF2110-Tubes-01/
-├── README.md
-├── Makefile
+```text
+tugas-besar-1-cbt/
 ├── .gitignore
-├── bin/                          # Compiled executables
-├── build/                        # Object files (.o)
-├── src/                          # Source files
-│   ├── main.c
-│   ├── main.h
-│   ├── adt/                      # Abstract Data Types
-│   ├── core/                     # Core application logic
-│   └── utils/                    # Utility functions
-├── config/                       # Configuration files
-└── docs/                         # Documentation
+├── README.md
+├── makefile
+├── bin/                          # Hasil kompilasi (executable)
+├── build/                        # Berkas objek (.o)
+├── config/                       # Berkas konfigurasi permainan
+│   ├── aksi.txt
+│   ├── misc.txt
+│   ├── property.txt
+│   ├── railroad.txt
+│   ├── special.txt
+│   ├── tax.txt
+│   └── utility.txt
+├── docs/                         # Laporan dan dokumen proyek
+├── include/                      # Deklarasi kode header (.hpp)
+│   ├── app/
+│   ├── core/
+│   ├── data/
+│   ├── exception/
+│   ├── gui/
+│   ├── models/
+│   ├── utils/
+│   └── views/
+├── raylib/                       # Library eksternal (GUI)
+└── src/                          # Berkas kode sumber (.cpp)
+    ├── main.cpp
+    ├── app/
+    ├── core/
+    ├── data/
+    ├── exception/
+    ├── gui/
+    ├── models/
+    ├── utils/
+    └── views/
 ```
-## Installation
 
-### Prerequisites
-- GCC compiler (recommended: GCC 9.0+)
-- Make utility
-- Linux/WSL/macOS environment
+## Instalasi
 
-### Build Instructions
+### Requirement
+- Kompiler GCC (disarankan: GCC 9.0+)
+- Utilitas Make
+- Lingkungan Linux/WSL/macOS
 
-1. **Clone Repository**
+### Petunjuk Build
 
-2. **Run the program**
+1. **Clone repositori**
+
+2. **Jalankan program**
 ```bash
 make run
 ```
 
-3. **Clean build files**
+3. **Hapus berkas hasil build**
 ```bash
 make clean
 ```
