@@ -36,14 +36,13 @@ bool BankruptcyHandler::sellToBank(Property *prop) {
 
     prop->setBuildingCount(prop->getBuildingCount() - 1);
 
-    int sellValue = 0;
     if (prop->getType() == "Railroad" || prop->getType() == "Utility") {
         sellValue = prop->getMortgageValue();
     } else {
         sellValue = prop->getBuyPrice() + prop->getBuildingSellValue();
     }
-    debtor.addCash(sellValue);
-    debtor.removeProperty(prop);
+    debtor->addCash(sellValue);
+    debtor->removeProperty(prop);
     prop->setOwner(nullptr);
     prop->setStatusStr("BANK");
     prop->setFestival(1, 0);
@@ -68,7 +67,7 @@ bool BankruptcyHandler::isDebtSatisfied() const {
 }
 
 int BankruptcyHandler::calculateMaxLiquidation() {
-    int total = debtor.getCash();
+    int total = debtor->getCash();
     for (Property *prop : sellableProperties) {
         if (prop == nullptr) continue;
         if (prop->getType() == "Railroad" || prop->getType() == "Utility") {

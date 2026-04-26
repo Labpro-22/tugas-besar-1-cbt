@@ -40,16 +40,7 @@ bool Auction::submitBid(Player* player, int amount, bool mustBid) {
         cout << "Sabar! Belum giliran " << player->getUsername() << " untuk menawar.\n";
         return false;
     }
-    // if(amount > currentBid && amount >= minimumBid && mustBid) {
-    //     currentBid = amount;
-    //     bids[player->getUsername()] = amount;
-    //     winnerIndex = currentParticipantIndex; 
-    //     passCount = 0; 
 
-    //     cout << ">> " << player->getUsername() << " menawar sebesar " << amount << "!\n";
-    //     nextParticipant();
-    //     return true;
-    // }  
     if (amount > currentBid && amount >= minimumBid) {
         try {
             player->ensureCanPay(amount);
