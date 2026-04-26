@@ -469,7 +469,7 @@ void GameManager::executeAuction(Property &prop) {
                << ".\n";
           continue;
         }
-        if (auction.submitBid(bidder, amount, mustBid)) {
+        if (auction.submitBid(bidder, amount)) {
           consecutivePass = 0;
         }
       } else {

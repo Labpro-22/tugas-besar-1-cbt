@@ -32,7 +32,7 @@ void Auction::start() {
     cout << "Giliran pertama: " << participants[currentParticipantIndex]->getUsername() << "\n";
 }
 
-bool Auction::submitBid(Player* player, int amount, bool mustBid) {
+bool Auction::submitBid(Player* player, int amount) {
     if (!isActive){
         return false;
     }
