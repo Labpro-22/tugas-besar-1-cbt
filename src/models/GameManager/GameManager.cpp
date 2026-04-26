@@ -597,7 +597,6 @@ int GameManager::executeMortgage(Player &player, Property &prop) {
         "Properti ini sedang digadaikan atau memiliki bangunan.");
   }
 
-  // Check group building rule
 
   if (prop.getType() == "Street") {
     Street &street = static_cast<Street &>(prop);

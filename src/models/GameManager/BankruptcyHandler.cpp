@@ -86,24 +86,6 @@ bool BankruptcyHandler::canCoverDebt() {
   return calculateMaxLiquidation() >= debtAmount;
 }
 
-// bool BankruptcyHandler::initiateLiquidation() {
-//     if (!canCoverDebt()) return false;
-//     if (isDebtSatisfied()) return true;
-
-//     vector<Property *> sellList = sellableProperties;
-//     for (size_t i = 0; i < sellList.size(); i++) {
-//         if (isDebtSatisfied()) break;
-//         sellToBank(sellList[i]);
-//     }
-
-//     vector<Property *> mortgageList = mortgageableProperties;
-//     for (size_t i = 0; i < mortgageList.size(); i++) {
-//         if (isDebtSatisfied()) break;
-//         mortgageProperty(mortgageList[i]);
-//     }
-
-//     return isDebtSatisfied();
-// }
 bool BankruptcyHandler::initiateLiquidation() {
   if (!canCoverDebt())
     return false;

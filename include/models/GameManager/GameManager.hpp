@@ -84,8 +84,6 @@ public:
   Board &getBoard();
   TransactionLogger &getLogger();
   const TransactionLogger &getLogger() const;
-
-  // Dynamic board accessors for card/tile logic
   int getGoSalary() const;
   int getJailPosition() const;
   int getBoardSize() const;

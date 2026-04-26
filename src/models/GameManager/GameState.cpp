@@ -26,7 +26,6 @@ string GameState::serialize() const {
 
     ss << players.size() << "\n";
     for (Player p : players) {
-        // Data dasar pemain
         ss << p.getUsername() << " " << p.getCash() << " " << p.getPosition()
             << " ";
 
@@ -151,7 +150,7 @@ void GameState::deserialize(const string &data) {
 
             Property *prop = nullptr;
 
-            // ALOKASI BERDASARKAN TIPE
+            // Menyesuaikan jenis
             if (jenis == "Street") {
                 prop = new Street();
             } else if (jenis == "Railroad") {
@@ -159,14 +158,8 @@ void GameState::deserialize(const string &data) {
             } else if (jenis == "Utility") {
                 prop = new Utility();
             }
-
-            // JIKA VALID, SET VALUENYA
             if (prop != nullptr) {
                 prop->setCode(kode);
-
-                if (pemilik != "BANK") {
-                    // prop->setOwner(player_pointer_dari_list);
-                }
 
                 prop->setStatusStr(status);
                 prop->setFestival(fmult, fdur);
