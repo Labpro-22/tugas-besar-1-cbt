@@ -32,7 +32,7 @@ void Auction::start() {
     cout << "Giliran pertama: " << participants[currentParticipantIndex]->getUsername() << "\n";
 }
 
-bool Auction::submitBid(Player* player, int amount) {
+bool Auction::submitBid(Player* player, int amount, bool mustBid) {
     if (!isActive){
         return false;
     }
@@ -40,6 +40,16 @@ bool Auction::submitBid(Player* player, int amount) {
         cout << "Sabar! Belum giliran " << player->getUsername() << " untuk menawar.\n";
         return false;
     }
+    // if(amount > currentBid && amount >= minimumBid && mustBid) {
+    //     currentBid = amount;
+    //     bids[player->getUsername()] = amount;
+    //     winnerIndex = currentParticipantIndex; 
+    //     passCount = 0; 
+
+    //     cout << ">> " << player->getUsername() << " menawar sebesar " << amount << "!\n";
+    //     nextParticipant();
+    //     return true;
+    // }  
     if (amount > currentBid && amount >= minimumBid) {
         try {
             player->ensureCanPay(amount);
@@ -56,7 +66,8 @@ bool Auction::submitBid(Player* player, int amount) {
         cout << ">> " << player->getUsername() << " menawar sebesar " << amount << "!\n";
         nextParticipant();
         return true;
-    } else {
+    } 
+    else {
         cout << "Gagal! Tawaran harus lebih besar dari " << max(currentBid, minimumBid) << ".\n";
         return false;
     }

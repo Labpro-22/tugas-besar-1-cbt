@@ -23,7 +23,7 @@ class Auction{
     public :
         Auction(Property* prop, vector<Player*> participants);
         void start();
-        bool submitBid(Player* player, int amount);
+        bool submitBid(Player* player, int amount, bool mustBid = false);
         void pass(Player* player);
         Player* getWinner();
         int getWinningBid();

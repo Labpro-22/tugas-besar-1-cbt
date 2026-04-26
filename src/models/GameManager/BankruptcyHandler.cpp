@@ -2,9 +2,11 @@
 #include "models/Property/Property.hpp"
 #include "models/Property/Street.hpp"
 #include "models/GameManager/Player.hpp"
+#include "views/InputHandler.hpp"
+#include <sstream>
 #include <algorithm>
 
-BankruptcyHandler::BankruptcyHandler(Player &debtor, Player *creditor, int debt)
+BankruptcyHandler::BankruptcyHandler(Player *debtor, Player *creditor, int debt)
     : debtor(debtor), creditor(creditor), debtAmount(debt) {
     buildAssetLists();
 }
@@ -12,26 +14,27 @@ BankruptcyHandler::BankruptcyHandler(Player &debtor, Player *creditor, int debt)
 void BankruptcyHandler::buildAssetLists() {
     sellableProperties.clear();
     mortgageableProperties.clear();
-    for (Property *prop : debtor.getProperties()) {
-        if (prop == nullptr) continue;
-        if (prop->getStatusString() == "OWNED") {
+    for (Property *prop : debtor->getProperties()) {
+        if (prop == nullptr){
+            continue;
+        }
+        if (prop->getBuildingCount() > 0) {
             sellableProperties.push_back(prop);
-            if (prop->getBuildingCount() == 0) {
-                mortgageableProperties.push_back(prop);
-            }
+        }
+        if (prop->getBuildingCount() == 0 && prop->getStatusString() != "MORTGAGED") {
+            mortgageableProperties.push_back(prop);
         }
     }
 }
 
 bool BankruptcyHandler::sellToBank(Property *prop) {
-    auto it = find(sellableProperties.begin(), sellableProperties.end(), prop);
-    if (it == sellableProperties.end()) return false;
-
-    sellableProperties.erase(it);
-    auto itM = find(mortgageableProperties.begin(), mortgageableProperties.end(), prop);
-    if (itM != mortgageableProperties.end()) {
-        mortgageableProperties.erase(itM);
+    if (prop == nullptr || prop->getBuildingCount() <= 0) {
+        return false;
     }
+    int sellValue = prop->getBuildingSellValue();
+    debtor->addCash(sellValue);
+
+    prop->setBuildingCount(prop->getBuildingCount() - 1);
 
     int sellValue = 0;
     if (prop->getType() == "Railroad" || prop->getType() == "Utility") {
@@ -49,19 +52,19 @@ bool BankruptcyHandler::sellToBank(Property *prop) {
 }
 
 bool BankruptcyHandler::mortgageProperty(Property *prop) {
-    auto it = find(mortgageableProperties.begin(), mortgageableProperties.end(), prop);
-    if (it == mortgageableProperties.end()) return false;
-
-    mortgageableProperties.erase(it);
-    if (prop->getStatusString() == "OWNED") {
-        debtor.addCash(prop->getMortgageValue());
-        prop->setStatusStr("MORTGAGED");
+    if (prop == nullptr || prop->getBuildingCount() > 0 || prop->getStatusString() == "MORTGAGED") {
+        return false;
     }
+
+    int mortValue = prop->getMortgageValue();
+    debtor->addCash(mortValue);
+    prop->setStatusStr("MORTGAGED");
+
     return true;
 }
 
 bool BankruptcyHandler::isDebtSatisfied() const {
-    return debtor.getCash() >= debtAmount;
+    return debtor->getCash() >= debtAmount;
 }
 
 int BankruptcyHandler::calculateMaxLiquidation() {
@@ -76,71 +79,135 @@ int BankruptcyHandler::calculateMaxLiquidation() {
     }
     return total;
 }
-
 bool BankruptcyHandler::canCoverDebt() {
     return calculateMaxLiquidation() >= debtAmount;
 }
 
+// bool BankruptcyHandler::initiateLiquidation() {
+//     if (!canCoverDebt()) return false;
+//     if (isDebtSatisfied()) return true;
+
+//     vector<Property *> sellList = sellableProperties;
+//     for (size_t i = 0; i < sellList.size(); i++) {
+//         if (isDebtSatisfied()) break;
+//         sellToBank(sellList[i]);
+//     }
+
+//     vector<Property *> mortgageList = mortgageableProperties;
+//     for (size_t i = 0; i < mortgageList.size(); i++) {
+//         if (isDebtSatisfied()) break;
+//         mortgageProperty(mortgageList[i]);
+//     }
+
+//     return isDebtSatisfied();
+// }
 bool BankruptcyHandler::initiateLiquidation() {
     if (!canCoverDebt()) return false;
-    if (isDebtSatisfied()) return true;
+    InputHandler ui;
 
-    vector<Property *> sellList = sellableProperties;
-    for (size_t i = 0; i < sellList.size(); i++) {
-        if (isDebtSatisfied()) break;
-        sellToBank(sellList[i]);
+    while (!isDebtSatisfied()) {
+        if (sellableProperties.empty() && mortgageableProperties.empty()) {
+            cout << "[!] Anda sudah menjual seluruh bangunan dan menggadaikan seluruh properti, tetapi dana tetap tidak mencukupi.\n";
+            break; 
+        }
+        string info = "UTANG: M" + to_string(debtAmount) + " | SALDO: M" + to_string(debtor->getCash()) + " | ";
+        info += "Kurang: M" + to_string(debtAmount - debtor->getCash()) + "\n\n";
+        info += "Daftar Aset Anda:\n";
+        
+        for (Property* p : debtor->getProperties()) {
+            if (p == nullptr) continue;
+            info += "- [" + p->getCode() + "] " + p->getName() 
+                 + " (Bangunan: " + to_string(p->getBuildingCount()) 
+                 + ", Status: " + p->getStatusString() + ")\n";
+        }
+        info += "\nKetik: JUAL <kode> atau GADAI <kode>";
+
+        string line = ui.readPromptLine(info, "Menu Likuidasi");
+        if (line.empty()) continue;
+
+        stringstream ss(line);
+        string cmd, code;
+        ss >> cmd >> code;
+        transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
+        transform(code.begin(), code.end(), code.begin(), ::toupper);
+
+        Property* target = nullptr;
+        for (Property* p : debtor->getProperties()) {
+            if (p != nullptr && p->getCode() == code) { target = p; break; }
+        }
+
+        if (!target) continue;
+
+        if (cmd == "JUAL") {
+            if (sellToBank(target)) {
+                cout << "[INFO] Berhasil menjual 1 bangunan di " << target->getCode() << ".\n";
+            } else {
+                cout << "[!] Gagal menjual. Pastikan ada bangunan di properti ini.\n";
+            }
+        } else if (cmd == "GADAI") {
+            if (mortgageProperty(target)) {
+                cout << "[INFO] Berhasil menggadaikan " << target->getCode() << ".\n";
+            } else {
+                cout << "[!] Gagal gadai. Pastikan bangunan kosong dan properti belum tergadai.\n";
+            }
+        }
+        buildAssetLists(); 
     }
-
-    vector<Property *> mortgageList = mortgageableProperties;
-    for (size_t i = 0; i < mortgageList.size(); i++) {
-        if (isDebtSatisfied()) break;
-        mortgageProperty(mortgageList[i]);
+    if(!isDebtSatisfied()) {
+        return false;
     }
-
-    return isDebtSatisfied();
+    return true;
 }
-
-void BankruptcyHandler::declareBankrupt() {
-    debtor.setStatus(BANKRUPT);
+vector<Property*> BankruptcyHandler::declareBankrupt() {
+    debtor->setStatus(BANKRUPT);
+    vector<Property*> repossessedList;
     if (creditor != nullptr) {
         transferAssets();
     } else {
-        repossessProperties();
-        auctionRepossessedProperties();
+        repossessedList = repossessProperties();
     }
-    debtor.setBankrupt();
+    debtor->setBankrupt();
+    return repossessedList;
 }
 
 void BankruptcyHandler::transferAssets() {
-    vector<Property *> props = debtor.getProperties();
+    vector<Property *> props = debtor->getProperties();
     for (size_t i = 0; i < props.size(); i++) {
         if (props[i] == nullptr) continue;
         creditor->addProperty(props[i]);
         props[i]->setOwner(creditor);
     }
-    const int cashToTransfer = max(0, debtor.getCash());
+    const int cashToTransfer = max(0, debtor->getCash());
     creditor->addCash(cashToTransfer);
-    debtor.reduceCash(debtor.getCash());
+    debtor->reduceCash(debtor->getCash());
     for (Property *prop : props) {
-        if (prop != nullptr) debtor.removeProperty(prop);
+        if (prop != nullptr){
+            debtor->removeProperty(prop);
+        }
     }
 }
 
-void BankruptcyHandler::repossessProperties() {
-    vector<Property *> props = debtor.getProperties();
+vector<Property *> BankruptcyHandler::repossessProperties() {
+    vector<Property *> repossessedList;
+    vector<Property *> props = debtor->getProperties();
+    
     for (size_t i = 0; i < props.size(); i++) {
         if (props[i] == nullptr) continue;
+        repossessedList.push_back(props[i]);
+
         props[i]->setOwner(nullptr);
         props[i]->setStatusStr("BANK");
         props[i]->setFestival(1, 0);
         props[i]->setBuildingCount(0);
     }
+    
     for (size_t i = 0; i < props.size(); i++) {
-        if (props[i] != nullptr) debtor.removeProperty(props[i]);
+        if (props[i] != nullptr) {
+            debtor->removeProperty(props[i]);
+        }
     }
-    debtor.reduceCash(debtor.getCash());
+    debtor->reduceCash(debtor->getCash());
+    return repossessedList;
 }
 
-void BankruptcyHandler::auctionRepossessedProperties() {
-    cout << "Properti sitaan masuk ke pelelangan." << endl;
-}
+

@@ -10,7 +10,7 @@ using namespace std;
 
 class BankruptcyHandler {
 private:
-    Player &debtor;
+    Player *debtor;
     Player *creditor;
     int debtAmount;
     vector<Property *> sellableProperties;
@@ -22,12 +22,11 @@ private:
     bool isDebtSatisfied() const;
 
 public:
-    BankruptcyHandler(Player &debtor, Player *creditor, int debt);
+    BankruptcyHandler(Player *debtor, Player *creditor, int debt);
     int calculateMaxLiquidation();
     bool canCoverDebt();
     bool initiateLiquidation();
-    void declareBankrupt();
+    vector<Property*> declareBankrupt();
     void transferAssets();
-    void repossessProperties();
-    void auctionRepossessedProperties();
+    vector<Property *> repossessProperties();
 };
