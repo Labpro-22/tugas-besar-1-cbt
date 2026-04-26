@@ -11,7 +11,7 @@ Auction::Auction(Property* prop, vector<Player*> participants) {
     this->participants = participants;
     this->currentBid = 0;
     
-    this->minimumBid = prop->getBuyPrice() / 2; 
+    this->minimumBid = 0; 
     
     this->winnerIndex = -1;
     this->passCount = 0;
