@@ -230,7 +230,7 @@ void BoardPopup::drawOverlay(const GameSnapshot &currentSnapshot, Font font) {
         GuiWindowInternal::kWhitePanel);
   }
 
-  DrawTextEx(font, "POP UP",
+  DrawTextEx(font, "NIMONSPOLI",
              Vector2{centerField.x + centerField.width / 2.0F - 60.0F,
                      centerField.y + centerField.height / 2.0F - 60.0F},
              36.0F, 2.0F, GuiWindowInternal::kAccentDark);
